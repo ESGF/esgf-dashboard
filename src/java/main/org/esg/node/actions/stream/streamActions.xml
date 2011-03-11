@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- AUTHOR: University of Salento and CMCC -->
+
+<struts>
+
+	<package name="streamActions" namespace="/stream" extends="struts-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor" class="org.esg.node.utils.AuthenticationInterceptor" />
+			<interceptor-stack name="authenticatedStack">
+				<interceptor-ref name="authenticationInterceptor" />
+				<interceptor-ref name="defaultStack" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="authenticatedStack" />
+		
+		<global-results>
+			<result name="error">/jsp/error.jsp</result>
+			<result name="input">/jsp/error.jsp</result>
+			<result name="login">/index.jsp</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="error" exception="java.lang.Exception" />
+		</global-exception-mappings>
+	
+		<action name="ActivityTableCSV" class="org.esg.node.actions.stream.ActivityCSVAction">
+			<result type="stream">
+				<param name="contentType">text/csv</param>
+				<param name="inputName">stream</param>
+				<param name="contentDisposition">filename="activity.csv"</param>
+				<param name="bufferSize">1024</param>
+			</result>			
+		</action>
+			
+		<action name="RTTTableCSV" class="org.esg.node.actions.stream.RTTCSVAction">
+			<result type="stream">
+				<param name="contentType">text/csv</param>
+				<param name="inputName">stream</param>
+				<param name="contentDisposition">filename="rtt.csv"</param>
+				<param name="bufferSize">1024</param>
+			</result>			
+		</action>
+		
+		<action name="MostActiveProjectsCSV" class="org.esg.node.actions.stream.MostActiveProjectsCSVAction">
+			<result type="stream">
+				<param name="contentType">text/csv</param>
+				<param name="inputName">stream</param>
+				<param name="contentDisposition">filename="projects_${formattedDate}.csv"</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>
+		
+		<action name="MostActiveHostsCSV" class="org.esg.node.actions.stream.MostActiveHostsCSVAction">
+			<result type="stream">
+				<param name="contentType">text/csv</param>
+				<param name="inputName">stream</param>
+				<param name="contentDisposition">filename="hosts_${formattedDate}.csv"</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>
+		
+		<action name="MostActiveServicesCSV" class="org.esg.node.actions.stream.MostActiveServicesCSVAction">
+			<result type="stream">
+				<param name="contentType">text/csv</param>
+				<param name="inputName">stream</param>
+				<param name="contentDisposition">filename="services_${formattedDate}.csv"</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>		
+	</package>
+</struts>

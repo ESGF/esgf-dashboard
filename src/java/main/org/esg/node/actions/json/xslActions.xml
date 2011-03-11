@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- AUTHOR: University of Salento and CMCC -->
+
+<struts>
+	<package name="xslActions" namespace="/xsl" extends="struts-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor" class="org.esg.node.utils.AuthenticationInterceptor" />
+			<interceptor-stack name="authenticatedStack">
+				<interceptor-ref name="authenticationInterceptor" />
+				<interceptor-ref name="defaultStack" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="authenticatedStack" />
+				
+		<global-results>
+			<result name="error">/jsp/error.jsp</result>
+			<result name="input" type="xslt">
+				<param name="location">xsl/xml.xslt</param>
+				<param name="exposedValue">{table}</param>
+			</result>
+			<result name="login">/index.jsp</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="error" exception="java.lang.Exception" />
+		</global-exception-mappings>
+	
+		<action name="ActivityTableXML" class="org.esg.node.actions.json.ActivityTableAction">
+			<result type="xslt">
+				<param name="location">xsl/activity.xslt</param>
+				<param name="exposedValue">{table}</param>
+			</result>
+		</action>
+		
+		<action name="ActivityTableXMLTree" class="org.esg.node.actions.json.ActivityTableAction">
+			<result type="xslt">
+				<param name="location">xsl/tree.xslt</param>
+				<param name="exposedValue">{table}</param>
+			</result>
+		</action>
+		
+		<action name="RTTTableXML" class="org.esg.node.actions.json.RTTTableAction">
+			<result type="xslt">
+				<param name="location">xsl/rtt.xslt</param>
+				<param name="exposedValue">{table}</param>
+			</result>
+		</action>
+		
+		<action name="RTTTableXMLTree" class="org.esg.node.actions.json.RTTTableAction">
+			<result type="xslt">
+				<param name="location">xsl/tree.xslt</param>
+				<param name="exposedValue">{table}</param>
+			</result>
+		</action>
+		
+		<action name="MostActiveProjectsXML" class="org.esg.node.actions.json.MostActiveProjectsAction">
+			<result type="xslt">
+				<param name="location">xsl/mostActiveProjects.xslt</param>
+				<param name="exposedValue">{projectsList}</param>
+			</result>
+		</action>
+		
+		<action name="MostActiveHostsXML" class="org.esg.node.actions.json.MostActiveHostsAction">
+			<result type="xslt">
+				<param name="location">xsl/mostActiveHosts.xslt</param>
+				<param name="exposedValue">{hostsList}</param>
+			</result>
+		</action>
+		
+		<action name="MostActiveServicesXML" class="org.esg.node.actions.json.MostActiveServicesAction">
+			<result type="xslt">
+				<param name="location">xsl/mostActiveServices.xslt</param>
+				<param name="exposedValue">{servicesList}</param>
+			</result>
+		</action>
+	</package>
+</struts>
+ 

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- AUTHOR: University of Salento and CMCC -->
+
+<struts>
+	<package name="securityJsonActions" namespace="/secure" extends="json-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor" class="org.esg.node.utils.AuthenticationInterceptor" />
+			<interceptor-stack name="authenticatedStack">
+				<interceptor-ref name="authenticationInterceptor" />
+				<interceptor-ref name="defaultStack" />
+			</interceptor-stack>
+		</interceptors>
+		<global-results>
+			<result name="error" type="json">
+				<param name="root">null</param>
+			</result>
+			<result name="input" type="json">
+				<param name="root">null</param>
+			</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="error" exception="java.lang.Exception" />
+		</global-exception-mappings>
+	
+		<action name="Registration" class="org.esg.node.security.actions.json.RegistrationAction">
+			<result type="json">
+				<param name="root">success</param>
+			</result>
+			<result name="input" type="json">
+				<param name="root">success</param>
+			</result>
+			<result name="error">
+				<param name="root">success</param>
+			</result>
+		</action>
+		
+		<action name="UsernameValidation" class="org.esg.node.security.actions.json.UsernameValidationAction">
+			<result type="json">
+				<param name="root">valid</param>
+			</result>
+		</action>
+		
+		<action name="UserDnValidation" class="org.esg.node.security.actions.json.UserDnValidationAction">
+			<result type="json">
+				<param name="root">valid</param>
+			</result>
+		</action>
+		
+		<action name="Login" class="org.esg.node.security.actions.json.LoginAction">
+			<result type="json">
+				<param name="root">userSession</param>
+			</result>		
+			<result name="login" type="json">
+				<param name="root">userSession</param>
+			</result>
+		</action>
+		
+		<action name="EditUserProfile" class="org.esg.node.security.actions.UserProfileAction" method="execute1">
+			<interceptor-ref name="authenticatedStack" />
+			<result type="json">
+				<param name="root">success</param>
+			</result>
+			<result name="input" type="json">
+				<param name="root">success</param>
+			</result>
+			<result name="login" type="json">
+				<param name="root">success</param>
+			</result>
+			<result name="error" type="json">
+				<param name="root">success</param>
+			</result>
+		</action>
+	</package>
+</struts>

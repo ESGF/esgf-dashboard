@@ -1,0 +1,222 @@
+@CHARSET "UTF-8";
+/* AUTHOR: University of Salento and CMCC */
+p {
+	font: 12px/13px arial,tahoma,helvetica,sans-serif;
+}
+
+label {
+	text-align: right;
+}
+
+.titleProjectTab {
+	font-size: 15px !important;
+	height: 16px;
+}
+
+.titleHostTab {
+	font-size: 13px !important;
+	/*
+	background-color: silver;
+	color: black;
+	*/
+	height: 16px;
+}
+
+.titleServiceTab {
+	font-size: 10px !important;
+	height: 16px;
+}
+
+.descriptionTableCaption {
+	font-size: 13px; 
+	color: #000000; 
+	font-family: Verdana; 
+	text-align: center;
+}
+
+.descriptionTableLeft {
+	border-bottom: 1px solid #ccc;
+	font: bold 12px/13px arial,tahoma,helvetica,sans-serif;
+	padding-top: 5px;
+	padding-right: 5px;
+}
+
+.descriptionTablePadding {
+	width: 5px;
+	border-right: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+.descriptionTableRight {
+	border-bottom:1px solid #ccc;
+	font: 12px/13px arial,tahoma,helvetica,sans-serif;
+	padding-left: 5px;
+	padding-top: 5px;
+	text-align: left;
+}
+
+.radioGroupCell {
+	vertical-align: top;
+}
+
+.checkboxAttivita {
+	margin-left: 10px;
+}
+
+.toolbarItem {
+	font-weight: bold !important;
+}
+
+/* Albero di navigazione */
+.treeRoot {
+	font-size: 15px;
+	padding-bottom: 5px;
+}
+
+.treeProject {
+	font-size: 15px;
+	margin-top: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;	
+}
+
+.treeServer {
+	font-size: 13px;
+	margin-bottom: 5px;
+}
+
+.treeProjectYesIcon {
+	background-image: url('/esgf-dashboard/img/yes.gif') !important;
+}
+
+.treeProjectNoIcon {
+	background-image: url('/esgf-dashboard/img/cross.gif') !important;
+}
+
+.treeServerIcon {
+	background-image: url('/esgf-dashboard/img/server.bmp') !important;
+}
+
+.treeXML {
+	background-image: none !important;
+}
+
+/* Dashboard */
+.homeIcon {
+	background-image: url('/esgf-dashboard/img/home.png') !important;
+	width: 30px !important;
+}
+
+.titleDashboardTab {
+	font-size: 13px !important;
+	height: 15px;
+}
+
+.titleNoDashboardTab {
+	height: 15px;
+}
+
+.titleNoDashboardSpecialTab {
+	height: 15px;
+	font-style: italic;
+}
+
+.expandDashBoardItemIcon {
+	background-image: url('/esgf-dashboard/img/page-next.gif') !important;
+}
+
+.restoreDashBoardViewIcon {
+	background-image: url('/esgf-dashboard/img/page-prev.gif') !important;
+}
+
+.buttonGridIcon {
+	background-image: url('/esgf-dashboard/img/grid.png') !important;
+	width: 30px !important;
+}
+
+.buttonZoomOutIcon {
+	background-image: url('/esgf-dashboard/img/zoomout.png') !important;
+	width: 30px !important;
+}
+
+.buttonPieChartIcon {
+	background-image: url('/esgf-dashboard/img/pie.png') !important;
+	width: 30px !important;
+}
+
+.buttonBarChartIcon {
+	background-image: url('/esgf-dashboard/img/icon-graf1.gif') !important;
+	width: 30px !important;
+}
+
+.buttonStackChartIcon {
+	background-image: url('/esgf-dashboard/img/stack.png') !important;
+	width: 30px !important;
+}
+
+.buttonLineChartIcon {
+	background-image: url('/esgf-dashboard/img/icon-graf2.gif') !important;
+	width: 30px !important;
+}
+.buttonAreaChartIcon {
+	background-image: url('/esgf-dashboard/img/icon-graf3.gif') !important;
+	width: 30px !important;
+}
+
+/* Griglie */
+.grid .x-grid3-scroller {
+	background-color: #DFE8F6; /* #F1F1F1 DFE8F6 */
+}
+
+.x-grid3-row td {
+	font: 12px/13px arial,tahoma,helvetica,sans-serif;	
+}
+
+.x-grid3-hd-row td {	/* Header Grid */
+	font: 12px/13px arial,tahoma,helvetica,sans-serif;
+	font-weight: bold;
+	/*text-align:center;*/
+}
+
+.x-small-editor .x-form-field,{
+	font-size: 12px;
+}
+
+.x-toolbar td, .x-toolbar span, .x-toolbar input, .x-toolbar div, .x-toolbar select, .x-toolbar label {
+	font-size: 12px;
+}
+
+.x-btn button {
+	font-size: 12px;
+}
+
+/* Info Window */
+.infoWindowTable td {
+	font: 12px/13px arial,tahoma,helvetica,sans-serif;
+}
+
+.infoWindowTable td:first-child {
+	font-weight: bold;
+}
+
+.helpButton {
+	background: url("/esgf-dashboard/img/help.png") no-repeat !important;
+}
+
+.x-grid3-col-virtualOrganizations, .x-grid3-col-description, .x-grid3-col-projectsName {
+	display: block;
+	white-space: normal;
+}
+
+.registrationInfo {
+	text-align: center;
+	font-size: 15px;
+	font-weight: bold;
+	color: blue;
+}
+
+.activationStatus {
+	font-size: 16px;
+	font-weight: normal;
+	text-align: center;
+}

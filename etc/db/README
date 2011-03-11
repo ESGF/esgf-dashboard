@@ -1,0 +1,6 @@
+The default schema of the database includes:
+1) 1 project (Data Node Monitoring)
+2) 1 host (localhost)
+3) 1 machine (localhost).
+4) 3 services (GridFTP, OPeNDAP, Postgres)
+5) 2 users (guest and admin, with pwd guest_esg and admin_esg)

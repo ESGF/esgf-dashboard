@@ -1,0 +1,64 @@
+#*****************************************************************
+#
+#   Description: Installation instructions for software products
+#   		(See the documentaton in the "docs" directory for
+#		more detailed information)
+#
+#*****************************************************************
+
+INSTALL:
+
+ESGF Dashboard Deployment Guide
+
+Database catalog
+----------------
+1. Please check that on your machine a MySQL server 5+ is up and running.
+(to install a mysql server go to http://dev.mysql.com/downloads/mysql/)
+
+2.  Create a MySQL database: registry
+
+3. Import the registry catalog of the ESGF Dashboard using the command line or some graphical user interface.
+./etc/db/sql/load_schema_and_data.sh
+
+Information Provider 
+--------------------
+Once you have the MySQL database (registry) on your machine, you can install the information provider client. 
+1. Download the MySql C connector for your platform (to install it go to http://www.mysql.com/downloads/connector/c/);
+2. Untar the C connector; 
+3. Configure the config.dat file avaiable into the information provider package. Every PING_SPAN seconds new metrics and statistics are collected by the client and stored into the MYSQL_DB_NAME database. The connection to the MYSQL_DB_NAME database is performed using the MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWD connection parameters. Every HOSTS_LOADING_SPAN seconds the list of hosts is reloaded from the database.
+
+$ more config.dat 
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWD=
+MYSQL_DB_NAME=registry
+CONNECTION_TIMEOUT=1000000
+THREAD_OPEN_MAX=20
+PING_SPAN=60
+HOSTS_LOADING_SPAN=120
+
+4. Check the Makefile (in particular the –L part for libraries and –I for the include files). We recommend to use the mysql_config command.
+5. Compile the C client.
+6. Run the C client.
+
+ESGF Dashboard Portal deployment
+-------------------------
+The following steps must be carried out to deploy an ESGF Dashboard instance.
+1. Install on the target machine an Apache Tomcat Server 6+ (http://tomcat.apache.org/download-60.cgi);
+2. Download the MySQL JDBC connector (http://www.mysql.com/downloads/connector/j/);
+3. Move the jar file related to the JDBC connector into the following directory: $CATALINA_BASE/lib;
+4. Add the following CONTEXT node into the HOST node of the server.xml configuration file ($CATALINA_BASE/conf folder):
+
+<Context docBase="esgf-dashboard" path="/esgf-dashboard" reloadable="true" source="org.eclipse.jst.jee.server:esgf-dashboard">
+<Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" maxActive="100" maxIdle="30" maxWait="10000" name="jdbc/registry" password="" type="javax.sql.DataSource" url="jdbc:mysql://localhost:3306/registry?autoReconnect=true" username="root"/>
+</Context>
+
+5. Check the configuration parameters in the RESOURCE node. You should not change them for a default installation.
+6. Put the war file into the $CATALINA_BASE/webapps directory.
+7. Restart tomcat:
+ 
+ $CATALINA_BASE/bin/shutdown.sh
+ $CATALINA_BASE/bin/startup.sh
+
+

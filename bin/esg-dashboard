@@ -1,0 +1,307 @@
+#!/bin/bash
+
+#####
+# ESGF Dashboard Services
+# description: Dashboard Services
+#
+#****************************************************************************
+#*                                                                          *
+#*   Copyright (c) 2009, Lawrence Livermore National Security, LLC.         *
+#*   Produced at the Lawrence Livermore National Laboratory                 *
+#*   Written by: Gavin M. Bell (gavin@llnl.gov)                             *
+#*   LLNL-CODE-420962                                                       *
+#*                                                                          *
+#*   All rights reserved. This file is part of the:                         *
+#*   Earth System Grid Fed (ESGF) Node Software Stack, Version 1.0          *
+#*                                                                          *
+#*   For details, see http://esgf.org/                                      *
+#*   Please also read this link                                             *
+#*    http://esgf.org/LICENSE                                               *
+#*                                                                          *
+#*   * Redistribution and use in source and binary forms, with or           *
+#*   without modification, are permitted provided that the following        *
+#*   conditions are met:                                                    *
+#*                                                                          *
+#*   * Redistributions of source code must retain the above copyright       *
+#*   notice, this list of conditions and the disclaimer below.              *
+#*                                                                          *
+#*   * Redistributions in binary form must reproduce the above copyright    *
+#*   notice, this list of conditions and the disclaimer (as noted below)    *
+#*   in the documentation and/or other materials provided with the          *
+#*   distribution.                                                          *
+#*                                                                          *
+#*   Neither the name of the LLNS/LLNL nor the names of its contributors    *
+#*   may be used to endorse or promote products derived from this           *
+#*   software without specific prior written permission.                    *
+#*                                                                          *
+#*   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    *
+#*   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT      *
+#*   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS      *
+#*   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE    *
+#*   LIVERMORE NATIONAL SECURITY, LLC, THE U.S. DEPARTMENT OF ENERGY OR     *
+#*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,           *
+#*   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT       *
+#*   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF       *
+#*   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND    *
+#*   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,     *
+#*   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT     *
+#*   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF     *
+#*   SUCH DAMAGE.                                                           *
+#*                                                                          *
+#****************************************************************************
+#####
+
+#uses: perl, awk, ifconfig, tar, wget, curl, su, useradd, groupadd,
+#      id, chmod, chown, chgrp, cut, svn, mkdir, killall, java, egrep,
+#      lsof, unlink, ln, pax, keytool, openssl
+
+#note: usage of readlink not macosx friendly :-( usage of useradd /
+#      groupadd is RedHat/CentOS dependent :-(
+
+DEBUG=${DEBUG:-0}
+VERBOSE=${VERBOSE:-0}
+esg_dist_url=http://198.128.245.140/dist
+envfile="/etc/esg.env"
+
+#--------------
+#User Defined / Setable (public)
+#--------------
+install_prefix=${install_prefix:-"/usr/local"}
+cdat_home=${cdat_home:-${install_prefix}/cdat}
+esg_root_dir=${esg_root_dir:-"/esg"}
+workdir=${workdir:-~/workbench/esg}
+install_logfile=${install_logfile:-"/etc/esg.install_log"}
+#--------------
+
+date_format=${date_format:-"+%Y_%m_%d_%H%M%S"}
+force_install=${force_install:-0}
+
+tomcat_user=${tomcat_user:-tomcat}
+tomcat_group=${tomcat_group:-$tomcat_user}
+tomcat_install_dir=${CATALINA_HOME:-${install_prefix}/tomcat}
+python_version=${python_version:-"2.6"}
+config_file=${esg_root_dir}/config/esgf.properties
+
+
+init() {
+    #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
+
+    dashboard_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard.war
+    dashboard_app_context_root=esgf-dashboard
+    dashboard_app_home=${tomcat_install_dir}/webapps/${dashboard_app_context_root}
+
+    esgf_dashboard_version=${esgf_dashboard_version:-"1.2.0"}
+    esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.1.4"}
+    esgf_dashboard_egg_file=esgf_dashboard-${esgf_dashboard_db_version}-py${python_version}.egg
+    
+    #Database information....
+    node_db_name=${node_db_name:-"esgcet"}
+    postgress_driver=${postgress_driver:-org.postgresql.Driver}
+    postgress_protocol=${postgress_protocol:-jdbc:postgresql:}
+    postgress_host=${PGHOST:-localhost}
+    postgress_port=${PGPORT:-5432}
+    postgress_user=${PGUSER:-dbsuper}
+    pg_sys_acct_passwd=${pg_sys_acct_passwd:=${pg_secret:=changeme}}
+    
+}
+
+
+#####
+# Install The ESGF Dashboard Services
+#####
+# - Takes boolean arg: 0 = setup / install mode (default)
+#                      1 = updated mode
+#
+# In setup mode it is an idempotent install (default)
+# In update mode it will always pull down latest after archiving old
+#
+setup_dashboard() {
+    init
+
+    echo -n "Checking for dashboard services ${esgf_dashboard_version}"
+    check_webapp_version "${dashboard_app_context_root}" "${esgf_dashboard_version}"
+    local ret=$?
+    ((ret == 0)) && (( ! force_install )) && echo " [OK]" && return 0
+    
+    echo
+    echo "*******************************"
+    echo "Setting up The ESGF Dashboard Services"
+    echo "*******************************"
+    echo
+
+    local upgrade=${1:-0}
+
+    local default="N"
+    ((force_install)) && default="Y"
+    local dosetup
+    if [ -d ${dashboard_app_home} ]; then 
+        echo "Detected an existing dashboard services installation..."
+        read -p "Do you want to continue with dashboard services installation and setup? $([ "$default" = "N" ] && echo "[y/N]" || echo "[Y/n]") " dosetup
+        [ -z "${dosetup}" ] && dosetup=${default}
+        if [ "${dosetup}" != "Y" ] && [ "${dosetup}" != "y" ]; then
+            echo "Skipping dashboard services installation and setup - will assume it's setup properly"
+            return 0
+        fi
+        
+        local dobackup="Y"
+        read -p "Do you want to make a back up of the existing distribution?? [Y/n] " dobackup
+        [ -z "${dobackup}" ] && dobackup=${default}
+        if [ "${dobackup}" = "Y" ] || [ "${dobackup}" = "y" ]; then
+            echo "Creating a backup archive of this web application $dashboard_app_home"
+            backup ${dashboard_app_home}
+        fi
+
+        echo
+    fi
+
+    configure_postgress
+
+    mkdir -p ${workdir}
+    [ $? != 0 ] && return 1
+    pushd ${workdir} >& /dev/null
+
+    local dashboard_dist_file=$(pwd)/${dashboard_dist_url##*/}
+    checked_get ${dashboard_dist_file} ${dashboard_dist_url} $((force_install))
+    (( $? > 1 )) && echo " ERROR: Could not download ${node_dist_url} :-(" && popd >& /dev/null && checked_done 1
+    
+    stop_tomcat
+
+    #make room for new install
+    if (( force_install )) ; then
+        echo "Removing Previous Installation of the ESGF Dashboard Services..."
+        [ -d "${dashboard_app_home}" ] && rm -rf ${dashboard_app_home} || echo "WARNING: Strange, can't locate previous install @ ${dashboard_app_home}"
+    fi
+    
+    #----------------------------
+    mkdir -p ${dashboard_app_home}
+    [ $? != 0 ] && echo "Could not create dir ${dashboard_app_home}" && popd >& /dev/null && checked_done 1
+    cd ${dashboard_app_home}
+    echo "Expanding war ${dashboard_dist_file} in $(pwd)"
+    $JAVA_HOME/bin/jar xf ${dashboard_dist_file}
+    
+    chown -R ${tomcat_user} ${dashboard_app_home}
+    chgrp -R ${tomcat_group} ${dashboard_app_home}
+    popd >& /dev/null
+    #----------------------------
+    
+    popd >& /dev/null
+    write_dashboard_install_log
+    checked_done 0
+
+}
+
+write_dashboard_install_log() {
+    echo "$(date ${date_format}) webapp:${dashboard_app_context_root}=${esgf_dashboard_version} ${dashboard_app_home}" >> ${install_logfile}
+    dedup ${install_logfile}
+    return 0
+}
+
+#--------------------------------------------------
+#NOTE: This must be run AFTER the esg node web app
+#      installation/configuration (setup_node_manager) 
+#--------------------------------------------------
+configure_postgress() {
+    init
+
+    echo
+    echo "*******************************"
+    echo "Configuring Postgres... for ESGF Dashboard"
+    echo "*******************************"
+    echo
+    
+    start_postgress
+
+    #Create the database...
+    echo "Creating esg node database: [${node_db_name}]"
+    echo "${postgress_install_dir}/bin/createdb ${node_db_name}"
+    ${postgress_install_dir}/bin/createdb ${node_db_name} >& /dev/null
+    (( $? > 1 )) && echo " ERROR: Could not create esg node database: ${node_db_name}" && return 0
+    echo 
+
+    mkdir -p ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db
+    pushd ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db >& /dev/null
+    [ $? != 0 ] && echo " ERROR: Could not find node distribution dir ${workdir}/${node_dist_dir}" && checked_done 1
+
+    #------------------------------------------------------------------------
+    #Based on the node type selection we build the appropriate database tables
+    #------------------------------------------------------------------------
+    
+    #download the egg file from the distribution server is necessary....
+    checked_get ${esgf_dashboard_egg_file} ${esg_dist_url}/esgf-dashboard/${esgf_dashboard_egg_file} $((force_install))
+    (( $? > 1 )) && return 0
+
+    #install the egg....
+    ((DEBUG)) && "$cdat_home/bin/easy_install ${esgf_dashboard_egg_file}"
+    $cdat_home/bin/easy_install ${esgf_dashboard_egg_file}
+    [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard python module" && checked_done 1
+
+    #run the code to build the database and install sql migration...
+    ((DEBUG)) && echo "$cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c"
+    $cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c
+    [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard database tables in ${node_db_name}" && checked_done 1
+    
+    write_dashboard_db_install_log
+    echo
+    
+    popd >& /dev/null
+    echo
+    echo
+    checked_done 0
+}
+
+
+
+write_dashboard_db_install_log() {
+    echo "$(date ${date_format}) python:esgf_dashboard=${esgf_dashboard_db_version} " >> ${install_logfile}
+    dedup ${install_logfile}
+    return 0
+}
+
+#--------------------------------------
+# Clean / Uninstall this module...
+#--------------------------------------
+
+clean_dashboard_webapp_subsystem() {
+    init
+    local doit="N"
+    if [ -e ${dashboard_app_home} ]; then
+        read -p "remove ESGF Dashboard web service? (${dashboard_app_home}) [y/N]: " doit
+        if [ "doit" = "Y" ] || [ "$doit" = "y" ]; then
+            echo "removing ${tomcat_install_dir}/webapps/${dashboard_app_context_root}"
+            if [ -n ${dashboard_app_home} ]; then
+                rm -rf ${dashboard_app_home}
+                [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
+                perl -n -i -e'print unless m!webapp:esgf-dashboard!' ${install_logfile}
+            fi
+        fi
+    fi 
+    return 0
+}
+
+#NOTE: There are certain fields that we are not pulling from (node_db_name and postgress_host).
+#      If the fit hits the shan I want to make it clear that we are not nuking anyone else's database, etc.
+#      strictly the "esgcet" database on "localhost"
+clean_dashboard_database_subsystem_installation() {
+    init
+    local doit="N"
+
+    if $(psql -U ${postgress_user} esgcet -c "\dt esgf_dashboard.;" | egrep '^\([1-9]* row[s]?\)' >& /dev/null); then
+        read -p "remove ESGF Dashboard database, database subsystem AND DATA? (esgf_dashboard.*) [y/N]: " doit
+
+        if [ "doit" = "Y" ] || [ "$doit" = "y" ]; then
+            #Call me paranoid but I want some integrity check that this code is what is meant to be straight from the distribution.
+            diff <(md5sum ${scripts_dir}/esg-dashboard | tr -s " " | cut -d " " -f 1) <(curl -s -L --insecure ${esg_dist_url}/esgf-dashboard/esg-dashboard.md5 | tr -s " " | cut -d " " -f 1) >& /dev/null
+            [ $? != 0 ] && echo " WARNING: Could not verify ${scripts_dir}/esg-dashboard, aborting this uninstall" && return 3
+            echo "[VERIFIED]"
+
+            backup_db esgcet dashboard
+            echo "removing esgf_dashboard.* schema and tables and DATA"
+            ${cdat_home}/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@localhost:${postgress_port}/esgcet -d 0
+            [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
+            rm -rvf ${cdat_home}/bin/esgf_dashboard_initialize && \
+                rm -rf ${cdat_home}/lib/python${python_version}/${esgf_dashboard_egg_file} && \
+                perl -n -i -e'print unless m!python:esgf_dashboard!' ${install_logfile} && echo "[REMOVED]"
+        fi
+    fi 
+    return 0
+}

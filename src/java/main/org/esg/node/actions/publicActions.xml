@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- AUTHOR: University of Salento and CMCC -->
+
+<struts>
+	<package name="publicActions" namespace="/monitoring" extends="struts-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor" class="org.esg.node.utils.AuthenticationInterceptor" />
+			<interceptor-stack name="authenticatedStack">
+				<interceptor-ref name="authenticationInterceptor" />
+				<interceptor-ref name="defaultStack" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="authenticatedStack" />
+		
+		<global-results>
+			<result name="error">/jsp/error.jsp</result>
+			<result name="login">/index.jsp</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="error" exception="java.lang.Exception" />
+		</global-exception-mappings>
+		
+		<action name="AllProjects" class="org.esg.node.actions.AllProjectsAction">
+			<result>/jsp/allProjects.jsp</result>
+		</action>
+		
+		<action name="AllProjectsMini" class="org.esg.node.actions.AllProjectsAction">
+			<result>/jsp/allProjects.jsp?mini=1</result>
+			<result name="login">/jsp/login.jsp</result>
+		</action>
+		
+		<action name="Project" class="org.esg.node.actions.ProjectAction">
+			<result>/jsp/project.jsp</result>
+			<result name="input">/index.jsp</result>
+		</action>
+		
+		<action name="ProjectMini" class="org.esg.node.actions.ProjectAction">
+			<result>/jsp/project.jsp?mini=1</result>
+			<result name="input">/jsp/accessDenied.jsp</result>
+			<result name="login">/jsp/login.jsp</result>	
+		</action>
+		
+		<action name="Server" class="org.esg.node.actions.ServerAction">
+			<result>/jsp/server.jsp</result>
+			<result name="input">/index.jsp</result>
+		</action>
+		
+		<action name="ServerMini" class="org.esg.node.actions.ServerAction">
+			<result>/jsp/server.jsp?mini=1</result>
+			<result name="input">/jsp/accessDenied.jsp</result>
+			<result name="login">/jsp/login.jsp</result>
+		</action>
+	</package>
+		
+</struts>

@@ -1,0 +1,143 @@
+<!--
+/***************************************************************************
+*                                                                          *
+*  Organization: Lawrence Livermore National Lab (LLNL)                    *
+*   Directorate: Computation                                               *
+*    Department: Computing Applications and Research                       *
+*      Division: S&T Global Security                                       *
+*        Matrix: Atmospheric, Earth and Energy Division                    *
+*       Program: PCMDI                                                     *
+*       Project: Earth Systems Grid (ESG) Data Node Software Stack         *
+*  First Author: Gavin M. Bell (gavin@llnl.gov)                            *
+*                                                                          *
+****************************************************************************
+*                                                                          *
+*   Copyright (c) 2009, Lawrence Livermore National Security, LLC.         *
+*   Produced at the Lawrence Livermore National Laboratory                 *
+*   Written by: Gavin M. Bell (gavin@llnl.gov)                             *
+*   LLNL-CODE-420962                                                       *
+*                                                                          *
+*   All rights reserved. This file is part of the:                         *
+*   Earth System Grid (ESG) Data Node Software Stack, Version 1.0          *
+*                                                                          *
+*   For details, see http://esg-repo.llnl.gov/esg-node/                    *
+*   Please also read this link                                             *
+*    http://esg-repo.llnl.gov/LICENSE                                      *
+*                                                                          *
+*   * Redistribution and use in source and binary forms, with or           *
+*   without modification, are permitted provided that the following        *
+*   conditions are met:                                                    *
+*                                                                          *
+*   * Redistributions of source code must retain the above copyright       *
+*   notice, this list of conditions and the disclaimer below.              *
+*                                                                          *
+*   * Redistributions in binary form must reproduce the above copyright    *
+*   notice, this list of conditions and the disclaimer (as noted below)    *
+*   in the documentation and/or other materials provided with the          *
+*   distribution.                                                          *
+*                                                                          *
+*   Neither the name of the LLNS/LLNL nor the names of its contributors    *
+*   may be used to endorse or promote products derived from this           *
+*   software without specific prior written permission.                    *
+*                                                                          *
+*   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    *
+*   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT      *
+*   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS      *
+*   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE    *
+*   LIVERMORE NATIONAL SECURITY, LLC, THE U.S. DEPARTMENT OF ENERGY OR     *
+*   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,           *
+*   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT       *
+*   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF       *
+*   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND    *
+*   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,     *
+*   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT     *
+*   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF     *
+*   SUCH DAMAGE.                                                           *
+*                                                                          *
+***************************************************************************/
+
+Description:
+Ivy "settings" file for defining libraries needed for this project.
+
+Note: Check Maven for propery dependency parameter values @
+      http://mvnrepository.com/
+
+Needed application jars:
+
+commons-fileupload-1.2.1.jar
+commons-io-1.3.2.jar
+commons-logging-1.0.4.jar
+commons-logging-api-1.1.jar
+freemarker-2.3.15.jar
+json-lib-2.1.jar
+mail.jar
+ognl-2.7.3.jar
+SimpleCaptcha-1.1.1.jar
+struts2-core-2.1.8.1.jar
+struts2-json-plugin-2.1.8.1.jar
+xstream-1.2.2.jar
+xwork-core-2.1.6.jar
+
+-->
+
+<ivy-module version="2.0" 
+	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation=
+                      "http://ant.apache.org/ivy/schemas/ivy.xsd">
+  <info organisation="org.esgf" module="esgf-node-manager">
+    <description homepage="http://esgf.org/esgf-node-manager-site/" />
+  </info>
+
+  <configurations>
+    <conf name="base" description="required for both compile and runtime" />
+    <conf name="runtime" extends="base" />
+    <conf name="compile" extends="base" />
+    <conf name="test" extends="base" visibility="private" />
+  </configurations>
+
+  <publications>
+    <artifact name="${module}-common" type="jar" conf="*"/>
+    <artifact name="${module}-filters" type="jar" conf="*"/>
+    <artifact name="${module}-accesslog-client" type="jar" conf="*"/>
+  </publications>
+
+  <dependencies>
+    <!-- CORE ESGF DEPENDENCY LIBS -->
+    <dependency org="net.sourceforge.cobertura" name="cobertura" rev="1.9.4"/>
+    <dependency org="junit" name="junit" rev="4.8.1"/>
+    <dependency org="log4j" name="log4j" rev="1.2.14">
+      <exclude org="com.sun.jdmk"/>
+      <exclude org="com.sun.jmx"/>
+      <exclude org="javax.jms"/>
+    </dependency>
+
+<!-- COMMON ESGF DEPENDENCY LIBS -- 
+    <dependency org="postgresql" name="postgresql" rev="8.3-603.jdbc3"/>
+    <dependency org="com.caucho" name="hessian" rev="3.0.20"/>
+    <dependency org="com.sun.xml.bind" name="jaxb-xjc" rev="2.2"/>
+
+    <dependency org="commons-dbcp" name="commons-dbcp" rev="1.4"/>
+    <dependency org="commons-dbutils" name="commons-dbutils" rev="1.3"/>
+    <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1"/>
+    <dependency org="commons-lang" name="commons-lang" rev="2.5"/>
+    <dependency org="commons-pool" name="commons-pool" rev="1.5.4"/>
+-->
+
+    <!-- ESGF DASHBOARD DEPENDENCY LIBS -->
+    <dependency org="commons-fileupload" name="commons-fileupload" rev="1.2.2"/>
+<!--<dependency org="commons-io" name="commons-io" rev="2.0.1" conf="base->default"/> -->
+    <dependency org="commons-io" name="commons-io" rev="1.3.2" conf="base->default"/>
+    <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
+    <dependency org="commons-logging" name="commons-logging-api" rev="1.1"/>
+    <dependency org="org.freemarker" name="freemarker" rev="2.3.16"/>
+    <dependency org="org.kohsuke.stapler" name="json-lib" rev="2.1"/>
+    <dependency org="javax.mail" name="mail" rev="1.4.3"/>
+    <dependency org="ognl" name="ognl" rev="2.7.3"/>    
+    <dependency org="org.apache.struts" name="struts2-core" rev="2.1.8"/>
+    <dependency org="org.apache.struts" name="struts2-json-plugin" rev="2.1.8.1"/>
+    <dependency org="xstream" name="xstream" rev="1.2.2"/>
+    <dependency org="com.opensymphony" name="xwork-core" rev="2.1.6"/>
+    
+
+  </dependencies>
+</ivy-module>

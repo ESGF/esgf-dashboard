@@ -1,0 +1,24 @@
+#*****************************************************************#
+# Copyright (c) 2009  Larence Livermore National Security (LLNS)  #
+# All rights reserved.						  #
+#*****************************************************************#
+
+# This is a manifest, listing all the files to be posted to the
+# distribution server.
+
+[esgf-node-manager]
+
+../HOWTO
+../INSTALL
+../TODO
+../LICENSE
+
+#Installation script
+./esg-node-manager
+
+#Software artifacts...
+../dist/@module@-@version_num@.tar.gz
+../dist/@module@-accesslog-client-@version_num@.jar
+
+#Python egg for database...
+../dist/esgf_node_manager-@db_version_num@-py2.6.egg

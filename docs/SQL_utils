@@ -1,0 +1,38 @@
+Useful SQL queries 
+
+New project
+INSERT INTO project(name, description) 
+VALUES("Test Project", "This is a test project")
+
+New host
+INSERT INTO host(name, ip, city, latitude, longitude) 
+VALUES("Test Host", "test.it", "Test City", 10, 10)
+
+New service
+INSERT INTO service_instance(port, name, institution, mail_admin, idHost) 
+VALUES(18500, "Test Service", "Test Institution", "test@mail.it", 1)
+
+New OPeNDAP instance
+INSERT INTO opendap_node(id, url) 
+VALUES(1, "http://test.it")
+
+Add a service to a project
+INSERT INTO uses(idProject, idServiceInstance) 
+VALUES(1, 1)
+
+Authorization – user join project 
+INSERT INTO `join`(idProject, idUser) 
+VALUES(1, 1)
+
+Authorization – remove user from project 
+DELETE FROM `join` WHERE idProject=1 AND idUser=1
+
+Remove old statistics
+DELETE FROM service_status WHERE timestamp <= ‘yyyy-MM-dd hh:mm:ss’
+
+Remove old statistics related to a project
+DELETE FROM service_status 
+WHERE timestamp <= 'yyyy-MM-dd hh:mm:ss' AND idServiceInstance IN(
+SELECT s.id FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE u.idProject=1
+)
+

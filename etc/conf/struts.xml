@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- AUTHOR: University of Salento and CMCC -->
+
+<struts>
+<!-- 	<constant name="struts.action.extension" value="html"/> -->
+    <constant name="struts.devMode" value="false" />
+
+	<package name="default" namespace="/" extends="struts-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor" class="org.esg.node.utils.AuthenticationInterceptor" />
+			<interceptor-stack name="authenticatedStack">
+				<interceptor-ref name="authenticationInterceptor" />
+				<interceptor-ref name="defaultStack" />
+			</interceptor-stack>
+		</interceptors>		
+		
+		<action name="Home">
+			<interceptor-ref name="authenticatedStack" />
+			<result type="redirect">/monitoring/AllProjects</result>
+			<result name="login">/homepage/home.jsp</result>
+		</action>
+				
+		<action name="Captcha">
+    		<result>/simpleImg</result>
+    	</action>
+	</package>
+
+	<include file="org/esg/node/actions/publicActions.xml" />
+	<include file="org/esg/node/actions/json/jsonActions.xml" />
+	<include file="org/esg/node/actions/json/xslActions.xml" />
+	<include file="org/esg/node/actions/stream/streamActions.xml" />
+	<include file="org/esg/node/opendap/actions/opendapActions.xml" />
+	<include file="org/esg/node/opendap/actions/json/opendapJsonActions.xml" />
+	<include file="org/esg/node/security/actions/securityActions.xml" />
+	<include file="org/esg/node/security/actions/json/securityActionsJson.xml" />
+</struts>
