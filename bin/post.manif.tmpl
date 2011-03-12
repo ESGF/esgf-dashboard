@@ -6,19 +6,19 @@
 # This is a manifest, listing all the files to be posted to the
 # distribution server.
 
-[esgf-node-manager]
+[@module@]
 
-../HOWTO
+../README
 ../INSTALL
 ../TODO
 ../LICENSE
 
 #Installation script
-./esg-node-manager
+./esg-dashboard
 
 #Software artifacts...
 ../dist/@module@-@version_num@.tar.gz
-../dist/@module@-accesslog-client-@version_num@.jar
+../dist/@module@.war
 
 #Python egg for database...
-../dist/esgf_node_manager-@db_version_num@-py2.6.egg
+../dist/esgf_dashboard-@db_version_num@-py2.6.egg
