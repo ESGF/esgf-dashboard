@@ -739,7 +739,7 @@ Builds the project via ant (obviously).
     -->
   <target name="make_python" depends="init" description="(creates python egg distribution)">
     <copy file="${py_src_dir}/setup.py.tmpl" tofile="${py_src_dir}/setup.py" filtering="true" overwrite="true"/>
-    <copy file="${py_src_dir}/scripts/esgf_node_manager_initialize.tmpl" tofile="${py_src_dir}/scripts/esgf_node_manager_initialize" filtering="true" overwrite="true"/>
+    <copy file="${py_src_dir}/scripts/esgf_${module}_initialize.tmpl" tofile="${py_src_dir}/scripts/esgf_${module}_initialize" filtering="true" overwrite="true"/>
 
     <echo message="Building python egg"/>
     <exec executable="./etc/db/make_python" dir="${basedir}">

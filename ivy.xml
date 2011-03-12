@@ -84,8 +84,8 @@ xwork-core-2.1.6.jar
 	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:noNamespaceSchemaLocation=
                       "http://ant.apache.org/ivy/schemas/ivy.xsd">
-  <info organisation="org.esgf" module="esgf-node-manager">
-    <description homepage="http://esgf.org/esgf-node-manager-site/" />
+  <info organisation="org.esgf" module="${module}">
+    <description homepage="http://esgf.org/${module}-site/" />
   </info>
 
   <configurations>
