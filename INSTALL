@@ -6,59 +6,90 @@
 #
 #*****************************************************************
 
-INSTALL:
+INSTALL
 
 ESGF Dashboard Deployment Guide
 
-Database catalog
-----------------
-1. Please check that on your machine a MySQL server 5+ is up and running.
-(to install a mysql server go to http://dev.mysql.com/downloads/mysql/)
+1) LOADING THE NEW TABLES INTO THE ESGCET DATABASE
 
-2.  Create a MySQL database: registry
+as esg-user
 
-3. Import the registry catalog of the ESGF Dashboard using the command line or some graphical user interface.
-./etc/db/sql/load_schema_and_data.sh
+wget http://193.204.199.157/esgf_dash_dump_tables.tgz
+tar xvzf esgf_dash_dump_tables.tgz
+cd esgf_dash_dump_tables
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_project_dash.sql
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_country.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_host.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_join1.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_news.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_opendap_node.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_service_instance.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_service_status.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_uses.sql 
+/usr/local/pgsql/bin/psql -e esgcet -U esgcet < esgf_dash_user1.sql 
 
-Information Provider 
---------------------
-Once you have the MySQL database (registry) on your machine, you can install the information provider client. 
-1. Download the MySql C connector for your platform (to install it go to http://www.mysql.com/downloads/connector/c/);
-2. Untar the C connector; 
-3. Configure the config.dat file avaiable into the information provider package. Every PING_SPAN seconds new metrics and statistics are collected by the client and stored into the MYSQL_DB_NAME database. The connection to the MYSQL_DB_NAME database is performed using the MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWD connection parameters. Every HOSTS_LOADING_SPAN seconds the list of hosts is reloaded from the database.
+2) DEPLOYING THE DASHBOARD
 
-$ more config.dat 
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWD=
-MYSQL_DB_NAME=registry
-CONNECTION_TIMEOUT=1000000
-THREAD_OPEN_MAX=20
-PING_SPAN=60
-HOSTS_LOADING_SPAN=120
+[you can get the war from the git repo esgf-dashboard in the folder: esgf-dashboard/war]
 
-4. Check the Makefile (in particular the –L part for libraries and –I for the include files). We recommend to use the mysql_config command.
-5. Compile the C client.
-6. Run the C client.
+mv esgf-dashboard.war /usr/local/tomcat/webapps/
 
-ESGF Dashboard Portal deployment
--------------------------
-The following steps must be carried out to deploy an ESGF Dashboard instance.
-1. Install on the target machine an Apache Tomcat Server 6+ (http://tomcat.apache.org/download-60.cgi);
-2. Download the MySQL JDBC connector (http://www.mysql.com/downloads/connector/j/);
-3. Move the jar file related to the JDBC connector into the following directory: $CATALINA_BASE/lib;
-4. Add the following CONTEXT node into the HOST node of the server.xml configuration file ($CATALINA_BASE/conf folder):
+Then, copy and paste the following <Context> node at the end of the server.xml file before the tag: </Host>.
 
-<Context docBase="esgf-dashboard" path="/esgf-dashboard" reloadable="true" source="org.eclipse.jst.jee.server:esgf-dashboard">
-<Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" maxActive="100" maxIdle="30" maxWait="10000" name="jdbc/registry" password="" type="javax.sql.DataSource" url="jdbc:mysql://localhost:3306/registry?autoReconnect=true" username="root"/>
-</Context>
+<!-- to be added - start -->
+      <Context docBase="esgf-dashboard" path="/esgf-dashboard" reloadable="true" source="org.eclipse.jst.jee.server:esgf-dashboard">
+       <Resource auth="Container" driverClassName="org.postgresql.Driver" name="jdbc/esgcet" password="" type="javax.sql.DataSource" url="jdbc:postgresql://localhost/esgcet" username="postgres"/>
+      </Context> 
+<!-- to be added - stop -->
+<!-- then there should be the last closing tags of the server.xml file -->
+	</Host>
+    </Engine>
+  </Service>
+</Server>
 
-5. Check the configuration parameters in the RESOURCE node. You should not change them for a default installation.
-6. Put the war file into the $CATALINA_BASE/webapps directory.
-7. Restart tomcat:
- 
- $CATALINA_BASE/bin/shutdown.sh
- $CATALINA_BASE/bin/startup.sh
+3) ADDING POSTGRESQL JDBC JAR TO THE DASHBOARD APPLICATION
 
+wget http://193.204.199.157/postgresql-9.0-801.jdbc4.jar 
+chown tomcat:tomcat postgresql-9.0-801.jdbc4.jar 
+mv postgresql-9.0-801.jdbc4.jar /usr/local/tomcat/webapps/esgf-dashboard/WEB-INF/lib/
 
+4) RESTARTING TOMCAT
+
+5) TESTING THE DASHBOARD
+You can now test the dashboard from your browser.
+http://<data_node_FQDN>/esgf-dashboard/
+
+username= dashgadmin
+password= QQw214t=0_21
+
+6) [OPTIONAL]
+if you want to test the dashboard with "fresh" metrics, you can start the info provider (C version) 
+This piece of software will no longer run, once the related Java info provider will be finalized.
+
+as esg-user
+
+wget http://193.204.199.157/info-service.tgz
+tar xvzf info-service.tgz
+cd info-service
+
+edit and check the "config.dat" file in particular the POSTGRES_PASSWD, that is the password to connect to the esgcet database
+Then run:
+
+./info-service.sh 
+
+check if the main program is running
+ps auxww| grep main
+
+you should get something like:
+
+[root@adm06 info-service]# ps auxwww | grep main
+root     28806  0.0  0.0  77744  1672 pts/2    S    13:53   0:00 ./main
+root     28852  0.0  0.0  61180   744 pts/2    R+   13:54   0:00 grep main
+
+Then you can test the dashboard from your browser.
+http://<data_node_FQDN>/esgf-dashboard/
+
+username= dashgadmin
+password= QQw214t=0_21
+
+Please report me in case of problems with this installation guide.
