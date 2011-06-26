@@ -25,7 +25,7 @@
 			<exception-mapping result="error" exception="java.lang.Exception" />
 		</global-exception-mappings>
 	
-		<action name="Registration" class="org.esg.node.security.actions.json.RegistrationAction">
+<!--  		<action name="Registration" class="org.esg.node.security.actions.json.RegistrationAction">
 			<result type="json">
 				<param name="root">success</param>
 			</result>
@@ -35,7 +35,7 @@
 			<result name="error">
 				<param name="root">success</param>
 			</result>
-		</action>
+		</action> -->
 		
 		<action name="UsernameValidation" class="org.esg.node.security.actions.json.UsernameValidationAction">
 			<result type="json">

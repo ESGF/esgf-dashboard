@@ -28,18 +28,23 @@ public class LoginAction extends ActionSupport implements SessionAware {
 		Connection conn = null;
 		if(username.toLowerCase().equals("guest")) {
 			session.put(Constants.USER_SESSION, userSession=new UserSession(1, "guest", ""));
+			//System.out.println("guest user connection");
 			return SUCCESS;
 		}
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(SqlQuery.LOGIN.getSql());
+			//System.out.println("Other user connection");
 			stmt.setString(1, username);
-			CheckSum checkSum = new CheckSum();
-			stmt.setString(2, checkSum.getDigest(password));
+			CheckSum checkSum = new CheckSum(); // commented for test
+			stmt.setString(2, checkSum.getDigest(password)); // commented for test
+			//System.out.println("Username ="+ username);
+			//System.out.println("Password ="+password + " - CheckSum ="+checkSum.getDigest(password));
 			ResultSet rs = stmt.executeQuery();
-			if(rs.next()) 
+			if(rs.next()) {
+				//System.out.println(rs.getInt("id"));
 				session.put(Constants.USER_SESSION, userSession=new UserSession(rs.getInt("id"), rs.getString("name"), rs.getString("surname")));
-			else {
+			} else {
 				stmt.close();
 				return LOGIN;
 			}
@@ -47,6 +52,7 @@ public class LoginAction extends ActionSupport implements SessionAware {
 			stmt.close();
 			return SUCCESS;			
 		} catch(SQLException e) {
+			//System.out.println("Query failed");
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

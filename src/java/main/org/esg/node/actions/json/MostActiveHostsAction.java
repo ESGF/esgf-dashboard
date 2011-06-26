@@ -38,30 +38,62 @@ public class MostActiveHostsAction extends GridBaseAction {
 	
 	@Override
 	public String execute() throws Exception {
-		Connection conn = null;		
+		Connection conn = null;	
+		String query;
+		PreparedStatement cStmt = null;
 		try {
-			int pivot = GridBaseAction.MAP.containsKey(super.sort)? GridBaseAction.MAP.get(super.sort): 0;
+			//int pivot = GridBaseAction.MAP.containsKey(super.sort)? GridBaseAction.MAP.get(super.sort): 0;
+			int pivot= 4;
+			
 			conn = Constants.DATASOURCE.getConnection();
-			CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_MOST_ACTIVE_HOST.getSql());
-			cStmt.setInt(1, idProject);
+			//CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_MOST_ACTIVE_HOST.getSql());
+						
+			//cStmt.setInt(1, idProject);
 			Calendar c = (Calendar) super.endDateTime.clone();
-			cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
-			c.add(Calendar.MINUTE, -Constants.TIME_SPANS[pivot]);
-			cStmt.setTimestamp(2, new Timestamp(c.getTimeInMillis()));
-			cStmt.setInt(4, super.start);
-			cStmt.setInt(5, super.limit);
-			cStmt.setString(6, FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "average");
-			cStmt.setBoolean(7, super.getDir());
+			Calendar cs = (Calendar) super.endDateTime.clone();
+			
+			//cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
+			cs.add(Calendar.MINUTE, -Constants.TIME_SPANS[pivot]);
+			//cStmt.setTimestamp(2, new Timestamp(c.getTimeInMillis()));
+			//cStmt.setInt(4, super.start);
+			//cStmt.setInt(5, super.limit);
+			//cStmt.setString(6, FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "average");
+			//cStmt.setBoolean(7, super.getDir());
+			
+			query = "SELECT t.idHost, h.name, h.ip, AVG(percentage) AS average FROM (SELECT s.idHost, 100* ( SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis());
+			query = query + "') / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis());
+			query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE u.idProject=";
+			query = query + idProject;
+			query = query + " AND u.endDate IS NULL) t INNER JOIN host h ON h.id=t.idHost GROUP BY t.idHost, h.name, h.ip ORDER BY ";
+			query = query + (FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "average");
+						
+			if (super.getDir()) 
+				query = query + " ASC LIMIT ";
+			else 
+				query = query + " DESC LIMIT ";
+						
+			query = query + super.limit;
+			
+			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
+			//System.out.println("!!! MostActiveHost Query = "+query);
+			cStmt = conn.prepareStatement(query);
 			
 			ResultSet rs = cStmt.executeQuery();
+			
 			hostsList = new MostActiveHosts(numHosts);
 			List<HostActivity> hosts = new LinkedList<HostActivity>();
 			AvgHostActivity avgHostActivity = new AvgHostActivity(conn);
 			while(rs.next()) {
 				HostActivity host = new HostActivity();
 				host.setId(rs.getInt("idHost"));
-				host.setName(rs.getString("h.name"));
-				host.setIp(rs.getString("h.ip"));
+				host.setName(rs.getString("name"));
+				host.setIp(rs.getString("ip"));
 				List<Number> percentages = new ArrayList<Number>(Constants.TIME_SPANS.length);
 				for(int index = 0; index < Constants.TIME_SPANS.length; index ++)
 					percentages.add(null);
@@ -72,7 +104,7 @@ public class MostActiveHostsAction extends GridBaseAction {
 				Number temp = null;
 				for(int index = 0; index < Constants.TIME_SPANS.length; index ++)
 					if(index != pivot)
-						if((temp=avgHostActivity.getHostActivity(idProject, host.getId(), Constants.TIME_SPANS[index], super.endDateTime)) != null)
+						if((temp=avgHostActivity.getHostActivity(conn, idProject, host.getId(), Constants.TIME_SPANS[index], super.endDateTime)) != null)
 							percentages.set(index, Math.round(temp.doubleValue()*100.)/100.);
 				host.setPercentages(percentages);				
 				hosts.add(host);
@@ -81,7 +113,8 @@ public class MostActiveHostsAction extends GridBaseAction {
 			cStmt.close();
 			avgHostActivity.close();
 			hostsList.setHosts(hosts);
-		} catch(SQLException e) {e.printStackTrace();
+		} catch(SQLException e) {
+			//System.out.println("%%% MOST ACTIVE HOST ERROR ="+ e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

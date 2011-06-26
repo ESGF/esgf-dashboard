@@ -33,9 +33,9 @@
 			<result>/jsp/login.jsp</result>
 		</action>
 				
-		<action name="RegistrationPage" class="org.esg.node.security.actions.RegistrationPageAction">
+<!-- 	<action name="RegistrationPage" class="org.esg.node.security.actions.RegistrationPageAction">
 			<result>/jsp/registration.jsp</result>
-		</action>
+		</action>  -->
 		
 		<action name="UserProfile" class="org.esg.node.security.actions.UserProfileAction">
 			<interceptor-ref name="authenticatedStack" />

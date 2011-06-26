@@ -37,8 +37,10 @@ public class AvgHostActivityPieChartAction extends ActionSupport {
 			addActionError("");
 			return;
 		}
+		
 		if(timeSpan == null || timeSpan <= 0)
 			timeSpan = Integer.parseInt(getText("default.timespan"));
+		//System.out.println("NEW CONF --> Timespan "+ timeSpan);
 	}
 	
 	@Override
@@ -48,7 +50,7 @@ public class AvgHostActivityPieChartAction extends ActionSupport {
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			AvgHostActivity avgHostActivity = new AvgHostActivity(conn);
-			activity = avgHostActivity.getHostActivity(idProject, idServer, timeSpan, cF);
+			activity = avgHostActivity.getHostActivity(conn,idProject, idServer, timeSpan, cF);
 			avgHostActivity.close();
 		} catch(SQLException e) {
 			return ERROR;

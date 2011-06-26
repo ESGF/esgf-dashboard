@@ -16,7 +16,7 @@
 		<default-interceptor-ref name="authenticatedStack" />
 		
 		<global-results>
-			<result name="error">/jsp/error.jsp</result>
+		    <result name="error">/jsp/error.jsp</result> 
 			<result name="login">/index.jsp</result>
 		</global-results>
 		<global-exception-mappings>

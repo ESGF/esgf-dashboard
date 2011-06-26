@@ -66,6 +66,7 @@ public class ProjectAction extends ActionSupport implements UserAware {
 			rs.close();
 			stmt.close();
 		} catch(SQLException e) {
+			//System.out.println("Error Message ProjectAction " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

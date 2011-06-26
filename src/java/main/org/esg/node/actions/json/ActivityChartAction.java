@@ -26,17 +26,18 @@ public class ActivityChartAction extends ChartBaseAction {
 	private Long labelStep = null;
 	private Boolean onOff = null;
 	private ServiceStatus[] STATI = null;
-	private String QUERY = null;
+	//private String QUERY = null;
+	private String TYPEQUERY = null;
 	
 	@Override
 	public void validate() {
 		super.validate();
 		if(onOff != null && onOff) {
 			STATI = Constants.STATI_ON_OFF;
-			QUERY = SqlQuery.SP_ACTIVITY_CHART_ON_OFF.getSql();
+			TYPEQUERY = "SP_ACTIVITY_CHART_ON_OFF";
 		} else {
 			STATI = Constants.STATI;
-			QUERY = SqlQuery.SP_ACTIVITY_CHART.getSql();
+			TYPEQUERY = "SP_ACTIVITY_CHART";
 		}
 	}
 	
@@ -44,22 +45,75 @@ public class ActivityChartAction extends ChartBaseAction {
 	@Override
 	public String execute() throws Exception {		
 		Connection conn = null;
+		PreparedStatement cStmt = null;
+		String query;
+		String query2;
+		
 		MyBarsList values[] = new MyBarsList[STATI.length];
 		for(byte i = 0; i < STATI.length; i ++)
 			values[i] = new MyBarsList();
 		try {
 			conn = Constants.DATASOURCE.getConnection();	
 			step = (super.cF.getTimeInMillis() - super.cI.getTimeInMillis())/1000;
-			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // arrotondo sempre per eccesso
-			CallableStatement cStmt = conn.prepareCall(QUERY);
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
+			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // round up
+			//CallableStatement cStmt = conn.prepareCall(QUERY);
+			
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
 
-			boolean hadResults = cStmt.execute();
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
+			//boolean hadResults = cStmt.execute();
+			//while(hadResults) 
+			Calendar c = (Calendar) (super.cI.clone());
+			
+		if (step>0) {		
+			while ((c.getTimeInMillis()) < (super.cF.getTimeInMillis())) {
+					  
+				//ResultSet rs = cStmt.getResultSet();
+				query="";
+				query2="";
+				if (TYPEQUERY=="SP_ACTIVITY_CHART") {
+					query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+					query = query + super.idServiceInstance;
+					query = query + " AND timestamp between '";
+					query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+					c.add(Calendar.SECOND, step.intValue());
+					query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
+				}
+				if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
+					query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+					query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+					query = query + super.idServiceInstance;
+					query2 = query2 + super.idServiceInstance;
+					query = query + " AND timestamp between '";
+					query2= query2 + " AND timestamp between '";
+					query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+					query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND '";
+					c.add(Calendar.SECOND, step.intValue());
+					query = query + new Timestamp(c.getTimeInMillis()) + "' AND status=1) UNION ";
+					query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND status<>1)";
+					query = query+query2;
+				}
+				//System.out.println(TYPEQUERY + "|-> ActivityChartAction Query = "+ query);
+				
+			   	//SELECT `status`*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=id AND `timestamp` between position AND position+INTERVAL step second GROUP BY `status`;
+			   	
+			   	     /* (
+                        SELECT 1 as status, count(*) as hitCount FROM service_status
+                        WHERE idServiceInstance=id AND `timestamp` between position AND position+INTERVAL step second
+                        AND status=1
+                      )
+                      UNION
+                      (
+                        SELECT -1 as status, count(*) as hitCount FROM service_status
+                        WHERE idServiceInstance=id AND `timestamp` between position AND position+INTERVAL step second
+                        AND status<>1
+                      );*/
+			   			
+				cStmt = conn.prepareStatement(query);
+				ResultSet rs = cStmt.executeQuery();
+				
 				long totale = 0L;
 				Bar[] barre = new Bar[STATI.length];
 				for(byte i = 0; i < STATI.length; i ++) 
@@ -81,8 +135,9 @@ public class ActivityChartAction extends ChartBaseAction {
 					values[i].add(null);
 					values[i].add(barre[i]);
 				}
-				hadResults = cStmt.getMoreResults(); 
-			}
+				//hadResults = cStmt.getMoreResults(); 
+			} //endwhile
+		} //endif
 			cStmt.close();
 		} catch(SQLException e) { 
 			return ERROR; 
@@ -148,6 +203,9 @@ public class ActivityChartAction extends ChartBaseAction {
 
 	private MyDotsList[] getDots() throws Exception {
 		Connection conn = null;
+		PreparedStatement cStmt = null;
+		String query;
+		String query2;
 		MyDotsList[] values = new MyDotsList[STATI.length];
 		try {
 			conn = Constants.DATASOURCE.getConnection();
@@ -160,18 +218,54 @@ public class ActivityChartAction extends ChartBaseAction {
 			for(byte i = 0; i < STATI.length; i ++)
 				values[i] = new MyDotsList();
 
-			CallableStatement cStmt = conn.prepareCall(QUERY);
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
+			//CallableStatement cStmt = conn.prepareCall(QUERY);
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
 			
 			Calendar c = (Calendar) cI.clone();
 			c.add(Calendar.SECOND, step.intValue()/2);
-			boolean hadResults = cStmt.execute();
+			
+			//boolean hadResults = cStmt.execute();
 			int index = 1;
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
+			
+			if (step>0) {		
+				while (c.getTimeInMillis() < super.cF.getTimeInMillis()) {
+						  
+					//ResultSet rs = cStmt.getResultSet();
+					query="";
+					query2="";
+					if (TYPEQUERY=="SP_ACTIVITY_CHART") {
+						query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = query + super.idServiceInstance;
+						query = query + " AND timestamp between '";
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						c.add(Calendar.SECOND, step.intValue());
+						query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
+					}
+					if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
+						query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = query + super.idServiceInstance;
+						query2 = query2 + super.idServiceInstance;
+						query = query + " AND timestamp between '";
+						query2= query2 + " AND timestamp between '";
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						c.add(Calendar.SECOND, step.intValue());
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND status=1) UNION ";
+						query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND status<>1)";
+						query = query+query2;
+					}
+					//System.out.println(TYPEQUERY + "|-> ActivityChartAction Query = "+ query);
+				   			
+					cStmt = conn.prepareStatement(query);
+					ResultSet rs = cStmt.executeQuery();
+			
+			
+			//while(hadResults) {
+				//ResultSet rs = cStmt.getResultSet();
 				long totale = 0L;
 				
 				Dot[] punti = new Dot[STATI.length];
@@ -183,7 +277,7 @@ public class ActivityChartAction extends ChartBaseAction {
 					punti[i].setX(c.getTimeInMillis()/1000);
 				}
 				index += 2;
-				c.add(Calendar.SECOND, step.intValue());
+//				c.add(Calendar.SECOND, step.intValue());
 				
 				while(rs.next()) {
 					totale += rs.getLong("hitCount");
@@ -200,8 +294,9 @@ public class ActivityChartAction extends ChartBaseAction {
 						punti[i].setTooltip(getText("chart.defaultUnknownValue"));
 					values[i].add(punti[i]);
 				}
-				hadResults = cStmt.getMoreResults(); 
-			}
+				//hadResults = cStmt.getMoreResults(); 
+			} //end while
+			}// endif	
 			cStmt.close();
 		} catch(SQLException e) { 
 			throw new Exception(); 
@@ -349,19 +444,62 @@ public class ActivityChartAction extends ChartBaseAction {
 	// build a stack chart
 	public String execute3() throws Exception {
 		Connection conn = null;
+		String query;
+		String query2;
+		PreparedStatement cStmt = null;
+		
 		List<StackBar[]> values = new LinkedList<StackBar[]>();
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			step = (cF.getTimeInMillis() - cI.getTimeInMillis())/1000;
 			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // arrotondo sempre per eccesso
-			CallableStatement cStmt = conn.prepareCall(QUERY);
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
-			boolean hadResults = cStmt.execute();
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
+			
+			
+			//CallableStatement cStmt = conn.prepareCall(QUERY);
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
+			//boolean hadResults = cStmt.execute();
+			
+			//while(hadResults) {
+				//ResultSet rs = cStmt.getResultSet();
+			Calendar c = (Calendar) (super.cI.clone());
+			
+			if (step>0) {		
+				while (c.getTimeInMillis() < super.cF.getTimeInMillis()) {
+						  
+					//ResultSet rs = cStmt.getResultSet();
+					query="";
+					query2="";
+					if (TYPEQUERY=="SP_ACTIVITY_CHART") {
+						query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = query + super.idServiceInstance;
+						query = query + " AND timestamp between '";
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						c.add(Calendar.SECOND, step.intValue());
+						query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
+					}
+					if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
+						query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = query + super.idServiceInstance;
+						query2 = query2 + super.idServiceInstance;
+						query = query + " AND timestamp between '";
+						query2= query2 + " AND timestamp between '";
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND '";
+						c.add(Calendar.SECOND, step.intValue());
+						query = query + new Timestamp(c.getTimeInMillis()) + "' AND status=1) UNION ";
+						query2 = query2 + new Timestamp(c.getTimeInMillis()) + "' AND status<>1)";
+						query = query+query2;
+					}
+					//System.out.println(TYPEQUERY + "|-> ActivityChartAction Query = "+ query);
+				   			
+					cStmt = conn.prepareStatement(query);
+					ResultSet rs = cStmt.executeQuery();
+			
+			
 				long totale = 0L;
 				StackBar[] barre = new StackBar[STATI.length];
 				for(byte i = 0; i < STATI.length; i ++) {
@@ -387,8 +525,9 @@ public class ActivityChartAction extends ChartBaseAction {
 				}
 				values.add(null);
 				values.add(barre);
-				hadResults = cStmt.getMoreResults(); 
-			}
+				//hadResults = cStmt.getMoreResults(); 
+			} //endwhile
+			} //endif	
 			cStmt.close();
 		} catch(SQLException e) { 
 			return ERROR;

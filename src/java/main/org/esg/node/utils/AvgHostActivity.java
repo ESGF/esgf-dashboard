@@ -5,10 +5,17 @@ import java.util.Calendar;
 
 public class AvgHostActivity {
 	
-	private CallableStatement cStmt = null;
+	//private CallableStatement cStmt = null;
+	private PreparedStatement cStmt = null;
 	
 	public AvgHostActivity(Connection conn) throws SQLException {
-		 cStmt = conn.prepareCall(SqlQuery.SP_AVG_HOST_ACTIVITY.getSql());		 
+		//System.out.println("Start Constructor - AvgHostActivity");		
+		// try {
+			 //cStmt = conn.prepareCall(SqlQuery.SP_AVG_HOST_ACTIVITY.getSql());
+	    //} catch(SQLException e) {
+		//		System.out.println("Error Message AvgHostActivity " + e.getMessage());
+		//	}
+	   //System.out.println("End Constructor - AvgHostActivity");
 	}
 	
 	/**
@@ -19,23 +26,49 @@ public class AvgHostActivity {
 	 * @return last timeSpan minutes host activity 
 	 * @throws SQLException
 	 */
-	public Number getHostActivity(Integer idProject, Integer idHost, Integer timeSpan, Calendar endDate) throws SQLException {
+	public Number getHostActivity(Connection conn, Integer idProject, Integer idHost, Integer timeSpan, Calendar endDate) throws SQLException {
 		ResultSet rs = null;
+		
 		try {
-			cStmt.clearParameters();
-			if(idProject == null)
-				cStmt.setNull(1, Types.INTEGER);
-			else
-				cStmt.setInt(1, idProject);
-			cStmt.setInt(2, idHost);
+			String query;
+			//System.out.println("getHostActivity1");
+			//cStmt.clearParameters();
+			//if(idProject == null)
+			//	cStmt.setNull(1, Types.INTEGER);
+			//else
+			//	cStmt.setInt(1, idProject);
+			//cStmt.setInt(2, idHost);
 			Calendar c = (Calendar) (endDate==null? Calendar.getInstance(): endDate.clone());
-			cStmt.setTimestamp(4, new Timestamp(c.getTimeInMillis()));
-			c.add(Calendar.MINUTE, -timeSpan);
-			cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
+			//cStmt.setTimestamp(4, new Timestamp(c.getTimeInMillis()));
+		
+			Calendar cs = (Calendar) (endDate==null? Calendar.getInstance(): endDate.clone());
+			cs.add(Calendar.MINUTE, -timeSpan);
+			
+			//cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
+			query = "SELECT AVG(percentage) as average FROM (SELECT 100* (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis());
+			query = query + "' ) / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '" ;
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis());
+			query = query + "')  AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
+			query = query + idHost;
+			if (idProject != null)
+		    {
+				query = query + " AND u.idProject=";
+				query = query + idProject;
+			}	
+			query = query + " AND u.endDate IS NULL) t";
+			//System.out.println("%%% AVG HOST ACTIVITY ="+ query);
+			cStmt = conn.prepareStatement(query);
+			
 			try {
 				rs = cStmt.executeQuery();
 			} catch(SQLException e) {
-				return null;
+				//System.out.println("Error Message getHostActivity " + e.getMessage());
+				return null; 
 			}
 			if(rs.next())
 				return rs.getBigDecimal("average");

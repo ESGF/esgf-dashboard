@@ -2,6 +2,7 @@ package org.esg.node.actions.json;
 
 import java.sql.*;
 import java.util.*;
+
 import org.esg.node.beans.RTTAvgAndStdDev;
 import org.esg.node.actions.base.ChartBaseAction;
 import org.esg.node.utils.*;
@@ -44,21 +45,42 @@ public class RTTChartAction extends ChartBaseAction {
 	@Override
 	public String execute() throws Exception {
 		Connection conn = null;
+		PreparedStatement cStmt = null;
+		String query;
 		MyBarsList values = new MyBarsList();
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			step = (super.cF.getTimeInMillis() - super.cI.getTimeInMillis())/1000;
 			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // arrotondo sempre per eccesso
 			
-			CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_RTT_CHART.getSql());
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
+			//CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_RTT_CHART.getSql());
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
 
-			boolean hadResults = cStmt.execute();
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
+			//boolean hadResults = cStmt.execute();
+			//while(hadResults) {
+			
+			Calendar c = (Calendar) cI.clone();
+			
+			if (step>0) {
+				while (c.getTimeInMillis() < cF.getTimeInMillis()) {
+					
+				query = "SELECT AVG(elapsedTime) as avgRtt FROM service_status WHERE idServiceInstance=";
+				query = query + super.idServiceInstance;
+				query = query + " AND timestamp between '";
+				query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+				
+				c.add(Calendar.SECOND, step.intValue());
+				
+			    query = query + new Timestamp(c.getTimeInMillis()) +"'";
+			    //System.out.println("|||->>> RTTTableAction Query = "+query);
+
+			    cStmt = conn.prepareStatement(query);
+				ResultSet rs = cStmt.executeQuery();
+
+				//ResultSet rs = cStmt.getResultSet();
 				values.add(null);
 				if(rs.next() && rs.getBigDecimal("avgRtt") != null) {
 					double val = rs.getBigDecimal("avgRtt").doubleValue();
@@ -66,7 +88,8 @@ public class RTTChartAction extends ChartBaseAction {
 					if(val > max) max = val;
 				}
 				else values.add(new Bar(0., null, null, getText("chart.defaultUnknownValue")));			
-				hadResults = cStmt.getMoreResults(); 
+				//hadResults = cStmt.getMoreResults(); 
+			}
 			}
 			cStmt.close();
 			rttAvgAndStdDev = getRTTAvgAndStdDev(conn);	
@@ -139,28 +162,47 @@ public class RTTChartAction extends ChartBaseAction {
 	private MyDotsList getDots() throws Exception {
 		Connection conn = null;
 		MyDotsList values = new MyDotsList();
+		PreparedStatement cStmt = null;
+		String query;
 
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			step = (super.cF.getTimeInMillis() - super.cI.getTimeInMillis())/1000;
 			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // arrotondo sempre per eccesso
 			
-			CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_RTT_CHART.getSql());
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
+			//CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_RTT_CHART.getSql());
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
 			
 			Calendar c = Calendar.getInstance();
 			c.setTimeInMillis(super.cI.getTimeInMillis());
 			c.add(Calendar.SECOND, step.intValue()/2);
 			
-			boolean hadResults = cStmt.execute();
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
+			//boolean hadResults = cStmt.execute();
+			//while(hadResults) {
+			if (step>0) {
+				while (c.getTimeInMillis() < cF.getTimeInMillis()) {
+			
+				//ResultSet rs = cStmt.getResultSet();
 				Dot dot = new Dot();
 				
+				query = "SELECT AVG(elapsedTime) as avgRtt FROM service_status WHERE idServiceInstance=";
+				query = query + super.idServiceInstance;
+			    query = query + " AND timestamp between '";
+				query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+				
 				dot.setX(c.getTimeInMillis()/1000);
+				
+				c.add(Calendar.SECOND, step.intValue());
+				
+			    query = query + new Timestamp(c.getTimeInMillis()) +"'";
+			    //System.out.println("|||->>> RTTChartAction Query = "+query);
+
+			    cStmt = conn.prepareStatement(query);
+				ResultSet rs = cStmt.executeQuery();
+				
 				if(rs.next() && rs.getBigDecimal("avgRtt") != null) {
 					double val = rs.getBigDecimal("avgRtt").doubleValue();
 					dot.setY(val/1000.);
@@ -168,9 +210,10 @@ public class RTTChartAction extends ChartBaseAction {
 				}
 				else { dot.setY(0); dot.setTooltip(getText("chart.defaultUnknownValue")); }
 				values.add(dot);
-				c.add(Calendar.SECOND, step.intValue());
-				hadResults = cStmt.getMoreResults(); 
-			}
+				//c.add(Calendar.SECOND, step.intValue());
+				//hadResults = cStmt.getMoreResults(); 
+			}//endwhile
+			}//endif
 			cStmt.close();
 			rttAvgAndStdDev = getRTTAvgAndStdDev(conn);
 		} catch(SQLException e) { 

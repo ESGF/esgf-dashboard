@@ -43,11 +43,12 @@ public class OpendapRegistryAction extends ActionSupport implements UserAware {
 			rs = stmt.executeQuery();
 			services = new LinkedList<NodeExtension>();
 			while(rs.next()) 
-				services.add(new NodeExtension(rs.getInt("o.id"), rs.getString("h.name"), rs.getString("h.ip"), rs.getInt("s.port"), rs.getString("o.url")));
+				services.add(new NodeExtension(rs.getInt("id"), rs.getString("name"), rs.getString("ip"), rs.getInt("port"), rs.getString("url")));
 			
 			rs.close();
 			stmt.close();
 		} catch(SQLException e) {
+			//System.out.println("Error Message OpendapBrowser " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

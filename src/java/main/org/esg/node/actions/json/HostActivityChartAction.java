@@ -2,6 +2,7 @@ package org.esg.node.actions.json;
 
 import org.esg.node.utils.*;
 import java.sql.*;
+
 import com.opensymphony.xwork2.ActionSupport;
 import org.esg.node.chart.*;
 import java.util.*;
@@ -53,25 +54,62 @@ public class HostActivityChartAction extends ActionSupport {
 	@Override
 	public String execute() throws Exception{
 		Connection conn = null;
+		PreparedStatement cStmt = null;
+		String query;
+		
 		String[] date = new String[2];
 		try {
 			conn = Constants.DATASOURCE.getConnection();
-			CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_HOST_ACTIVITY_CHART.getSql());
-			if(idProject == null)
-				cStmt.setNull(1, Types.INTEGER);
-			else
-				cStmt.setInt(1, idProject);
-			cStmt.setInt(2, idServer);
+			//CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_HOST_ACTIVITY_CHART.getSql());
+			//if(idProject == null)
+			//	cStmt.setNull(1, Types.INTEGER);
+			//else
+			//	cStmt.setInt(1, idProject);
+			//cStmt.setInt(2, idServer);
 			DateFormat formatter = new DateFormat(getLocale().getLanguage());
-			Calendar c = endDateTime==null? Calendar.getInstance(): endDateTime;
+			Calendar c = (Calendar) (endDateTime==null? Calendar.getInstance(): endDateTime.clone());
+			Calendar cs =(Calendar) (endDateTime==null? Calendar.getInstance(): endDateTime.clone());
+			cs.add(Calendar.MINUTE, -timeSpan);
+			//System.out.println("Timespan Minutes: " + timeSpan);
+			//System.out.println("GettimeMillis "+ cs.getTimeInMillis() + " " + c.getTimeInMillis());
+			
 			date[1] = formatter.formatDateTime(c);
-			cStmt.setTimestamp(4, new Timestamp(c.getTimeInMillis()));
-			c.add(Calendar.MINUTE, -timeSpan);
-			date[0] = formatter.formatDateTime(c);
-			cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
-			cStmt.setInt(5, start);
-			cStmt.setInt(6, limit);
-			boolean hadResults = cStmt.execute();
+			
+			//cStmt.setTimestamp(4, new Timestamp(c.getTimeInMillis()));
+			
+			
+			date[0] = formatter.formatDateTime(cs);
+			//cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
+			
+			//cStmt.setInt(5, start);
+			//cStmt.setInt(6, limit);
+			
+			query = "SELECT s.id, s.name, 100* (  SELECT COUNT(*)  FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis());
+			query = query + "') / ( SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + new Timestamp(cs.getTimeInMillis());
+			query = query + "' AND '";
+			query = query + new Timestamp(c.getTimeInMillis()); 
+			
+			if(idProject == null)
+				query = query + "') AS percentage FROM service_instance s WHERE s.idHost=";
+			else
+				query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
+			
+			query = query + idServer;
+			
+			if (idProject == null)
+				query = query + " ORDER BY s.name LIMIT " + limit;
+			else
+				query = query + " AND u.idProject=" + idProject + " AND u.endDate IS NULL ORDER BY s.name LIMIT " + limit;
+				
+			//System.out.println("HostActivityChartAction ="+ query);
+			cStmt = conn.prepareStatement(query);
+			
+			//boolean hadResults = cStmt.execute();
+			ResultSet rs = cStmt.executeQuery();
 			
 			horizontalBarChart = new HorizontalBarChart();
 			List<ElementHBar> elements = new LinkedList<ElementHBar>();
@@ -80,10 +118,10 @@ public class HostActivityChartAction extends ActionSupport {
 			YAxis yAxis = new YAxis(null, null, 1, true);
 			yAxis.setGrid_colour(getText("chart.defaultGridColor"));
 			ArrayDeque<String> labels = new ArrayDeque<String>();
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
-				while(rs.next()) {
-					labels.addFirst(rs.getString("s.name"));
+			//while(hadResults) {
+			//	ResultSet rs = cStmt.getResultSet();
+			while(rs.next()) {
+					labels.addFirst(rs.getString("name"));
 					HBar hBar = new HBar(0, rs.getBigDecimal("percentage"));
 					values.add(hBar);
 					if(rs.getBigDecimal("percentage") == null) {
@@ -106,9 +144,9 @@ public class HostActivityChartAction extends ActionSupport {
 						colour = "#ff" + hex;
 					}
 					hBar.setColour(colour + "00");
-				}
-				hadResults = cStmt.getMoreResults();
-			}
+				} //endwhile
+			//	hadResults = cStmt.getMoreResults();
+			//}
 			cStmt.close();
 			element.setTooltip("#val#%");
 			element.setAlpha(1);
@@ -118,7 +156,8 @@ public class HostActivityChartAction extends ActionSupport {
 			element.setValues(values);
 			elements.add(element);
 			horizontalBarChart.setElements(elements);
-		} catch(SQLException e) {			
+		} catch(SQLException e) {
+			//System.out.println("Error Message HostActivityCharAction  " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

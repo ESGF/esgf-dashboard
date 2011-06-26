@@ -23,9 +23,9 @@
 			<result name="login">/homepage/home.jsp</result>
 		</action>
 				
-		<action name="Captcha">
+<!--	<action name="Captcha">
     		<result>/simpleImg</result>
-    	</action>
+    	</action> -->
 	</package>
 
 	<include file="org/esg/node/actions/publicActions.xml" />

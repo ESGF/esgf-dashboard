@@ -48,11 +48,11 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 			DateFormat formatter = new DateFormat(getLocale().getLanguage());
 			while(rs1.next()) {
 				TreeNode project = new TreeNode();
-				project.setMyObject(rs1.getInt("p.id"));
-				project.setText(rs1.getString("p.name"));
+				project.setMyObject(rs1.getInt("id"));
+				project.setText(rs1.getString("name"));
 				project.setExpanded(false);
 				project.setCls("treeProject");
-				Timestamp d = rs1.getTimestamp("p.endDate");
+				Timestamp d = rs1.getTimestamp("endDate");
 				if(d == null) 
 					project.setIconCls("treeProjectYesIcon");
 				else {
@@ -63,14 +63,14 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 					project.setQtip(getText("treeNode.project.quickTip.text", "End Date: {0}", new String[] { formatter.formatDate(endDate) }));
 				}
 				stmt2.clearParameters();
-				stmt2.setInt(1, rs1.getInt("p.id"));
+				stmt2.setInt(1, rs1.getInt("id"));
 				ResultSet rs2 = stmt2.executeQuery();
 				List<TreeNode> servers = new LinkedList<TreeNode>();				
 				while(rs2.next()) {
 					TreeNode server = new TreeNode();
-					server.setMyObject(rs2.getInt("h.id"));
+					server.setMyObject(rs2.getInt("id"));
 					server.setLeaf(true);
-					String name = rs2.getString("h.name")==null? rs2.getString("h.ip"): rs2.getString("h.name");
+					String name = rs2.getString("name")==null? rs2.getString("ip"): rs2.getString("name");
 					/*
 					Number activity = avgHostActivity.getHostActivity((Integer)project.getMyObject(), (Integer)server.getMyObject(), timeSpan, endDateTime);
 					String value = getText("treeNode.server.activity.text.unknown", "Unknown");
@@ -84,7 +84,7 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 				}
 				rs2.close();
 				stmt4.clearParameters();
-				stmt4.setInt(1, rs1.getInt("p.id"));
+				stmt4.setInt(1, rs1.getInt("id"));
 				ResultSet rs4 = stmt4.executeQuery();
 				if(rs4.next()) {
 					TreeNode registry = new TreeNode();
@@ -104,6 +104,7 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 			stmt1.close();
 			// avgHostActivity.close();			
 		} catch(SQLException e) {
+			//System.out.println("Error MessageProjectTreeAction " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

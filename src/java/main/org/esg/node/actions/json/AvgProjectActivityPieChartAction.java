@@ -50,13 +50,14 @@ public class AvgProjectActivityPieChartAction extends ActionSupport {
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			AvgProjectActivity avgProjectActivity = new AvgProjectActivity(conn);			
-			activity = avgProjectActivity.getProjectActivity(idProject, cI, cF);
+			activity = avgProjectActivity.getProjectActivity(conn,idProject, cI, cF);
 			avgProjectActivity.close();
 		} catch(SQLException e) {
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();
 		}
+		
 		
 		pieChart = new PieChart();
 		DateFormat formatter = new DateFormat(getLocale().getLanguage());
@@ -111,8 +112,10 @@ public class AvgProjectActivityPieChartAction extends ActionSupport {
 			conn = Constants.DATASOURCE.getConnection();
 			AvgProjectActivity avgProjectActivity = new AvgProjectActivity(conn);
 			for(byte i = 0; i < status.length; i ++)
-				if((values[i] = avgProjectActivity.getProjectStatus(idProject, cI, cF, status[i].getValue())) != null)
+				if((values[i] = avgProjectActivity.getProjectStatus(conn,idProject, cI, cF, status[i].getValue())) != null) {
 					total += values[i].doubleValue();
+					//System.out.println("status "+ status[i].getValue() + "value "+ values[i].doubleValue());
+				}
 			avgProjectActivity.close();
 		} catch(SQLException e) {
 			return ERROR;

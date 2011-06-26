@@ -45,13 +45,13 @@ public class ServerAction extends ActionSupport implements UserAware {
 			if(rs.next()) {
 				server = new Host();
 				server.setId(idServer);
-				server.setIp(rs.getString("h.ip"));
-				server.setName(rs.getString("h.name"));
-				server.setCity(rs.getString("h.city"));
-				server.setLatitude(rs.getBigDecimal("h.latitude"));
-				server.setLongitude(rs.getBigDecimal("h.longitude"));
+				server.setIp(rs.getString("ip"));
+				server.setName(rs.getString("name"));
+				server.setCity(rs.getString("city"));
+				server.setLatitude(rs.getBigDecimal("latitude"));
+				server.setLongitude(rs.getBigDecimal("longitude"));
 				server.setNumInstances(rs.getInt("numInstances"));
-				server.setProjectName(rs.getString("p.name"));
+				server.setProjectName(rs.getString("name"));
 			}
 			else return ERROR;
 			rs.close();
@@ -64,20 +64,20 @@ public class ServerAction extends ActionSupport implements UserAware {
 			List<ServiceInstance> services = new LinkedList<ServiceInstance>();
 			while(rs.next()) {
 				ServiceInstance service = new ServiceInstance();
-				service.setId(rs.getInt("s.id"));
-				service.setPort(rs.getInt("s.port"));
-				service.setName(rs.getString("s.name"));
-				service.setMailAdmin(rs.getString("s.mail_admin"));
-				service.setInstitution(rs.getString("s.institution"));
+				service.setId(rs.getInt("id"));
+				service.setPort(rs.getInt("port"));
+				service.setName(rs.getString("name"));
+				service.setMailAdmin(rs.getString("mail_admin"));
+				service.setInstitution(rs.getString("institution"));
 				DateFormat formatter = new DateFormat(getLocale().getLanguage());
 				Calendar c = Calendar.getInstance();
 				c.clear();
-				c.setTimeInMillis(rs.getTimestamp("u.startDate").getTime());
+				c.setTimeInMillis(rs.getTimestamp("startDate").getTime());
 				service.setStartDate(formatter.formatDate(c));
 				service.setStartTime(formatter.formatTime(c));
-				if(rs.getTimestamp("u.endDate") != null) {
+				if(rs.getTimestamp("endDate") != null) {
 					c.clear();
-					c.setTimeInMillis(rs.getTimestamp("u.endDate").getTime());
+					c.setTimeInMillis(rs.getTimestamp("endDate").getTime());
 					service.setEndDate(formatter.formatDate(c));
 					service.setEndTime(formatter.formatTime(c));
 				}
@@ -100,6 +100,7 @@ public class ServerAction extends ActionSupport implements UserAware {
 			stmt.close();
 			server.setServices(services);
 		} catch(SQLException e) {
+			//System.out.println("Error Message ServerAction " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

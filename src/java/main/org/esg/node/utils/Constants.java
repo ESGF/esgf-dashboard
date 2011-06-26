@@ -9,7 +9,7 @@ import javax.sql.DataSource;
  */
 public abstract class Constants { 
 	
-	private final static String DATASOURCE_NAME = "java:/comp/env/jdbc/registry";
+	private final static String DATASOURCE_NAME = "java:/comp/env/jdbc/esgcet";
 	/**
 	 * as microseconds
 	 */

@@ -48,16 +48,16 @@
 
 	var northPanel = new Ext.Panel({
 		region: "north",
-		//height: 163,
-		autoHeight: true,
+		//height: 163,	 // formerly disabled 	 
+		autoHeight: true,// formerly enabled // autoHeight: true,
 		layout: 'fit',
 		//layout: "border",		
 		items: [
 		     new Ext.Panel({		    	 
 		    //	 region: "north",
 		    	 frame: true,
-		    	 //height: 125,
-		    	 autoHeight: true,		    	 
+		    	 //height: 125,	//formerly disabled
+		    	 autoHeight: true,	// formerly enabled	    	 
 		    	 contentEl: "northEl"		    	 
 		     }),
 		     new Ext.Panel({

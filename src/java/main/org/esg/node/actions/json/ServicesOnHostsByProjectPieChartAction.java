@@ -35,11 +35,12 @@ public class ServicesOnHostsByProjectPieChartAction extends ActionSupport {
 			conn = Constants.DATASOURCE.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(SqlQuery.SERVICES_ON_HOSTS_BY_PROJECT.getSql());
 			stmt.setInt(1, idProject);
+		
 			ResultSet rs = stmt.executeQuery();
 			
 			while(rs.next()) {
-				String name = rs.getString("h.name")==null? rs.getString("h.ip"): rs.getString("h.name");
-				int count = rs.getInt("t.conteggio");
+				String name = rs.getString("name")==null? rs.getString("ip"): rs.getString("name");
+				int count = rs.getInt("conteggio");
 				Slice slice = new Slice();
 				slice.setLabel(name + "[" + count + "]");
 				slice.setTooltip(name + "\n" + count + " running services");

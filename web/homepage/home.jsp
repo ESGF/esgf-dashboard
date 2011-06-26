@@ -106,12 +106,13 @@
 						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 						<div class="content" style="height: 29em;">
 						
-							<center>
+							<!-- <center>
 								<s:a action="RegistrationPage" namespace="/secure" title="Register for an account on ESGF Dashboard" cssClass="register_button" onclick="alert('This functionality will be available soon'); return false;"/>
-							</center>
-							<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
-								<b>or Login:</b>
+							</center> -->  
+						    <p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
+								<b><!-- or --> Login:</b>
 							</p>
+							
 							<div id="login">
 								<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 								<div class="login">
@@ -162,7 +163,7 @@
 								<div id="hd" class="frontpage_header">
 									<!-- <img alt="Logo" src="img/title.png" class="logo"> -->
 									<div class="text">
-									  ESGF Dashboard: an easy way to find, use and share scientific data  following a community-based approach
+									  ESGF Dashboard: text to be added max three rows of text.
 									</div>
 									<div class="clearer">&nbsp;</div>
 								</div>									
@@ -181,8 +182,7 @@
 								About
 							</p>
 							<p>
-								ESGF Dashboard is a data-oriented community-based environment.
-								It allows people to share geographically spread scientific data.
+								ESGF Dashboard is a ....
 							</p>
 							<p>
 								You need to be a registered user to get access to the full ESGF Dashboard features.

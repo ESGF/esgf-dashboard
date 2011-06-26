@@ -27,10 +27,14 @@ public class ActivityTableAction extends ChartBaseAction {
 	@Override
 	public String execute() throws Exception {
 		Connection conn = null;
+		PreparedStatement cStmt = null;
+		String query;
+		//boolean hadResults;
+		//System.out.println("Activity Table Action start!!!!");
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			Long step = (super.cF.getTimeInMillis() - super.cI.getTimeInMillis()) / 1000;
-			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // arrotondo sempre per eccesso
+			step =  step / super.spansNumber + (step%super.spansNumber == 0L? 0: 1); // round up 
 			
 			cI.add(Calendar.SECOND, (int) (start*step));
 			Calendar c = null;
@@ -42,20 +46,45 @@ public class ActivityTableAction extends ChartBaseAction {
 				cF = c;
 			DateFormat formatter = new DateFormat(getLocale().getLanguage());
 			table = new ActivityTable();
+			
 			List<ActivityRecord> activityRecords = new LinkedList<ActivityRecord>();
-			CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_ACTIVITY_CHART.getSql());
-			cStmt.setInt(1, super.idServiceInstance);
-			cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
-			cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
-			cStmt.setLong(4, step);
+			
+			//CallableStatement cStmt = conn.prepareCall(SqlQuery.SP_ACTIVITY_CHART.getSql());
+			
+			//cStmt.setInt(1, super.idServiceInstance);
+			//cStmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
+			//cStmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			//cStmt.setLong(4, step);
+						
+			/*`attivitaServizio`(IN id INTEGER, IN startDate DATETIME, IN endDate DATETIME, IN step LONG)
+			
+			DECLARE position DATETIME;
+
+	        SET position = startDate;
+
+	        IF step>0 THEN
+	                WHILE position < endDate DO
+	                        SELECT `status`*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=id AND `timestamp` between position AND position+INTERVAL step second GROUP BY `status`;
+	                SET position = position + INTERVAL step second;
+	                END WHILE;
+	        END IF;*/
 			
 			c = (Calendar) cI.clone();
-			boolean hadResults = cStmt.execute();
+			
 			boolean fullTime = step < 60;
-			while(hadResults) {
-				ResultSet rs = cStmt.getResultSet();
-				long totale = 0L;
+			//while(hadResults) {
+			if (step>0) {
 				
+			  while (c.getTimeInMillis() < cF.getTimeInMillis()) {
+				
+				query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+				query = query + super.idServiceInstance;
+				query = query + " AND timestamp between '";
+			    query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
+			   	//System.out.println("c.getTimeMillis = " + c.getTimeInMillis());		
+				//hadResults = cStmt.execute();
+				//ResultSet rs = cStmt.getResultSet();
+				long totale = 0L;				
 				ActivityRecord record = new ActivityRecord();
 				List<Number> percentages = new ArrayList<Number>(Constants.STATI_LENGTH);
 				for(int i = 0; i < Constants.STATI_LENGTH; i ++)
@@ -66,6 +95,12 @@ public class ActivityTableAction extends ChartBaseAction {
 				record.setEndDate(formatter.formatDate(c));
 				record.setEndTime(formatter.formatTime(c, fullTime));
 				
+			    query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
+			    //System.out.println("|||->>> ActivityTableAction Query = "+query);
+
+			    cStmt = conn.prepareStatement(query);
+				ResultSet rs = cStmt.executeQuery();
+			    
 				while(rs.next()) {
 					totale += rs.getLong("hitCount");
 					for(int i = 0; i < Constants.STATI_LENGTH; i ++)
@@ -80,8 +115,10 @@ public class ActivityTableAction extends ChartBaseAction {
 					else percentages.set(i, null);
 				record.setValues(percentages);
 				activityRecords.add(record);
-				hadResults = cStmt.getMoreResults(); 
+				//hadResults = cStmt.getMoreResults(); 				
+			  }
 			}
+			
 			cStmt.close();
 			table.setActivityRecords(activityRecords);
 			table.setTotalCount(super.spansNumber);

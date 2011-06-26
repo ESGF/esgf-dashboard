@@ -28,8 +28,8 @@ public class NewsAction extends ActionSupport {
 		try {
 			conn = Constants.DATASOURCE.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(SqlQuery.NEWS.getSql());
-			stmt.setInt(1, start);
-			stmt.setInt(2, limit);
+			//stmt.setInt(1, start);
+			stmt.setInt(1, limit);
 			ResultSet rs = stmt.executeQuery();
 			news = new LinkedList<News>();
 			DateFormat formatter = new DateFormat(getLocale().getLanguage());

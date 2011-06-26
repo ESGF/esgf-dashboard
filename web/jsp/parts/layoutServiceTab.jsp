@@ -609,7 +609,7 @@
 		return {
 			title: '<span class="titleServiceTab">' + title + '</span>',
 			frame: true,
-			autoScroll: true,
+			autoScroll: true, //// formerly true!
 	        items: [
 			    new Ext.Panel({
 	            	margins: '3 0 3 3',
@@ -637,7 +637,7 @@
 			        id: "tabGrafici"+index,
 			        margins: '3 0 3 3',
 	                cmargins: '3 3 3 3',
-	                enableTabScroll: true,
+	                enableTabScroll: true,// formerly true!
 	             // tabPosition: 'bottom',
 		            items: [
 						new Ext.Panel({

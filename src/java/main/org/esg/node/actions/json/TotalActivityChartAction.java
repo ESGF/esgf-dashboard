@@ -29,6 +29,8 @@ public class TotalActivityChartAction extends ChartBaseAction {
 			stmt.setInt(1, super.idServiceInstance);
 			stmt.setTimestamp(2, new Timestamp(super.cI.getTimeInMillis()));
 			stmt.setTimestamp(3, new Timestamp(super.cF.getTimeInMillis()));
+			
+			//System.out.println("STATUS_QUERY ="+stmt.toString());
 			ResultSet rs = stmt.executeQuery();
 			while(rs.next()) {
 				for(byte i = 0; i < Constants.STATI_LENGTH; i ++)

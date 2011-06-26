@@ -327,7 +327,7 @@
 		<s:include value="commons/header.jsp" />
 	
 		<div id="container" class="x-hide-display">
-			<div id="map_canvas" style="height: 500;"></div>
+			<div id="map_canvas" style="height: 500;"></div> <!-- Early height: 500 -->
 		</div>
 		
 		<div id="descriptionContent" class="x-hide-display">

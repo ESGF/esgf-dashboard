@@ -22,14 +22,23 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 		Connection conn = null;
 		try {
 			conn = Constants.DATASOURCE.getConnection();
+			//System.out.println("ALLProjects "+SqlQuery.ALL_PROJECTS_ID_AND_NAME.getSql());
+			//System.out.println("ALLProjects UserID=" + userSession.getId());
 			PreparedStatement stmt = conn.prepareStatement(SqlQuery.ALL_PROJECTS_ID_AND_NAME.getSql());
 			stmt.setInt(1, userSession.getId());
+			//System.out.println("ALLProjects Query=" + stmt.toString());
+			
 			ResultSet rs = stmt.executeQuery();
 			projects = new LinkedList<ProjectBase>();
-			while(rs.next())
-				projects.add(new ProjectBase(rs.getInt("p.id"), rs.getString("p.name")));
+			while(rs.next()) {
+				projects.add(new ProjectBase(rs.getInt("id"), rs.getString("name")));
+				//System.out.println("inside the first query cycle!");
+			}	
 			rs.close();
 			stmt.close();
+			
+			//System.out.println("ALL_PROJECTS_START_DATE ="+ SqlQuery.ALL_PROJECTS_START_DATE.getSql());
+			
 			stmt = conn.prepareStatement(SqlQuery.ALL_PROJECTS_START_DATE.getSql());
 			stmt.setInt(1, userSession.getId());
 			rs = stmt.executeQuery();
@@ -38,9 +47,13 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 				Calendar c = Calendar.getInstance();
 				c.setTimeInMillis(rs.getTimestamp("startDate").getTime());
 				startDate = formatter.formatDateTime(c);
+				//System.out.println("inside the second query");
 			}
 			rs.close();
 			stmt.close();
+	
+			//System.out.println("ALL_PROJECTS_NUM_HOSTS ="+ SqlQuery.ALL_PROJECTS_NUM_HOSTS.getSql());
+
 			stmt = conn.prepareStatement(SqlQuery.ALL_PROJECTS_NUM_HOSTS.getSql());
 			stmt.setInt(1, userSession.getId());
 			rs = stmt.executeQuery();
@@ -48,14 +61,19 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 				numHosts = rs.getInt("numHosts");
 			rs.close();
 			stmt.close();
+			
+			//System.out.println("ALL_PROJECTS_NUM_SERVICES ="+ SqlQuery.ALL_PROJECTS_NUM_SERVICES.getSql());
+			
 			stmt = conn.prepareStatement(SqlQuery.ALL_PROJECTS_NUM_SERVICES.getSql());
 			stmt.setInt(1, userSession.getId());
 			rs = stmt.executeQuery();			
 			if(rs.next()) 
 				numServices = rs.getInt("numServices");
 			rs.close();
-			stmt.close();			
+			stmt.close();	
+			
 		} catch(SQLException e) {
+			//System.out.println("Error Message AllProjectsAction " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();
