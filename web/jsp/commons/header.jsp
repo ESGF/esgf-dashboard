@@ -14,15 +14,24 @@
 	Integer idGuest = Integer.parseInt(ActionContext.getContext().getValueStack().findValue("getText(\"user.guestId\")").toString());
 %>
 
+
+    
+
+
 <div id="northEl" class="x-hide-display">
 	<table width="100%" border="0" style="background-color: white;">
 	<tbody>
 		<tr valign="center" style="background-color: white;">
 			<td  width="80%" style="border: white" border=0>
 				<%-- <p style="font-size: 20px; color: brown; text-align: center;"><s:text name="northern.title" /></p> --%>
-				 <img align="left" src="<%= pathURL %>/img/esgf.png" height="92px" alt='<s:text name="northern.title" />' />
-<!--  			 <img align="right" src="<%= pathURL %>/img/pcmdi_doe_logo.png" alt='<s:text name="northern.title" />' /> -->
+				 <!--   <div style="margin: 3em;"> -->
+				  <div style="padding-left: 3em;">
+				 	<img align="left" src="<%= pathURL %>/img/esgf.png" height="92px" alt='<s:text name="northern.title" />' />
+				 </div>
+<!--  			 <img align="right" src="<%= pathURL %>/img/pcmdi_doe_logo.png" alt='<s:text name="northern.title" />' /> -->	
+		  	<div style="padding-right: 3em;">
 				 <img align="right" src="<%= pathURL %>/img/p2p_default_logo.png" alt='<s:text name="northern.title" />' />
+			</div>	 
 			</td>
 			<td style="display: none;"> 
 			<!--  <td width="20%" style="border: white" border=0> -->
