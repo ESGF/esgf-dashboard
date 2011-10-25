@@ -4,15 +4,18 @@
 <%@ taglib prefix="s" uri="/struts-tags" %>
 
 <html>
+
 	<head>
 		<s:include value="../jsp/commons/include.jsp" />
 		
 		<script type="text/javascript">
 		//<![CDATA[
 			swfobject.embedSWF(pathURL+"flash/imagerotator.swf", "imageRotator", "100%", "100%", "9.0.0", pathURL+"flash/expressInstall.swf",  
-				{ file: pathURL+"rotator/playlist.xml", screencolor: "0xE0EDF8", shuffle: false, rotatetime: 5 }, { 
+				{ file: pathURL+"rotator/playlist.xml", screencolor: "0xE0EDF8",  shuffle: false, rotatetime: 5 }, { 
 					allowScriptAccess: "always",
 		            bgcolor: "#ffffff",
+		            width: "100%", 
+		            height: "100%",
 		            wmode: "transparent", // opaque
 		            allowfullscreen: true
 		        }, false
@@ -28,7 +31,7 @@
 				        	region: 'center',
 				        	width: '88%',
 				        	frame: false,	
-				        	autoScroll: true,
+				        	bgcolor: "black",autoScroll: true,
 				        	margins: '3 3 0 3',
 				        	items: [
 					        	new Ext.Panel({							   		
@@ -87,6 +90,7 @@
 		<link href="homepage/front.css" media="screen" rel="Stylesheet" type="text/css">
 	</head>
 	<body>
+	
 	<s:include value="../jsp/commons/header.jsp" />
 		<div id="container" class="x-hide-display">
 			<div id="doc2">				
@@ -96,7 +100,8 @@
 					<div class="box" style="width: 70%;">
 						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 						<div class="content" style="height: 29em;">
-							<div id="imageRotator"></div>
+							<!--  <div id="imageRotator"></div>-->
+							<img src="rotator/image1.png" width="100%" height="100% "alt="" />
 						</div>
 						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
 					</div>
