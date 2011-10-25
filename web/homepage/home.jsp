@@ -100,8 +100,12 @@
 					<div class="box" style="width: 70%;">
 						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 						<div class="content" style="height: 29em;">
-							<!--  <div id="imageRotator"></div>-->
-							<img src="rotator/image1.png" width="100%" height="100% "alt="" />
+							<!--  <div id="imageRotator"></div>
+							<img src="rotator/image1.png" width="100%" height="100% "alt="" />-->
+							<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
+								<b>ESGF Dashbard</b>
+							</p>
+							<img src="img/global_view.png" width="100%"  alt="" />
 						</div>
 						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
 					</div>
