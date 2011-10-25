@@ -21,7 +21,8 @@
 			<td  width="80%" style="border: white" border=0>
 				<%-- <p style="font-size: 20px; color: brown; text-align: center;"><s:text name="northern.title" /></p> --%>
 				 <img align="left" src="<%= pathURL %>/img/esgf.png" height="92px" alt='<s:text name="northern.title" />' />
-				 <img align="right" src="<%= pathURL %>/img/pcmdi_doe_logo.png" alt='<s:text name="northern.title" />' />
+<!--  			 <img align="right" src="<%= pathURL %>/img/pcmdi_doe_logo.png" alt='<s:text name="northern.title" />' /> -->
+				 <img align="right" src="<%= pathURL %>/img/p2p_default_logo.png" alt='<s:text name="northern.title" />' />
 			</td>
 			<td style="display: none;"> 
 			<!--  <td width="20%" style="border: white" border=0> -->
