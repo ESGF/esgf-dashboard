@@ -105,7 +105,7 @@
 							<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
 								<b>ESGF Dashbard</b>
 							</p>
-							<img src="img/global_view.png" width="100%"  alt="" />
+							<img src="img/global_view.png" width="100%" alt="" />
 						</div>
 						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
 					</div>
@@ -172,7 +172,7 @@
 								<div id="hd" class="frontpage_header">
 									<!-- <img alt="Logo" src="img/title.png" class="logo"> -->
 									<div class="text">
-									  ESGF Dashboard: text to be added max three rows of text.
+									  Welcome to the ESGF-Dashboard, the distributed monitoring system of the Earth System Grid Federation
 									</div>
 									<div class="clearer">&nbsp;</div>
 								</div>									
