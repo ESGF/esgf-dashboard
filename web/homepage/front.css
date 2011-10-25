@@ -35,8 +35,8 @@ li img {
 }
 
 #frontpage_body {
-	padding-left: 3em;
-	padding-right: 3em;
+	padding-left: 1em; /* formerly 3em */ 
+	padding-right: 1em; /* formerly 3em */
 	text-align: center;
 }
 
