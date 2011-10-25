@@ -15,14 +15,16 @@
 %>
 
 <div id="northEl" class="x-hide-display">
-	<table width="100%" border="0">
+	<table width="100%" border="0" style="background-color: white;">
 	<tbody>
-		<tr valign="top">
-			<td align="center" width="70%">
-				<p style="font-size: 20px; color: brown; text-align: center;"><s:text name="northern.title" /></p>
-				<%-- <img src="<%= pathURL %>img/title.jpg" height="100%" width="100%" alt='<s:text name="northern.title" />' />--%>
+		<tr valign="center" style="background-color: white;">
+			<td  width="80%" style="border: white" border=0>
+				<%-- <p style="font-size: 20px; color: brown; text-align: center;"><s:text name="northern.title" /></p> --%>
+				 <img align="left" src="<%= pathURL %>/img/esgf.png" height="92px" alt='<s:text name="northern.title" />' />
+				 <img align="right" src="<%= pathURL %>/img/pcmdi_doe_logo.png" alt='<s:text name="northern.title" />' />
 			</td>
-			<td style="display: none;">
+			<td style="display: none;"> 
+			<!--  <td width="20%" style="border: white" border=0> -->
 				<s:form target="_top" name="formLingua" action="Home" namespace="/">
 					<select name="request_locale" id="locale" onchange="formLingua.submit()">
 						<option value="it">Italiano</option>
