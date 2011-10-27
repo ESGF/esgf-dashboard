@@ -31,7 +31,7 @@ struct host * loadHosts(unsigned *numHosts) {
         else*/
 
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
-	printf("Conninfo %s\n",conninfo);
+	//printf("Conninfo %s\n",conninfo);
 	conn = PQconnectdb ((const char *) conninfo);
 
 	if (PQstatus(conn) != CONNECTION_OK)
@@ -43,7 +43,7 @@ struct host * loadHosts(unsigned *numHosts) {
 	/* send SQL query */
 	/* QUERY1 === "SELECT s.id, h.ip, s.port FROM service_instance s INNER JOIN host h ON h.id=s.idHost ORDER BY h.ip, s.port;"*/
 	
-	fprintf(stdout,"Query1 = %s \n",QUERY1);
+	//fprintf(stdout,"Query1 = %s \n",QUERY1);
 
 	res = PQexec(conn, QUERY1);
 
@@ -86,7 +86,7 @@ RES_USER, POSTGRES_PASSWD);
         else*/
 
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
-        printf("Conninfo %s\n",conninfo);
+        //printf("Conninfo %s\n",conninfo);
         conn = PQconnectdb ((const char *) conninfo);
 
         if (PQstatus(conn) != CONNECTION_OK)
@@ -109,12 +109,12 @@ RES_USER, POSTGRES_PASSWD);
 
 		res = PQexec(conn, insert_query);
 
-  		/*if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
+  		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
 		{
        		 	fprintf(stderr, "Insert query failed\n");
-        		PQclear(res);
-        		exit_nicely(conn);
-		}*/
+        		//PQclear(res);
+        		//exit_nicely(conn);
+		}
     		PQclear(res);
 	}
         PQfinish(conn);
