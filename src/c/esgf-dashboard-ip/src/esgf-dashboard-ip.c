@@ -121,7 +121,7 @@ ESGF_config_path (char **esgf_properties_pointer)
   char *position;
   int notfound;
 
-  sprintf (esg_env, "/export/fiore2/etc/esg.env");
+  sprintf (esg_env, "/etc/esg.env");
 
   FILE *file = fopen (esg_env, "r");
 
@@ -169,7 +169,7 @@ ESGF_properties (char *esgf_properties_path)
   int notfound;
 
   sprintf (esgf_properties_filename,
-	   "/export/fiore2/%s/config/esgf.properties", esgf_properties_path);
+	   "/%s/config/esgf.properties", esgf_properties_path);
 
   FILE *file = fopen (esgf_properties_filename, "r");
 
@@ -249,7 +249,7 @@ ESGF_passwd (char *esgf_passwd_path)
   int notfound;
   char buffer[256] = { '\0' };
 
-  sprintf (esgf_passwd_filename, "/export/fiore2/%s/config/.esg_pg_pass",
+  sprintf (esgf_passwd_filename, "/%s/config/.esg_pg_pass",
 	   esgf_passwd_path);
 
   FILE *file = fopen (esgf_passwd_filename, "r");
