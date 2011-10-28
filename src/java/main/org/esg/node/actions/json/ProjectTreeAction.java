@@ -42,7 +42,7 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 			stmt1.setInt(1, userSession.getId());
 			ResultSet rs1 = stmt1.executeQuery();
 			PreparedStatement stmt2 = conn.prepareStatement(SqlQuery.HOSTS_BY_PROJECT.getSql());
-			PreparedStatement stmt4 = conn.prepareStatement(SqlQuery.PROJECT_CONTAINS_OPENDAP_SERVICES.getSql());
+			//PreparedStatement stmt4 = conn.prepareStatement(SqlQuery.PROJECT_CONTAINS_OPENDAP_SERVICES.getSql());
 			projects = new LinkedList<TreeNode>();
 			// AvgHostActivity avgHostActivity = new AvgHostActivity(conn);
 			DateFormat formatter = new DateFormat(getLocale().getLanguage());
@@ -83,7 +83,7 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 					servers.add(server);
 				}
 				rs2.close();
-				stmt4.clearParameters();
+				/*stmt4.clearParameters();
 				stmt4.setInt(1, rs1.getInt("id"));
 				ResultSet rs4 = stmt4.executeQuery();
 				if(rs4.next()) {
@@ -94,12 +94,12 @@ public class ProjectTreeAction extends ActionSupport implements UserAware {
 					registry.setMyObject("opendapRegistry");
 					servers.add(registry);
 				}
-				rs4.close();
+				rs4.close();*/
 				project.setChildren(servers);
 				projects.add(project);
 			}
 			stmt2.close();
-			stmt4.close();
+			//stmt4.close();
 			rs1.close();
 			stmt1.close();
 			// avgHostActivity.close();			
