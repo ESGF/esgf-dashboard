@@ -856,7 +856,7 @@
 				loadAvgHostActivityPieChart(<s:text name="default.timespan" />, true, serverName, true);
 				for(var i = 0; i < numTabs; i ++)
 					switch(servicesType[i]) {
-						case "OPeNDAP": buildOpendapLayout(i); break;
+						//case "OPeNDAP": buildOpendapLayout(i); break;
 					}
 				for(var i = 0; i < numTabs; i ++)
 					reloadSWF(i);								
