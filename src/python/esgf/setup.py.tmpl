@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+    
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from ez_setup import use_setuptools
+    use_setuptools()
+    from setuptools import setup, find_packages
+
+VERSION = '@db_version_num@'
+
+setup(
+    name = '@module@',
+    version = VERSION,
+    description = 'ESGF Dashboard Database Package',
+    author = 'ESGF Software Team',
+    author_email = 'esgf-mechanic@lists.llnl.gov',
+    url = 'http://esgf.org',
+    install_requires = ["psycopg2>=2.0", "SQLAlchemy>=0.5.3", "sqlalchemy_migrate>=0.6"],
+    #setup_requires = ["psycopg2>=2.0", "SQLAlchemy>=0.5.3", "sqlalchemy_migrate>=0.6"],
+    dependency_links = ["http://rainbow.llnl.gov/dist/externals"],
+    packages = find_packages(exclude=['ez_setup']),
+    include_package_data = True,
+    package_data = {'@module@.schema_migration': ['migrate.cfg'],
+                    '@module@.schema_migration.versions': ['*.sql'],
+                    },
+    scripts = ['scripts/esgf_dashboard_initialize',
+               ],
+    zip_safe = False,                   # Migration repository must be a directory
+)

@@ -1,26 +1,18 @@
 <!--
 /***************************************************************************
 *                                                                          *
-*  Organization: Lawrence Livermore National Lab (LLNL)                    *
-*   Directorate: Computation                                               *
-*    Department: Computing Applications and Research                       *
-*      Division: S&T Global Security                                       *
-*        Matrix: Atmospheric, Earth and Energy Division                    *
-*       Program: PCMDI                                                     *
-*       Project: Earth Systems Grid (ESG) Data Node Software Stack         *
-*  First Author: Gavin M. Bell (gavin@llnl.gov)                            *
+*  Organization: Earth System Grid Federation                              *
 *                                                                          *
 ****************************************************************************
 *                                                                          *
 *   Copyright (c) 2009, Lawrence Livermore National Security, LLC.         *
 *   Produced at the Lawrence Livermore National Laboratory                 *
-*   Written by: Gavin M. Bell (gavin@llnl.gov)                             *
 *   LLNL-CODE-420962                                                       *
 *                                                                          *
 *   All rights reserved. This file is part of the:                         *
 *   Earth System Grid (ESG) Data Node Software Stack, Version 1.0          *
 *                                                                          *
-*   For details, see http://esgf.org/esg-node/                             *
+*   For details, see http://esgf.org/                                      *
 *   Please also read this link                                             *
 *    http://esgf.org/LICENSE                                               *
 *                                                                          *
@@ -59,24 +51,15 @@
 /**
    Description:
 
-   This is the ant build file for the esg-node project.  This file
-   should not be modified.  A user may set the values of the
+   This is the ant build file for the esgf-dashboard project.  This
+   file should not be modified.  A user may set the values of the
    properties used in this file by defining the property file
-   $HOME/.esg-node.ant.properties which will override the values set
+   $HOME/.esgf-dashboard.ant.properties which will override the values set
    here.  An example of such a file is located in this etc directory.
-
-   NOTE:
-   If you get this error:
-
-   BUILD FAILED
-   java.lang.NoSuchMethodError: org.apache.tools.ant.util.FileUtils.getFileUtils()L
-   org/apache/tools/ant/util/FileUtils;
-    
-   It means somewhere in your system and/or classpath is an old ANT clobbering
-   the one you want to run. Use the "-noclasspath" flag in the ant command.
  
 **/
 -->
+
 
 <!--
 Description:
@@ -84,10 +67,11 @@ Builds the project via ant (obviously).
 -->
 
 <project name="esgf-dashboard" default="make" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
-  
+
+  <!-- Default properties for this module - can be overridden in etc/${module}.ant.properties -->
   <property name="module" value="esgf-dashboard"/>
   <property name="organization" value="Earth Systems Grid Federation"/>
-  
+
   <!--
       ************************************************************
       Global Initialization and Preparation....
@@ -101,23 +85,42 @@ Builds the project via ant (obviously).
   <property file="${basedir}/etc/${module}.ant.properties"/> 
   <echo message="user property file ${basedir}/etc/${module}.ant.properties"/>
 
+  <exec executable="bash" dir="${basedir}" outputproperty="version_num">
+    <arg value="-c"/>
+    <arg value="git describe | sed -n 's/v\([a-zA-Z0-9.]*\)[-]*.*/\1/p'"/>
+  </exec>
+  <exec executable="bash" dir="${basedir}" outputproperty="branch">
+    <arg value="-c"/>
+    <arg value="git branch | grep '*' | sed -n 's/\*[ ]*//p'"/>
+  </exec>
+  <exec executable="bash" dir="${basedir}" outputproperty="commit">
+    <arg value="-c"/>
+    <arg value="git describe"/>
+  </exec>
+  <exec executable="bash" dir="${basedir}" outputproperty="release_name">
+    <arg value="-c"/>
+    <arg value="git tag | sed -ne 's/\(v[0-9]*\.[0-9]*\.[0-9]*\)-\([a-zA-Z0-9_-]*\)-release.*$/\2/p' | sort -k1,1 | tail -n 1"/>
+  </exec>
+
   <property name="filter" value="false"/>
-  <property name="sign"   value="false"/>
-  <property name="seal"   value="false"/>
 
   <!-- **static defines** -->
   <property name="version_num" value="0.0.0"/>
   <filter token="version_num"  value="${version_num}"/>
+  <property name="branch" value="[nobranch]"/>
+  <filter token="branch"  value="${branch}"/>
+  <property name="commit" value="ffffff"/>
+  <filter token="commit"  value="${commit}"/>
   <property name="db_version_num" value="0.0.0"/>
   <filter token="db_version_num"  value="${db_version_num}"/>
   <property name="release_name" value="no_name"/>
   <filter token="release_name" value="${release_name}"/>
   <filter token="module" value="${module}"/>
 
-  <property name="log_dir" value="/tmp/esg/logs"/>
+  <property name="log_dir" value="${basedir}/runlogs"/>
   <mkdir dir="${log_dir}" />
   <filter token="log_dir"  value="${log_dir}"/>
-
+  
   <property environment="env"/>
   <!-- ****************** -->
   
@@ -129,7 +132,7 @@ Builds the project via ant (obviously).
     -->
   
   <target name="-pre-init" unless="build.master">
-    <property name="build.compiler" value="javac1.5" /> 
+    <property name="build.compiler" value="javac1.6" /> 
     <property name="build.compiler.emacs" value="true" /> 
     <echo message="set build.compiler to ${build.compiler}"/>
   </target>
@@ -141,9 +144,11 @@ Builds the project via ant (obviously).
     <echo message="Initializing build environment..."/>
         
     <!-- defaults to use if local .${module}.ant.properties file does not exist --> 
-    <property name="src_dir"   	          value="${basedir}/src/java/main"/>
-    <property name="lib_dir"   	          value="${basedir}/lib"/>
-    <property name="lib_fetched_dir"      value="${basedir}/lib/fetched"/>
+    <property name="src_dir"   	      value="${basedir}/src/java/main"/>
+    <property name="lib_dir"   	      value="${basedir}/lib"/>
+    <property name="weblib_dir"   	  value="${basedir}/web/WEB-INF/lib"/>
+    <property name="lib_fetched_dir"  value="${basedir}/lib/fetched"/>
+  	<property name="lib_endorsed_dir" value="${basedir}/lib/endorsed"/>
     <property name="build_dir"   	  value="${basedir}/build"/>
     <property name="dist_dir"   	  value="${basedir}/dist"/>
     <property name="bin_dir"              value="${basedir}/bin"/>
@@ -152,12 +157,12 @@ Builds the project via ant (obviously).
     <property name="test_build_dir_inst"  value="${basedir}/build/test-instrumented" />
     <property name="etc_dir"   	          value="${basedir}/etc"/>
     <property name="conf_dir"   	  value="${etc_dir}/conf"/>
-    <property name="web_dir"   	          value="${basedir}/web"/>
-    <property name="doc_dir"   	          value="${basedir}/docs"/>
-    <property name="depcache_dir"     	  value="${java.io.tmpdir}/${module}/depcache"/>
-    <property name="log_config"       	  value="${conf_dir}/log4j.properties"/>
-    <property name="log_file"         	  value="${log_dir}/${module}_v${version_num}.log"/>
-    <property name="javadoc_link_src" 	  value="true"/>
+    <property name="web_dir"   	      value="${basedir}/web"/>
+    <property name="doc_dir"   	      value="${basedir}/docs"/>
+    <property name="depcache_dir"     value="${java.io.tmpdir}/${module}/depcache"/>
+    <property name="log_config"       value="${conf_dir}/log4j.properties"/>
+    <property name="log_file"         value="${log_dir}/${module}_v${version_num}.log"/>
+    <property name="javadoc_link_src" value="false"/>
 
     <property name="doc_dir_generated"    value="${basedir}/docs-generated"/>
     <property name="jdoc_dir"   	  value="${doc_dir_generated}/javadocs"/>
@@ -172,16 +177,21 @@ Builds the project via ant (obviously).
 
     <property name="test_last_failed_file" location="${build_dir}/.lasttestsfailed"/>
     <property name="test_coverage_file"   value="${basedir}/.cobertura.ser"/>
-    <property name="ivy.lib.dir"          value="${lib_fetched_dir}"/>
+    <property name="ivy.lib.dir" value="${lib_fetched_dir}"/>
+     
+    <property name="python_version"       value="2.6"/>
+    <property name="py_src_dir"	          value="${basedir}/src/python/esgf"/>
 
     <echo message="--------------------------------"/> 
     <echo message="module            = ${module} "/> 
     <echo message="version_num       = ${version_num} "/> 
+    <echo message="db_version_num    = ${db_version_num} "/> 
     <echo message="release_name      = ${release_name} "/> 
     <echo message="--------------------------------"/> 
     <echo message="src_dir           = ${src_dir}"/>
     <echo message="lib_dir           = ${lib_dir}"/>
     <echo message="lib_fetched_dir   = ${lib_fetched_dir}"/>
+  	<echo message="lib_endorsed_dir  = ${lib_endorsed_dir}"/>
     <echo message="build_dir         = ${build_dir}"/>
     <echo message="dist_dir          = ${dist_dir}"/>
     <echo message="bin_dir           = ${bin_dir}"/>
@@ -195,7 +205,6 @@ Builds the project via ant (obviously).
     <echo message="log_config        = ${log_config}"/>
     <echo message="log_file          = ${log_file}"/>
     <echo message="javadoc_link_src  = ${javadoc_link_src}"/>
-    <echo message="filter            = ${filter} "/> 
     <echo message="--------------------------------"/> 
     <echo message="doc_dir_generated    = ${basedir}/docs-generated"/>
     <echo message="jdoc_dir             = ${jdoc_dir}"/>
@@ -203,6 +212,9 @@ Builds the project via ant (obviously).
     <echo message="test_reports_dir     = ${test_reports_dir}"/>
     <echo message="test_coverage_dir    = ${test_coverage_dir}"/>
     <echo message="lib_deps_reports_dir = ${doc_dir_generated}/dep-reports"/>
+    <echo message="--------------------------------"/> 
+    <echo message="python_version    = ${python_version}"/>
+    <echo message="py_src_dir        = ${py_src_dir}"/>
     <echo message="--------------------------------"/> 
     <tstamp/>
   </target> 
@@ -216,6 +228,8 @@ Builds the project via ant (obviously).
   
   <target name="init-ivy" depends="init">
     <property name="ivy_version" value="2.1.0" />
+    <!-- <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy_version}/ivy-${ivy_version}.jar" 
+	      dest="ivy-${ivy_version}.jar" usetimestamp="true"/> -->
     <taskdef resource="org/apache/ivy/ant/antlib.xml"
              uri="antlib:org.apache.ivy.ant" classpath="${lib_dir}/ivy-${ivy_version}.jar"/>
     <ivy:settings file="./ivysettings.xml">
@@ -225,16 +239,21 @@ Builds the project via ant (obviously).
   
   <target name="deps" depends="init-ivy" description="(Sets up library dependencies: Ivy)">
     <mkdir dir="${lib_fetched_dir}"/>
-    <ivy:retrieve sync="true"/>
-    <ivy:deliver deliverpattern="dist/[artifact]-[revision].[ext]"
-                 pubrevision="${version_num}" status="milestone" />
+    <ivy:retrieve sync="true" conf="default" />
     <path id="main_classpath">
-      <fileset dir="${lib_dir}">
-	<include name="**/*.jar"/>
-	<exclude name="**/junit*.jar"/>
-	<exclude name="**/*javadoc.jar"/>
-	<exclude name="**/*sources.jar"/>
+      <fileset dir="${lib_fetched_dir}">
+	  	<include name="**/*.jar"/>
+		<exclude name="**/junit*.jar"/>
+		<exclude name="**/*javadoc.jar"/>
+		<exclude name="**/*sources.jar"/>
       </fileset>
+      <!-- <fileset dir="${weblib_dir}">
+   		<include name="**/*.jar"/>
+   		<exclude name="**/junit*.jar"/>
+   		<exclude name="**/*javadoc.jar"/>
+   		<exclude name="**/*sources.jar"/>
+       </fileset>
+       -->
       <pathelement path="${build_dir}"/>
     </path>
     
@@ -248,6 +267,11 @@ Builds the project via ant (obviously).
     <echo message="--------------------------------"/> 
   </target>
 
+  <target name="deliver" depends="deps">
+    <ivy:deliver deliverpattern="dist/[artifact]-[revision].[ext]"
+                 pubrevision="${version_num}" status="milestone" />
+  </target>
+  
   <target name="dep_report" depends="deps" description="(Generates a report of library dependencies)">
     <mkdir dir="${lib_deps_reports_dir}"/>
     <ivy:report todir="${lib_deps_reports_dir}"/>
@@ -297,10 +321,11 @@ Builds the project via ant (obviously).
     <javac srcdir="${src_dir}"
 	   destdir="${build_dir}" 
 	   includes="**/*.java" 
-	   excludes="**/no_comp/**,**/ignore/**,**/*_,**/*_*/**"
+	   excludes="**/no_comp/**,**/ignore/**,**/*_"
 	   classpathref="main_classpath"
 	   debug="on"
 	   verbose="off"
+           includeantruntime="false"
 	   nowarn="on">
       <compilerarg value="-Xlint"/>
     </javac>
@@ -308,7 +333,8 @@ Builds the project via ant (obviously).
     <copy todir="${build_dir}" filtering="${filter}" overwrite="true">
       <fileset dir="${conf_dir}" includes="**/*.properties,**/*.template,**/*.xml"/>
       <fileset dir="${src_dir}" includes="**/*.properties,**/*.template,**/*.xml"/>
-    </copy> 
+    </copy>
+
 
     <tstamp/>
   </target>
@@ -329,22 +355,23 @@ Builds the project via ant (obviously).
     <mkdir dir="${dist_dir}" />
     <jar destfile="${dist_dir}/${module}-${version_num}.jar">
       <fileset dir="${build_dir}"
-	       includes="org/esg/**,**/*.properties,**/*filter-web.xml"
-	       excludes="**/test/**,**/test-instrumented/**"/>
+	       includes="esg/**,**/*.properties"
+	       excludes="**/test/**,*.properties"/>
       <manifest>
 	<attribute name="Organization" value="${organization}"/>
 	<attribute name="Author"       value="${author}"/>
 	<attribute name="Project"      value="${project_name}"/>
 	<attribute name="Module"       value="${module}"/>
 	<attribute name="Version"      value="${version_num}"/>
+	<attribute name="Branch"       value="${branch}"/>
+	<attribute name="Commit"       value="${commit}"/>
 	<attribute name="Release-Name" value="${release_name}"/>
 	<attribute name="Main-Class"   value="${main_class}"/>
-	<section name="esg/">
-	  <attribute name="Sealed" value="${seal}"/>
+	<section name="esg/node/dashboard">
+	  <attribute name="Sealed" value="true"/>
 	</section>
       </manifest>
     </jar>
-    <!-- <signjar jar="${dist_dir}/${module}-${version_num}.jar" alias="${signing_alias}" keystore="${keystore}" storepass="${storepass}"/> -->
   </target>
 
   <target name="make_test_jar" depends="make_test" description="(Creates test jar file)">
@@ -358,9 +385,11 @@ Builds the project via ant (obviously).
       <manifest>
 	<attribute name="Organization" value="${organization}"/>
 	<attribute name="Author"       value="${author}"/>
-	<attribute name="Project"      value="${project_name} Tests"/>
+	<attribute name="Project"      value="${project_name} (Tests)"/>
 	<attribute name="Module"       value="${module}"/>
 	<attribute name="Version"      value="${version_num}"/>
+	<attribute name="Branch"       value="${branch}"/>
+	<attribute name="Commit"       value="${commit}"/>
 	<attribute name="Release-Name" value="${release_name}"/>
 	<section name="esg/">
 	  <attribute name="Sealed" value="false"/>
@@ -369,44 +398,48 @@ Builds the project via ant (obviously).
     </jar>
   </target>
   
-  <target name="make_all_jars" depends="make_jar"/>
-
+  <target name="make_all_jars" depends="make_jar,make_test_jar"/>
+	
   <target name="make_war" depends="make,init"
-	  description="(Creates war file of this project)">
-    <mkdir dir="${dist_dir}" />
-    <mkdir dir="${dist_dir}/tmplib"/>
-    
-    <copy todir="${dist_dir}/tmplib" overwrite="true" flatten="yes">
-      <fileset dir="${lib_dir}" includes="**/*.jar" excludes="servlet-api*.jar,**/junit*.jar,**/*sources.jar,**/*javadoc.jar"/>
-    </copy>
+	          description="(Creates war file of this project)">
+	    <mkdir dir="${dist_dir}" />
+	    <mkdir dir="${dist_dir}/tmplib"/>
 
-    <delete file="${dist_dir}/${module}.war"/>
-    <war destfile="${dist_dir}/${module}.war" webxml="${build_dir}/${module}-web.xml">
-      <fileset dir="${web_dir}" excludes="WEB-INF/**/web.xml/**,**semantic.cache**,index.tmpl.html"/>
-      <lib dir="${dist_dir}/tmplib">
-	<include name="**/*.jar"/>
-	<exclude name="**/*-test*.jar,**/*-common*.jar"/>
-      </lib>
-      <classes dir="${build_dir}" excludes="${module}-web.xml"/>
-      <manifest>
-	<attribute name="Organization" value="${organization}"/>
-	<attribute name="Author"       value="${author}"/>
-	<attribute name="Project"      value="${project_name}"/>
-	<attribute name="Module"       value="${module}"/>
-	<attribute name="Version"      value="${version_num}"/>
-	<attribute name="Release-Name" value="${release_name}"/>
-      </manifest>
-    </war>
-    <delete dir="${dist_dir}/tmplib"/>
-    <delete file="${web_dir}/index.html"/>
-  </target>
+	    <copy todir="${dist_dir}/tmplib" overwrite="true" flatten="yes">
+	      <fileset dir="${lib_dir}" includes="**/*.jar" excludes="servlet-api*.jar,**/junit*.jar,**/*sources.jar,**/*javadoc.jar"/>
+	    </copy>
+	  	<echo message="${conf_dir}"/>
+	    <delete file="${dist_dir}/${module}.war"/>
+	    <war destfile="${dist_dir}/${module}.war" webxml="${build_dir}/${module}-web.xml">
+	    	<!-- Add configuration files to WEB-INF -->
+	      <fileset dir="${web_dir}" excludes="WEB-INF/**/web.xml/**,**semantic.cache**"/>
+	      <webinf dir="${conf_dir}" includes="**/*.xml" excludes="${module}-web.xml"/>
+	      <lib dir="${dist_dir}/tmplib">
+	        <include name="**/*.jar"/>
+	        <exclude name="**/*-test*.jar,**/*-common*.jar"/>
+	      </lib>
+	      <classes dir="${build_dir}" excludes="${module}-web.xml,log4j.xml, test/** "/>
+	      <manifest>
+		<attribute name="Organization" value="${organization}"/>
+		<attribute name="Author"       value="${author}"/>
+		<attribute name="Project"      value="${project_name} ${module}"/>
+		<attribute name="Module"       value="${module}"/>
+		<attribute name="Version"      value="${version_num}"/>
+                <attribute name="Branch"       value="${branch}"/>
+                <attribute name="Commit"       value="${commit}"/>
+		<attribute name="Release-Name" value="${release_name}"/>
+	      </manifest>
+	    </war>
+	    <delete dir="${dist_dir}/tmplib"/>
+	  </target>
 
-  <target name="make_dist" depends="make_war,make_all_jars"
+
+  <target name="make_dist" depends="make_all_jars, make_war, make_python"
 	  description="(Creates full software distribution)">
     <delete file="${dist_dir}/${module}-${version_num}.tar.gz"/> 
     <tar destfile="${dist_dir}/${module}-${version_num}.tar">
-      <tarfileset dir="${dist_dir}" includes="**/*.jar,**/*.war" prefix="${module}-${version_num}"/>
-      <tarfileset dir="${etc_dir}/db" prefix="${module}-${version_num}/db"/>
+      <tarfileset dir="${dist_dir}" includes="**/*${version_num}.jar,**/*.war" prefix="${module}-${version_num}"/>
+   	  <tarfileset dir="${basedir}/etc/conf" prefix="${module}-${version_num}/conf"/>
       <tarfileset dir="${basedir}" prefix="${module}-${version_num}">
 	<include name="LICENSE"/>
 	<include name="INSTALL"/>
@@ -463,12 +496,13 @@ Builds the project via ant (obviously).
     <delete dir="${jaxb_gen_src_dir}"/>
   </target>
 
+  
   <target name="clean_all"
-	  depends="clean,clean_dist,clean_jaxb,dep_clean_libs"
+	  depends="clean,clean_dist,clean_jaxb,dep_clean_libs,clean_python"
 	  description="(Cleans out generatable artifacts)">
+    <delete dir="${log_dir}"/>
     <delete file="${bin_dir}/post.manif"/>
   </target>
-
   
   <!--
       ************************************************************
@@ -477,7 +511,7 @@ Builds the project via ant (obviously).
     -->
 
   <target name="make_test" depends="make"
-	  description="(Java compile all the test source code)">
+	  description="(Java compiles all the test source code)">
     <echo message="Java compiling ${module} TESTs..."/>
 
     <path id="test_classpath">
@@ -506,10 +540,16 @@ Builds the project via ant (obviously).
 	   classpathref="test_classpath"
 	   deprecation="true"
 	   failonerror="true"
-	   target="1.5"
+	   target="1.6"
 	   debug="on"
 	   verbose="off"
+           includeantruntime="false"
 	   nowarn="on"/>
+  	
+    <copy todir="${test_build_dir}" filtering="${filter}" overwrite="true">
+      <fileset dir="${test_src_dir}" includes="**/*.properties,**/*.template,**/*.xml,**/*.ks"/>
+    </copy>
+
     <tstamp/>
 
   </target>
@@ -545,10 +585,10 @@ Builds the project via ant (obviously).
 
   <!--
       To run a single test case...
-      ant test -Dtestcase=esg.dashboard.foo.ESGFooTest
+      EXAMPLE: ant test -Dtestcase=esg.node.dashboard.connector.ESGdashboardTest
       (unless="tests_uptodate")
     -->
-  <target name="test" depends="make_test,test_check"
+  <target name="test" depends="make_test"
 	  description="(Runs unit tests: JUnit)">
     <delete dir="${test_results_dir}" />
     <mkdir dir="${test_results_dir}"/>
@@ -599,7 +639,6 @@ Builds the project via ant (obviously).
 	<enable/>
       </assertions>
     </junit>
-
     <junitreport todir="${test_results_dir}">
       <fileset dir="${test_results_dir}">
 	<include name="TEST-*.xml"/>
@@ -613,7 +652,7 @@ Builds the project via ant (obviously).
 
     <echo message="last build failed tests" file="${test_last_failed_file}"/>
     <fail if="failed" message="Unit tests failed.  Check log or reports for details"/>
-    <delete file="${test_last_failed_file}"/>
+    <delete file="${test_last_failed_file}"/> 
   </target>
 
   <!--
@@ -621,7 +660,7 @@ Builds the project via ant (obviously).
       DOCUMENTATION....
       ************************************************************
     -->
-  
+
   <target name="docs" depends="init"
 	  description="(Generates the javadoc for this project)">
     <delete dir="${jdoc_dir}"/>
@@ -636,19 +675,15 @@ Builds the project via ant (obviously).
        classpathref="main_classpath">
 
       <packageset dir="${src_dir}" defaultexcludes="yes">
-	<exclude name="**/test/**,**/test-instrumented/**"/>
+	<exclude name="**/test/**"/>
       </packageset>
 
       <doctitle><![CDATA[<h1>${module}</h1>]]></doctitle>
       <bottom><![CDATA[<i><a href="http://esgf.org/" target="_top">ESGF</a> / <a href="http://esgf.org/LICENSE" target="_top">BSD OpenSource License</a></i>]]></bottom>
       <tag name="todo" scope="all" description="To do:"/>
-      <group title="ESGF Core Packages" packages="esg.dashboard.core*"/>
-      <group title="ESGF Component Packages" packages="esg.dashboard.components*"/>
-      <group title="ESGF Connection Packages" packages="esg.dashboard.connection*"/>
-      <group title="ESGF Server Packages" packages="esg.dashboard.service*"/>
-      <group title="ESGF Common Packages" packages="esg.common*"/>
-      <group title="ESGF Database Packages" packages="esg.dashboard.db*"/>
-      <group title="ESGF Utility Packages" packages="esg.dashboard.util*"/>
+      <group title="ESG DASHBOARD Component Packages" packages="esg.dashboard*"/>
+      <group title="ESG DASHBOARD Common Packages" packages="esg.dashboard.common*"/>
+      <group title="ESG DASHBOARD Utility Packages" packages="esg.dashboard.util*"/>
       <link offline="true" href="http://java.sun.com/javase/6/docs/api/" packagelistLoc="${java.io.tmpdir}"/>
       <link href="http://java.sun.com/javase/6/docs/api/"/>
     </javadoc>
@@ -687,12 +722,46 @@ Builds the project via ant (obviously).
   <target name="make_everything" depends="make_dist,test,docs,dep_report"
 	  description="(Builds Everything... Distributions, Tests, Docs n Reports)">
     <echo message="JavaDocs ----------> file://${jdoc_dir}/index.html"/>
-    <echo message="Dependency Report -> file://${lib_deps_reports_dir}/esgf-${module}-default.html"/>
+    <echo message="Dependency Report -> file://${lib_deps_reports_dir}/esg-${module}-default.html"/>
     <echo message="Unit Test Report  -> file://${test_reports_dir}/index.html"/>
     <echo message="Coverage Report   -> file://${test_coverage_dir}/index.html"/>
     <echo message="Web Site ----------> http://esgf.org/${module}-site/index.html"/>
   </target>
 
+
+  <target name="make_web_dir" depends="make, init" 
+	  description="(Assembles the WEB-INF directory to run the web application in place.)">
+    
+    <mkdir dir="${basedir}/WebContent" />
+    <mkdir dir="${basedir}/WebContent/WEB-INF" />
+  	<mkdir dir="${basedir}/WebContent/themes" />
+    <property name="web_deploy_dir" value="${basedir}/WebContent/WEB-INF"/>
+    
+    <!-- web configuration files -->
+    <copy file="${conf_dir}/${module}-web.xml" tofile="${web_deploy_dir}/web.xml"/>
+    <copy todir="${web_deploy_dir}">
+      <fileset dir="${conf_dir}" includes="**/*.xml, **/*.properties" excludes="**/${module}-web.xml"/>
+    </copy>
+    
+    <!-- web views -->
+  	<copy file="${web_dir}/index.jsp" tofile="${basedir}/WebContent/index.jsp"/>
+    <copy todir="${web_deploy_dir}/views">
+      <fileset dir="${web_dir}/WEB-INF/views" />
+    </copy>
+  	
+	<!-- images and css -->
+    <copy todir="${basedir}/WebContent/themes">
+      <fileset dir="${web_dir}/themes" />
+    </copy>
+    
+    <!-- web lib -->
+    <copy todir="${web_deploy_dir}/lib" flatten="true">
+      <fileset dir="${lib_dir}" includes="**/*.jar" excludes="**/junit*.jar,**/*sources.jar,**/*javadoc.jar"/>
+    </copy>
+    
+  </target>
+  
+  
   <!--
       ************************************************************
       Artifact and Documentation distribution targets
@@ -716,19 +785,18 @@ Builds the project via ant (obviously).
   <target name="post" depends="init" description="(posts built artifacts to distribution server)">
     <copy file="${bin_dir}/post.manif.tmpl" tofile="${bin_dir}/post.manif" filtering="true" overwrite="true"/>
     <echo message="Posting Files To Distribution Server..."/>
-    <exec executable="post" dir="${bin_dir}">
-      <arg value="--debug"/>
+    <exec executable="post" dir="${basedir}/bin">
+      <arg value="--verbose"/>
     </exec>
   </target>
 
-  <target name="publish" depends="init-ivy" description="(publishes built artifacts to artifact repository)">
+  <target name="publish" depends="deliver" description="(publishes built artifacts to artifact repository)">
     <ivy:publish resolver="esgf_repo_devel" 
                  organisation="org.esgf"
                  module="${module}"
                  revision="${version_num}"
                  overwrite="true" haltonmissing="false">
       <artifacts pattern="dist/[artifact]-[revision].[ext]"/>
-      <artifacts pattern="dist/[artifact].war"/>
     </ivy:publish>
   </target>
 
@@ -737,9 +805,9 @@ Builds the project via ant (obviously).
       Python Targets....(calls targets defined in ${basedir}/src/python/build.xml
       ************************************************************
     -->
-  <target name="make_python" depends="init" description="(creates python egg distribution)">
+  <target name="make_python" depends="init">
     <copy file="${py_src_dir}/setup.py.tmpl" tofile="${py_src_dir}/setup.py" filtering="true" overwrite="true"/>
-    <copy file="${py_src_dir}/scripts/esgf_${module}_initialize.tmpl" tofile="${py_src_dir}/scripts/esgf_${module}_initialize" filtering="true" overwrite="true"/>
+    <copy file="${py_src_dir}/scripts/esgf_dashboard_initialize.tmpl" tofile="${py_src_dir}/scripts/esgf_dashboard_initialize" filtering="true"/>
 
     <echo message="Building python egg"/>
     <exec executable="./etc/db/make_python" dir="${basedir}">
@@ -749,12 +817,12 @@ Builds the project via ant (obviously).
       <arg value="${python_version}"/>
     </exec>
   </target>
-
+  
   <target name="clean_python">
     <echo message="Cleaning python build artifacts"/>
     <exec executable="./etc/db/make_python" dir="${basedir}">
       <arg value="--clean"/>
     </exec>
   </target>
- 
+  
 </project>

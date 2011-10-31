@@ -1,0 +1,10 @@
+ESGF schema definition and migration
+
+To create a distribution (.egg) file:
+
+(1) In setup.py, set VERSION
+(2) Run
+
+% python setup.py --verbose bdist_egg
+
+The distribution will be created in dist/esgf-<VERSION>-py<PYTHON_VERSION>.egg
