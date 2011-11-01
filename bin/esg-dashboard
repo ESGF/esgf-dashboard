@@ -60,8 +60,14 @@
 
 DEBUG=${DEBUG:-0}
 VERBOSE=${VERBOSE:-0}
-esg_dist_url=http://198.128.245.140/dist
 envfile="/etc/esg.env"
+esg_dist_url=${esg_dist_url:-"http://198.128.245.140/dist"}
+
+#Maybe I am paranoid but I want to make sure someone can't just set
+#the environment to any place and have us just accept it and pull from
+#it -gavin
+if $(echo "${esg_dist_url}" | grep "http://198.128.245.140/dist" >& /dev/null); then echo "*"; else (echo "illegal distribution url: ${esg_dist_url}" && checked_done 1); fi
+
 
 #--------------
 #User Defined / Setable (public)
@@ -82,7 +88,6 @@ tomcat_install_dir=${CATALINA_HOME:-${install_prefix}/tomcat}
 python_version=${python_version:-"2.6"}
 config_file=${esg_root_dir}/config/esgf.properties
 
-
 init() {
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
 
@@ -90,8 +95,8 @@ init() {
     dashboard_app_context_root=esgf-dashboard
     dashboard_app_home=${tomcat_install_dir}/webapps/${dashboard_app_context_root}
 
-    esgf_dashboard_version=${esgf_dashboard_version:-"1.2.0"}
-    esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.1.4"}
+    esgf_dashboard_version=${esgf_dashboard_version:-"0.0.1"}
+    esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.0.1"}
     esgf_dashboard_egg_file=esgf_dashboard-${esgf_dashboard_db_version}-py${python_version}.egg
     
     #Database information....
@@ -102,6 +107,12 @@ init() {
     postgress_port=${PGPORT:-5432}
     postgress_user=${PGUSER:-dbsuper}
     pg_sys_acct_passwd=${pg_sys_acct_passwd:=${pg_secret:=changeme}}
+
+    #Dashboard IP provider...
+    esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
+    esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
+    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-"0.0.1"}
+    esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
     
 }
 
@@ -116,6 +127,13 @@ init() {
 # In update mode it will always pull down latest after archiving old
 #
 setup_dashboard() {
+    init
+    setup_dashboard_database
+    setup_dashboard_webapp
+    setup_dashboard_provider
+}
+
+setup_dashboard_webapp() {
     init
 
     echo -n "Checking for dashboard services ${esgf_dashboard_version}"
@@ -153,8 +171,6 @@ setup_dashboard() {
 
         echo
     fi
-
-    configure_postgress
 
     mkdir -p ${workdir}
     [ $? != 0 ] && return 1
@@ -196,11 +212,132 @@ write_dashboard_install_log() {
     return 0
 }
 
+setup_dashboard_provider() {
+
+    echo -n "Checking for esgf-dashboard-ip ${esgf_dashboard_version} "
+    check_version esgf-dashboard-ip ${esgf_dashboard_version}
+    [ $? == 0 ] && (( ! force_install )) && echo " [OK]" && return 0
+
+    echo
+    echo "*******************************"
+    echo "Setting up ESGF Dashboard IP ${esgf-dashboard-ip_version}"
+    echo "*******************************"
+    echo
+
+    local default="Y"
+    ((force_install)) && default="N"
+    local dosetup
+    if [ -x ${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip ]; then
+	echo "Detected an existing ESGF Dashboard IP installation..."
+	read -p "Do you want to continue with ESGF Dashboard IP installation and setup? $([ "$default" = "N" ] && echo "[y/N]" || echo "[Y/n]") " dosetup
+	[ -z ${dosetup} ] && dosetup=${default}
+	if [ "${dosetup}" != "Y" ] && [ "${dosetup}" != "y" ]; then
+	    echo "Skipping ESGF Dashboard IP installation and setup - will assume ESGF Dashboard IP is setup properly"
+	    return 0
+	fi
+	echo
+    fi
+
+    mkdir -p ${esgf_dashboard_workdir}
+    [ $? != 0 ] && checked_done 1
+    chmod a+rw ${esgf_dashboard_workdir}
+    pushd ${esgf_dashboard_workdir} >& /dev/null
+
+    local esgf_dashboard_ip_dist_file=${esgf_dashboard_ip_dist_url##*/}
+    #strip off .tar.gz at the end
+    local esgf_dashboard_ip_dist_dir=$(echo ${esgf_dashboard_ip_dist_file} | awk 'gsub(/('$compress_extensions')/,"")')
+
+    #There is this pesky case of having a zero sized dist file... WTF!?
+    if [ -e ${esgf_dashboard_ip_dist_file} ]; then
+	ls -l ${esgf_dashboard_ip_dist_file}
+	local size=$(stat -c%s ${esgf_dashboard_ip_dist_file})
+	(( size == 0 )) && rm -v ${esgf_dashboard_ip_dist_file}
+    fi
+
+    #Check to see if we have postgres distribution directory
+    if [ ! -e ${esgf_dashboard_ip_dist_dir} ]; then
+	echo "Don't see ESGF Dashboard IP distribution dir ${esgf_dashboard_ip_dist_dir}"
+	if [ ! -e ${esgf_dashboard_ip_dist_file} ]; then
+	    echo "Don't see ESGF Dashboard IP distribution file ${esgf_dashboard_ip_dist_file} either"
+	    echo "Downloading ESGF Dashboard IP from ${esgf_dashboard_ip_dist_url}"
+	    checked_wget ${esgf_dashboard_ip_dist_file} ${esgf_dashboard_ip_dist_url}
+	    (( $? > 1 )) && echo " ERROR: Could not download ESGF Dashboard IP:${esgf_dashboard_ip_dist_file}" && popd && checked_done 1
+	    echo "unpacking ${esgf_dashboard_ip_dist_file}..."
+	    tar xzf ${esgf_dashboard_ip_dist_file}
+	    [ $? != 0 ] && echo " ERROR: Could not extract ESGF Dashboard IP: ${esgf_dashboard_ip_dist_file}" && popd && checked_done 1
+	fi
+    fi
+
+    #If you don't see the directory but see the tar.gz distribution
+    #then expand it and go from there....
+    if [ -e ${esgf_dashboard_ip_dist_file} ] && [ ! -e ${esgf_dashboard_ip_dist_dir} ]; then
+	echo "unpacking ${esgf_dashboard_ip_dist_file}..."
+	tar xzf ${esgf_dashboard_ip_dist_file}
+    fi
+
+    pushd ${esgf_dashboard_ip_dist_dir}
+    ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "[FAIL]")
+    echo "./Configure --prefix=${esgf_dashboard_ip_install_dir}"
+    if ./configure --prefix=${esgf_dashboard_ip_install_dir} \
+	&& make \
+	&& make install
+    then
+	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
+	#this is the "test"
+	#${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version
+	#[ $? != 0 ] &&	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!" && popd >& /dev/null && checked_done 1
+    else
+	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!"
+	popd >& /dev/null
+	checked_done 1
+    fi
+
+    popd >& /dev/null
+    popd >& /dev/null
+
+    write_esgf_dashboard_ip_env
+    write_esgf_dashboard_ip_install_log
+    checked_done 0
+
+}
+
+write_esgf_dashboard_ip_env() {
+    ((show_summary_latch++))
+    echo "export ESGF_DASHBOARD_IP_HOME=${esgf_dashboard_ip_install_dir}" >> ${envfile}
+    ##zoiks TODO: check the path if this is already in the path if so then don't set it again or maybe get sexy and move it to the front and re-write
+    echo "export PATH=${ESGF_DASHBOARD_IP_HOME}/bin:$PATH"  >> ${envfile}
+    dedup ${envfile} && source ${envfile}
+    return 0
+}
+
+write_esgf_dashboard_ip_install_log() {
+    echo "$(date ${date_format}) esgf_dashboard_ip=${esgf_dashboard_ip_min_version} ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
+    dedup ${install_manifest}
+    return 0
+}
+
+start_dashboard_services() {
+    echo "Starting dashboard provider..."
+    #TODO: command to start provider
+    #${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip.sh start
+    [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
+    return 0
+}
+
+stop_dashboard_services() {
+    echo "Stopping dashboard provider..."
+    #TODO: command to start provider
+    #${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip.sh stop
+    [ $? != 0 ] && echo " ERROR: Could not stop esgf dashboard provider" && popd && return 1
+    return 0
+}
+
+
 #--------------------------------------------------
 #NOTE: This must be run AFTER the esg node web app
 #      installation/configuration (setup_node_manager) 
 #--------------------------------------------------
-configure_postgress() {
+setup_dashboard_database() {
     init
 
     echo

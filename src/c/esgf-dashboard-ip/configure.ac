@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([esgf-dashboard-ip], [2.0.3], [sandro.fiore@unisalento.it])
+AC_INIT(esgf-dashboard-ip, 2.0.3, sandro.fiore@unisalento.it)
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
