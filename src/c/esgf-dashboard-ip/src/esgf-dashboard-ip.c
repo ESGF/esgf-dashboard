@@ -8,12 +8,30 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <getopt.h>
 #include "../include/ping.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 
 void readConfig (void);
 int myfree (char *mystring);
+
+
+static struct option long_options[] = {
+{"version", 0, 0, 'v'},
+{"help", 0, 0, 'h'},
+{0, 0, 0, 0}
+};
+
+static char                                   *USAGE =
+    "USAGE:\n"
+    "  --v, --version                            Get esgf-dashboard-ip version\n"
+    "  --h, --help                               Show usage\n\n"
+    "EXAMPLE:\n"
+    "%s -v \n";
+
+#define PRINT_USAGE fprintf(stderr, USAGE, argv[0])
+#define VERSION "0.0.1"
 
 int
 main (int argc, char **argv)
@@ -26,12 +44,41 @@ main (int argc, char **argv)
   struct host *hosts = NULL;
   int counter = 0;
 
+  int c;
+  int option_index = 0;
+  int opt_t = 0;
+
+// reading the command line arguments
+
+  while ((c = getopt_long(argc, argv, "v:h", long_options, &option_index)) != -1)
+  {
+    switch (c)
+    {
+      case 'v':
+	fprintf(stdout,"%s\n",VERSION);
+	return 0;
+      case 'h':
+ 	PRINT_USAGE;	
+	return 0;
+      case '?':
+	fprintf(stdout,"Bad Arguments\n");
+ 	PRINT_USAGE;	
+	return 0;
+      default:
+	fprintf(stdout,"Bad Arguments\n");
+ 	PRINT_USAGE;	
+	return 0;
+    }
+  }
+
+fprintf(stdout,"Starting esgf-dashboard-ip\n");
 
 // reading the ESGF_HOME attribute
 
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
       strcpy (esgf_properties_default_path, "/esg/");
+      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
@@ -122,6 +169,7 @@ ESGF_config_path (char **esgf_properties_pointer)
   int notfound;
 
   sprintf (esg_env, "/etc/esg.env");
+  //sprintf (esg_env, "/export/fiore2/etc/esg.env");
 
   FILE *file = fopen (esg_env, "r");
 
@@ -170,6 +218,8 @@ ESGF_properties (char *esgf_properties_path)
 
   sprintf (esgf_properties_filename,
 	   "/%s/config/esgf.properties", esgf_properties_path);
+  //sprintf (esgf_properties_filename,
+//	   "/export/fiore2/%s/config/esgf.properties", esgf_properties_path);
 
   FILE *file = fopen (esgf_properties_filename, "r");
 
@@ -177,12 +227,13 @@ ESGF_properties (char *esgf_properties_path)
     return -1;
 
   // setting default values for non-mandatory properties 
+
   CONNECTION_TIMEOUT = 1000000;
   THREAD_OPEN_MAX = 20;
   PING_SPAN = 295;
   HOSTS_LOADING_SPAN = 120;
 
-  notfound = 4;
+  notfound = 4; // number of mandatory properties to be retrieved from the esgf.properties file
   while (notfound)
     {
       char buffer[256] = { '\0' };
@@ -251,6 +302,8 @@ ESGF_passwd (char *esgf_passwd_path)
 
   sprintf (esgf_passwd_filename, "/%s/config/.esg_pg_pass",
 	   esgf_passwd_path);
+ // sprintf (esgf_passwd_filename, "/export/fiore2/%s/config/.esg_pg_pass",
+//	   esgf_passwd_path);
 
   FILE *file = fopen (esgf_passwd_filename, "r");
 
@@ -265,49 +318,3 @@ ESGF_passwd (char *esgf_passwd_path)
   fclose (file);
   return 0;
 }
-
-  /*    if (position != NULL)
-
-
-     strcpy (POSTGRES_HOST =
-     (char *) malloc (strlen (position + 1)), position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     POSTGRES_PORT_NUMBER = atoi (position + 1);
-     printf ("Port %d\n", POSTGRES_PORT_NUMBER);
-     }
-   */
-
-  /*fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     strcpy (POSTGRES_USER =
-     (char *) malloc (strlen (position + 1)), position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     strcpy (POSTGRES_PASSWD =
-     (char *) malloc (strlen (position + 1)), position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     strcpy (POSTGRES_DB_NAME =
-     (char *) malloc (strlen (position + 1)), position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     CONNECTION_TIMEOUT = atoi (position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     THREAD_OPEN_MAX = atoi (position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     PING_SPAN = atoi (position + 1);
-     fscanf (file, "%s", buffer);
-     position = strchr (buffer, '=');
-     if (position != NULL)
-     HOSTS_LOADING_SPAN = atoi (position + 1);
-   */
