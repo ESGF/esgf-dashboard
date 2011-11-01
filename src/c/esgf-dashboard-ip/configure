@@ -603,6 +603,7 @@ PACKAGE_BUGREPORT='sandro.fiore@unisalento.it'
 ac_unique_file="src"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+INSTALLATION_PATH
 pq_LIB_FILE
 pq_LIB_FIND
 pq_LDFLAGS
@@ -4779,7 +4780,10 @@ fi
 
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")
 
-ac_config_files="$ac_config_files Makefile src/Makefile"
+INSTALLATION_PATH=$"${prefix}"
+
+
+ac_config_files="$ac_config_files Makefile src/Makefile bin/ip.service"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5411,6 +5415,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "bin/ip.service") CONFIG_FILES="$CONFIG_FILES bin/ip.service" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
