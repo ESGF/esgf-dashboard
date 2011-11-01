@@ -55,6 +55,9 @@ AC_ARG_ENABLE(postgresql,
 
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")
 
+INSTALLATION_PATH=$"${prefix}"
+AC_SUBST(INSTALLATION_PATH)
+
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile  bin/ip.service])
 AC_OUTPUT
