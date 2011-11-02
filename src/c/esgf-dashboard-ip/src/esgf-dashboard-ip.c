@@ -300,9 +300,9 @@ ESGF_passwd (char *esgf_passwd_path)
   int notfound;
   char buffer[256] = { '\0' };
 
-  sprintf (esgf_passwd_filename, "/%s/config/.esg_pg_pass",
+  sprintf (esgf_passwd_filename, "/%s/config/.esgf_pass",
 	   esgf_passwd_path);
- // sprintf (esgf_passwd_filename, "/export/fiore2/%s/config/.esg_pg_pass",
+ // sprintf (esgf_passwd_filename, "/export/fiore2/%s/config/.esgf_pass",
 //	   esgf_passwd_path);
 
   FILE *file = fopen (esgf_passwd_filename, "r");
