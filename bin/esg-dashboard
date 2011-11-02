@@ -108,7 +108,7 @@ init() {
     postgress_user=${PGUSER:-dbsuper}
     pg_sys_acct_passwd=${pg_sys_acct_passwd:=${pg_secret:=changeme}}
 
-    #Dashboard IP provider...
+    #Dashboard Information Provider...
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
     esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-"0.0.1"}
@@ -128,9 +128,9 @@ init() {
 #
 setup_dashboard() {
     init
-    setup_dashboard_database
-    setup_dashboard_webapp
-    setup_dashboard_provider
+    setup_dashboard_database $@
+    setup_dashboard_webapp $@
+    setup_dashboard_provider $@
 }
 
 setup_dashboard_webapp() {
@@ -304,8 +304,12 @@ write_esgf_dashboard_ip_env() {
     ((show_summary_latch++))
     echo "export ESGF_DASHBOARD_IP_HOME=${esgf_dashboard_ip_install_dir}" >> ${envfile}
     ##zoiks TODO: check the path if this is already in the path if so then don't set it again or maybe get sexy and move it to the front and re-write
-    echo "export PATH=${ESGF_DASHBOARD_IP_HOME}/bin:$PATH"  >> ${envfile}
-    dedup ${envfile} && source ${envfile}
+    (echo ${PATH} | grep ${ESGF_DASHBOARD_IP_HOME} >& /dev/null)
+    if [ $? != 0 ]; then
+        debug_print "Adding {ESGF_DASHBOARD_IP_HOME}/bin to PATH..."
+        echo "export PATH=${ESGF_DASHBOARD_IP_HOME}/bin:$PATH"  >> ${envfile}
+        dedup ${envfile} && source ${envfile}
+    fi
     return 0
 }
 
