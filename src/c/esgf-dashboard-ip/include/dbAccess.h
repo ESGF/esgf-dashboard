@@ -13,9 +13,9 @@
 // --------------------------------------------------------
 
 // --------------- Query ----------------------------------
-#define QUERY1 	"SELECT s.id, h.ip, s.port FROM service_instance s INNER JOIN host h ON h.id=s.idHost ORDER BY h.ip, s.port;"
-#define QUERY2	"INSERT INTO service_status(status, elapsedTime, idServiceInstance) " 
-//#define QUERY2	"INSERT INTO service_status(status, elapsedTime, idServiceInstance) VALUES(?, ?, ?)"
+#define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;"
+#define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance) " 
+//#define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance) VALUES(?, ?, ?)"
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);
