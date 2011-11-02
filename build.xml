@@ -435,12 +435,18 @@ Builds the project via ant (obviously).
 
 
   <target name="make_ip" depends="init" description="Creates the tar for the
-                                                     Information Provider C code">
+                                                     Information
+                                                     Provider C code">
+    <copy todir="${dist_dir}/tmp_c" filtering="true" overwrite="true">
+      <fileset dir="${basedir}/src/c/${module}-ip"/>
+    </copy>
+
     <tar destfile="${dist_dir}/${module}-ip-${version_num}.tar">
-      <tarfileset dir="${basedir}/src/c/${module}-ip" prefix="${module}-ip-${version_num}"/>
+      <tarfileset dir="${dist_dir}/tmp_c" prefix="${module}-ip-${version_num}"/>
     </tar>
     <gzip destfile="${dist_dir}/${module}-ip-${version_num}.tar.gz" src="${dist_dir}/${module}-ip-${version_num}.tar"/>
     <delete file="${dist_dir}/${module}-ip-${version_num}.tar"/>
+    <delete dir="${dist_dir}/tmp_c"/>
   </target>
 
   <target name="make_dist" depends="make_all_jars, make_war, make_python, make_ip"

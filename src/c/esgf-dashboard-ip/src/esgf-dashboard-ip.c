@@ -31,7 +31,7 @@ static char                                   *USAGE =
     "%s -v \n";
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0])
-#define VERSION "0.0.1"
+#define VERSION "@version_num@"
 
 int
 main (int argc, char **argv)
