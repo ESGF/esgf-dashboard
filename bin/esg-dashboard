@@ -283,9 +283,8 @@ setup_dashboard_provider() {
 	&& make install
     then
 	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
-	#this is the "test"
-	#${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version
-	#[ $? != 0 ] &&	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!" && popd >& /dev/null && checked_done 1
+	${esgf_dashboard_ip_install_dir}/bin/ip.service --version
+	[ $? != 0 ] &&	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!" && popd >& /dev/null && checked_done 1
     else
 	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!"
 	popd >& /dev/null
@@ -318,16 +317,14 @@ write_esgf_dashboard_ip_install_log() {
 
 start_dashboard_services() {
     echo "Starting dashboard provider..."
-    #TODO: command to start provider
-    #${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip.sh start
+    ${esgf_dashboard_ip_install_dir}/bin/ip.service start
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
 }
 
 stop_dashboard_services() {
     echo "Stopping dashboard provider..."
-    #TODO: command to start provider
-    #${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip.sh stop
+    ${esgf_dashboard_ip_install_dir}/bin/ip.service stop
     [ $? != 0 ] && echo " ERROR: Could not stop esgf dashboard provider" && popd && return 1
     return 0
 }
