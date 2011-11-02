@@ -277,7 +277,7 @@ setup_dashboard_provider() {
 
     pushd ${esgf_dashboard_ip_dist_dir}
     ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "[FAIL]")
-    echo "./Configure --prefix=${esgf_dashboard_ip_install_dir}"
+    echo "./configure --prefix=${esgf_dashboard_ip_install_dir}"
     if ./configure --prefix=${esgf_dashboard_ip_install_dir} \
 	&& make \
 	&& make install
