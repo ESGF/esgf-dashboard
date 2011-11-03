@@ -75,7 +75,9 @@ if $(echo "${esg_dist_url}" | grep "http://198.128.245.140/dist" >& /dev/null); 
 install_prefix=${install_prefix:-"/usr/local"}
 cdat_home=${cdat_home:-${install_prefix}/cdat}
 esg_root_dir=${esg_root_dir:-"/esg"}
-workdir=${workdir:-~/workbench/esg}
+installer_home=${installer_home:-/usr/local/src/esgf}
+workdir=${workdir:-${installer_home}/workbench/esg}
+
 install_logfile=${install_logfile:-"/etc/esg.install_log"}
 #--------------
 
@@ -238,10 +240,10 @@ setup_dashboard_provider() {
 	echo
     fi
 
-    mkdir -p ${esgf_dashboard_workdir}
+    mkdir -p ${workdir}
     [ $? != 0 ] && checked_done 1
-    chmod a+rw ${esgf_dashboard_workdir}
-    pushd ${esgf_dashboard_workdir} >& /dev/null
+    chmod a+rw ${workdir}
+    pushd ${workdir} >& /dev/null
 
     local esgf_dashboard_ip_dist_file=${esgf_dashboard_ip_dist_url##*/}
     #strip off .tar.gz at the end
