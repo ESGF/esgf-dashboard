@@ -67,7 +67,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
 		echo "STOPPED]"
 	fi
         ;;
-    version)
+    version | --version)
        	./esgf-dashboard-ip --version 
         ;;
     restart)
