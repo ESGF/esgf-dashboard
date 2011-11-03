@@ -764,3 +764,4 @@ ALTER TABLE ONLY service_status
 -- PostgreSQL database dump complete
 --
 
+SET search_path = public, pg_catalog;
