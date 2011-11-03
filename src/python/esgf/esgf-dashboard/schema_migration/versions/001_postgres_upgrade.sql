@@ -135,7 +135,7 @@ ALTER SEQUENCE news_idnews_seq OWNED BY news.idnews;
 -- Name: news_idnews_seq; Type: SEQUENCE SET; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-SELECT pg_catalog.setval('news_idnews_seq', 3, true);
+SELECT pg_catalog.setval('news_idnews_seq', 1, true);
 
 
 --
@@ -223,7 +223,7 @@ ALTER SEQUENCE user1_id_seq OWNED BY user1.id;
 -- Name: user1_id_seq; Type: SEQUENCE SET; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-SELECT pg_catalog.setval('user1_id_seq', 3, true);
+SELECT pg_catalog.setval('user1_id_seq', 1, true);
 
 
 --
@@ -237,9 +237,10 @@ ALTER TABLE user1 ALTER COLUMN id SET DEFAULT nextval('user1_id_seq'::regclass);
 -- Data for Name: user1; Type: TABLE DATA; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-COPY user1 (dn, id, name, surname, mail, username, password, registrationdate, accountcertified, idcountry) FROM stdin;
-\N	1	guest	guest	guest@guest.com	guest	d89d9a8b05e6e70040ca5b0e00db6c43	2010-09-28 14:56:06	1	\N
-\.
+insert into user1(id,name,surname,mail,username,password,accountcertified) values(1,'guest','guest','guest@guest.gov','guest',MD5('password'),1);
+--- COPY user1 (dn, id, name, surname, mail, username, password, registrationdate, accountcertified, idcountry) FROM stdin;
+--- \N	1	guest	guest	guest@guest.com	guest	d89d9a8b05e6e70040ca5b0e00db6c43	2010-09-28 14:56:06	1	\N
+--- \.
 
 
 --
@@ -336,7 +337,7 @@ ALTER SEQUENCE host_id_seq OWNED BY host.id;
 -- Name: host_id_seq; Type: SEQUENCE SET; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-SELECT pg_catalog.setval('host_id_seq', 5, true);
+SELECT pg_catalog.setval('host_id_seq', 1, true);
 
 
 --
@@ -559,7 +560,7 @@ ALTER SEQUENCE service_instance_id_seq OWNED BY service_instance.id;
 -- Name: service_instance_id_seq; Type: SEQUENCE SET; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-SELECT pg_catalog.setval('service_instance_id_seq', 18, true);
+SELECT pg_catalog.setval('service_instance_id_seq', 1, true);
 
 
 --
@@ -707,7 +708,7 @@ ALTER SEQUENCE service_status_id_seq OWNED BY service_status.id;
 -- Name: service_status_id_seq; Type: SEQUENCE SET; Schema: esgf_dashboard; Owner: dbsuper
 --
 
-SELECT pg_catalog.setval('service_status_id_seq', 91866, true);
+SELECT pg_catalog.setval('service_status_id_seq', 1, true);
 
 
 --
