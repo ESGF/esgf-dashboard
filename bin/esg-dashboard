@@ -262,7 +262,7 @@ setup_dashboard_provider() {
 	if [ ! -e ${esgf_dashboard_ip_dist_file} ]; then
 	    echo "Don't see ESGF Dashboard IP distribution file ${esgf_dashboard_ip_dist_file} either"
 	    echo "Downloading ESGF Dashboard IP from ${esgf_dashboard_ip_dist_url}"
-	    checked_wget ${esgf_dashboard_ip_dist_file} ${esgf_dashboard_ip_dist_url}
+	    checked_get ${esgf_dashboard_ip_dist_file} ${esgf_dashboard_ip_dist_url}
 	    (( $? > 1 )) && echo " ERROR: Could not download ESGF Dashboard IP:${esgf_dashboard_ip_dist_file}" && popd && checked_done 1
 	    echo "unpacking ${esgf_dashboard_ip_dist_file}..."
 	    tar xzf ${esgf_dashboard_ip_dist_file}
