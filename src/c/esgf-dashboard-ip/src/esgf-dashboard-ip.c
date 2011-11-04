@@ -18,17 +18,16 @@ int myfree (char *mystring);
 
 
 static struct option long_options[] = {
-{"version", 0, 0, 'v'},
-{"help", 0, 0, 'h'},
-{0, 0, 0, 0}
+  {"version", 0, 0, 'v'},
+  {"help", 0, 0, 'h'},
+  {0, 0, 0, 0}
 };
 
-static char                                   *USAGE =
-    "USAGE:\n"
-    "  --v, --version                            Get esgf-dashboard-ip version\n"
-    "  --h, --help                               Show usage\n\n"
-    "EXAMPLE:\n"
-    "%s -v \n";
+static char *USAGE =
+  "USAGE:\n"
+  "  --v, --version                            Get esgf-dashboard-ip version\n"
+  "  --h, --help                               Show usage\n\n"
+  "EXAMPLE:\n" "%s -v \n";
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0])
 #define VERSION "@version_num@"
@@ -50,35 +49,36 @@ main (int argc, char **argv)
 
 // reading the command line arguments
 
-  while ((c = getopt_long(argc, argv, "v:h", long_options, &option_index)) != -1)
-  {
-    switch (c)
+  while ((c =
+	  getopt_long (argc, argv, "v:h", long_options, &option_index)) != -1)
     {
-      case 'v':
-	fprintf(stdout,"%s\n",VERSION);
-	return 0;
-      case 'h':
- 	PRINT_USAGE;	
-	return 0;
-      case '?':
-	fprintf(stdout,"Bad Arguments\n");
- 	PRINT_USAGE;	
-	return 0;
-      default:
-	fprintf(stdout,"Bad Arguments\n");
- 	PRINT_USAGE;	
-	return 0;
+      switch (c)
+	{
+	case 'v':
+	  fprintf (stdout, "%s\n", VERSION);
+	  return 0;
+	case 'h':
+	  PRINT_USAGE;
+	  return 0;
+	case '?':
+	  fprintf (stdout, "Bad Arguments\n");
+	  PRINT_USAGE;
+	  return 0;
+	default:
+	  fprintf (stdout, "Bad Arguments\n");
+	  PRINT_USAGE;
+	  return 0;
+	}
     }
-  }
 
-fprintf(stdout,"Starting esgf-dashboard-ip\n");
+  fprintf (stdout, "Starting esgf-dashboard-ip\n");
 
 // reading the ESGF_HOME attribute
 
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
-      strcpy (esgf_properties_default_path, "/esg/");
-      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");
+      //strcpy (esgf_properties_default_path, "/esg/");
+      strcpy (esgf_properties_default_path, "/export/fiore2/esg/");
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
@@ -106,6 +106,7 @@ fprintf(stdout,"Starting esgf-dashboard-ip\n");
   printf ("CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
   printf ("THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
   printf ("PING_SPAN = [%d]\n", PING_SPAN);
+  printf ("PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
   printf ("HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
 
 // reading the postgres password
@@ -126,19 +127,33 @@ fprintf(stdout,"Starting esgf-dashboard-ip\n");
   printf ("All of the properties have been found\n");
   printf ("Information provider startup...\n");
 
+  counter = 0;
   while (1)
     {
       if (counter == 0)
 	{
-	  free (hosts);
+	  if (hosts)
+	    free (hosts);
+	  // reload list of hosts/services
 	  hosts = loadHosts (&numHosts);
-	  if (numHosts == 0 || hosts == NULL)
-	    break;
+	  //if (numHosts == 0 || hosts == NULL)
+	  //  break;
 	}
-      pingHostList (hosts, numHosts);
-      writeResults (hosts, numHosts);
-      counter = (counter + 1) % HOSTS_LOADING_SPAN;
-      sleep (PING_SPAN);
+      if (numHosts != 0 && hosts != NULL)
+	{
+	  fprintf (stdout, "Host/services found. Let's ping them...");
+	  pingHostList (hosts, numHosts);
+	  writeResults (hosts, numHosts);
+	  counter = (counter + 1) % HOSTS_LOADING_SPAN;
+	  fprintf (stdout, "Waiting for %d sec\n",PING_SPAN);
+	  sleep (PING_SPAN);
+	}
+      else
+	{
+	  fprintf (stdout, "Host/serices not found...\n");
+	  fprintf (stdout, "Waiting for %d sec\n",PING_SPAN_NO_HOSTS);
+	  sleep (PING_SPAN_NO_HOSTS);
+	}
     }
 
   // freeing space
@@ -168,8 +183,8 @@ ESGF_config_path (char **esgf_properties_pointer)
   char *position;
   int notfound;
 
-  sprintf (esg_env, "/etc/esg.env");
-  //sprintf (esg_env, "/export/fiore2/etc/esg.env");
+  //sprintf (esg_env, "/etc/esg.env");
+  sprintf (esg_env, "/export/fiore2/etc/esg.env");
 
   FILE *file = fopen (esg_env, "r");
 
@@ -208,6 +223,7 @@ ESGF_config_path (char **esgf_properties_pointer)
   return (notfound);
 }
 
+
 int
 ESGF_properties (char *esgf_properties_path)
 {
@@ -216,11 +232,11 @@ ESGF_properties (char *esgf_properties_path)
   char *position;
   int notfound;
 
+// this line is ok for local and production env
   sprintf (esgf_properties_filename,
 	   "/%s/config/esgf.properties", esgf_properties_path);
-  //sprintf (esgf_properties_filename,
-//	   "/export/fiore2/%s/config/esgf.properties", esgf_properties_path);
 
+  fprintf (stdout, esgf_properties_filename);
   FILE *file = fopen (esgf_properties_filename, "r");
 
   if (file == NULL)		// /esg/config/esgf.properties not found
@@ -231,9 +247,10 @@ ESGF_properties (char *esgf_properties_path)
   CONNECTION_TIMEOUT = 1000000;
   THREAD_OPEN_MAX = 20;
   PING_SPAN = 295;
+  PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
 
-  notfound = 4; // number of mandatory properties to be retrieved from the esgf.properties file
+  notfound = 9;			// number of mandatory properties to be retrieved from the esgf.properties file
   while (notfound)
     {
       char buffer[256] = { '\0' };
@@ -275,13 +292,30 @@ ESGF_properties (char *esgf_properties_path)
 	      notfound--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.connection_timeout")))
-	    CONNECTION_TIMEOUT = atoi (value_buffer);
-	  if (!(strcmp (buffer, "esgf.ip.thread_open_max")))
+	    {
+   	      CONNECTION_TIMEOUT = atoi (value_buffer);
+	      notfound--;
+	    }
+  	  if (!(strcmp (buffer, "esgf.ip.thread_open_max")))
+	    {
 	    THREAD_OPEN_MAX = atoi (value_buffer);
+	      notfound--;
+	    }
 	  if (!(strcmp (buffer, "esgf.ip.ping_span")))
+	    {
 	    PING_SPAN = atoi (value_buffer);
+	      notfound--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.ping_span_no_hosts")))
+	    {
+	    PING_SPAN_NO_HOSTS = atoi (value_buffer);
+	      notfound--;
+	    }
 	  if (!(strcmp (buffer, "esgf.ip.hosts_loading_span")))
+	    {
 	    HOSTS_LOADING_SPAN = atoi (value_buffer);
+	    notfound--;
+	    }
 	}
     }
 
@@ -300,11 +334,10 @@ ESGF_passwd (char *esgf_passwd_path)
   int notfound;
   char buffer[256] = { '\0' };
 
-  sprintf (esgf_passwd_filename, "/%s/config/.esgf_pass",
-	   esgf_passwd_path);
- // sprintf (esgf_passwd_filename, "/export/fiore2/%s/config/.esgf_pass",
-//	   esgf_passwd_path);
+// this line is ok for local and production env
+  sprintf (esgf_passwd_filename, "/%s/config/.esgf_pass", esgf_passwd_path);
 
+  fprintf (stdout, esgf_passwd_filename);
   FILE *file = fopen (esgf_passwd_filename, "r");
 
   if (file == NULL)		// /esg/config/.esg_pg_pass not found

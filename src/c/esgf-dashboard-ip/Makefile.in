@@ -34,8 +34,9 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_bin_SCRIPTS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/bin/ip.service.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile depcomp install-sh missing
+	$(top_srcdir)/bin/ip.service.local.in $(top_srcdir)/configure \
+	AUTHORS COPYING ChangeLog INSTALL NEWS compile depcomp \
+	install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
@@ -45,7 +46,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = bin/ip.service
+CONFIG_CLEAN_FILES = bin/ip.service bin/ip.service.local
 am__installdirs = "$(DESTDIR)$(bindir)"
 dist_binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(dist_bin_SCRIPTS)
@@ -166,7 +167,7 @@ ACLOCAL_AMFLAGS = -I #m4
 SUBDIRS = . src
 
 #include_HEADERS=include/config.h include/ping.h include/dbAccess.h
-dist_bin_SCRIPTS = bin/ip.service
+dist_bin_SCRIPTS = bin/ip.service bin/ip.service.local
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -222,6 +223,8 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 bin/ip.service: $(top_builddir)/config.status $(top_srcdir)/bin/ip.service.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+bin/ip.service.local: $(top_builddir)/config.status $(top_srcdir)/bin/ip.service.local.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-dist_binSCRIPTS: $(dist_bin_SCRIPTS)
 	@$(NORMAL_INSTALL)

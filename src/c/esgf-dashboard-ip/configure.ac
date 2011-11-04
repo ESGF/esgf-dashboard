@@ -59,5 +59,5 @@ INSTALLATION_PATH=$"${prefix}"
 AC_SUBST(INSTALLATION_PATH)
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile  bin/ip.service])
+                 src/Makefile  bin/ip.service bin/ip.service.local])
 AC_OUTPUT

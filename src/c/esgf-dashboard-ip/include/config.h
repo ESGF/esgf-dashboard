@@ -15,6 +15,7 @@ char *POSTGRES_DB_NAME;
 int CONNECTION_TIMEOUT; // microseconds
 unsigned short THREAD_OPEN_MAX; // max threads #
 int PING_SPAN;
+int PING_SPAN_NO_HOSTS;
 int HOSTS_LOADING_SPAN;
 
 #endif /* CONFIG_H_ */
