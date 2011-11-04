@@ -437,17 +437,6 @@ Builds the project via ant (obviously).
   <target name="make_ip" depends="init" description="Creates the tar for the
                                                      Information
                                                      Provider C code">
-    <!--
-    <copy todir="${build_dir}/tmp_c" filtering="true" overwrite="true">
-      <fileset dir="${basedir}/src/c/${module}-ip"/>
-    </copy>
-    <tar destfile="${dist_dir}/${module}-ip-${version_num}.tar">
-      <tarfileset dir="${build_dir}/tmp_c" prefix="${module}-ip-${version_num}"/>
-    </tar>
-    <gzip destfile="${dist_dir}/${module}-ip-${version_num}.tar.gz" src="${dist_dir}/${module}-ip-${version_num}.tar"/>
-    <delete file="${dist_dir}/${module}-ip-${version_num}.tar"/>
-    -->
-
     <mkdir dir="${build_dir}/${module}-ip-${version_num}"/>
     <exec executable="bash" dir="${basedir}/src/c/${module}-ip">
       <arg value="-c"/>
@@ -460,7 +449,7 @@ Builds the project via ant (obviously).
     <mkdir dir="${dist_dir}"/>
     <exec executable="bash" dir="${build_dir}">
       <arg value="-c"/>
-      <arg value="tar cvzpf ${dist_dir}/${module}-ip-${version_num}.tar.gz ${module}-ip-${version_num}"/>
+      <arg value="tar czpf ${dist_dir}/${module}-ip-${version_num}.tar.gz ${module}-ip-${version_num}"/>
     </exec>
     <delete dir="${build_dir}/${module}-ip-${version_num}"/>
   </target>
