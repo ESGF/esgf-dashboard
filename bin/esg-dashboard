@@ -90,6 +90,9 @@ tomcat_install_dir=${CATALINA_HOME:-${install_prefix}/tomcat}
 python_version=${python_version:-"2.6"}
 config_file=${esg_root_dir}/config/esgf.properties
 
+esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
+    
+
 init() {
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
 
@@ -114,7 +117,6 @@ init() {
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
     esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-"0.0.1"}
-    esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
     
 }
 
@@ -136,7 +138,6 @@ setup_dashboard() {
 }
 
 setup_dashboard_webapp() {
-    init
 
     echo -n "Checking for dashboard services ${esgf_dashboard_version}"
     check_webapp_version "${dashboard_app_context_root}" "${esgf_dashboard_version}"
@@ -316,7 +317,7 @@ write_esgf_dashboard_ip_env() {
 }
 
 write_esgf_dashboard_ip_install_log() {
-    echo "$(date ${date_format}) esgf_dashboard_ip=${esgf_dashboard_ip_min_version} ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
+    echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_dist_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
     dedup ${install_manifest}
     return 0
 }
@@ -354,7 +355,7 @@ setup_dashboard_database() {
     #Create the database...
     echo "Creating esg node database: [${node_db_name}]"
     echo "${postgress_install_dir}/bin/createdb ${node_db_name}"
-    ${postgress_install_dir}/bin/createdb ${node_db_name} >& /dev/null
+    PGPASSWORD=${PGPASSWORD:-${pg_sys_acct_passwd}} ${postgress_install_dir}/bin/createdb ${node_db_name} >& /dev/null
     (( $? > 1 )) && echo " ERROR: Could not create esg node database: ${node_db_name}" && return 0
     echo 
 

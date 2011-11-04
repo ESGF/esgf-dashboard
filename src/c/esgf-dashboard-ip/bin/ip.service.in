@@ -15,6 +15,7 @@
 #	
 ### END INIT INFO
 
+[ -e /etc/esg.env ] && source /etc/esg.env
 
 # Check for missing binaries
 
@@ -41,7 +42,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
 	else
         	## Start the esgf information provider 
 		cd $ESGF_DASHBOARD_IP_HOME/bin
-        	./esgf-dashboard-ip & 
+        	$ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip & 
 		echo "OK]"
 	fi
         ;;
