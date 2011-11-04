@@ -4,6 +4,6 @@ SUBDIRS=. src
 
 #include_HEADERS=include/config.h include/ping.h include/dbAccess.h
 
-dist_bin_SCRIPTS = bin/ip.service bin/ip.service.local
+dist_bin_SCRIPTS = bin/ip.service #bin/ip.service.local
 
 #EXTRA_DIST = bin/esgf-dashboard-ip.sh
