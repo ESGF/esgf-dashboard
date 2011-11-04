@@ -286,8 +286,9 @@ setup_dashboard_provider() {
 	&& make install
     then
 	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
-	${esgf_dashboard_ip_install_dir}/bin/ip.service --version
-	[ $? != 0 ] &&	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!" && popd >& /dev/null && checked_done 1
+	if [ ! -e "${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip" ]; then
+            echo" ERROR: Did NOT successfully build ESGF Dashboard IP Executable!!" && popd >& /dev/null && checked_done 1
+        fi
     else
 	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!"
 	popd >& /dev/null
@@ -317,7 +318,7 @@ write_esgf_dashboard_ip_env() {
 }
 
 write_esgf_dashboard_ip_install_log() {
-    echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_dist_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
+    echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
     dedup ${install_manifest}
     return 0
 }

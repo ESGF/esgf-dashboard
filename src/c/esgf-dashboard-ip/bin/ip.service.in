@@ -15,7 +15,7 @@
 #	
 ### END INIT INFO
 
-[ -e /etc/esg.env ] && source /etc/esg.env
+[ -e /etc/esg.env ] && $(grep LD_LIBRARY_PATH /etc/esg.env)
 
 # Check for missing binaries
 
@@ -34,38 +34,42 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
 
   case "$1" in
     start)
-        echo -n "Starting the ESGF Information Provider...["
+        echo -n "Starting the ESGF Information Provider... "
 
 	if ps ax | grep -v grep | grep $SERVICE > /dev/null
 	then
-	    echo "ALREADY RUNNING] "
+	    echo "[ALREADY RUNNING] "
 	else
         	## Start the esgf information provider 
 		cd $ESGF_DASHBOARD_IP_HOME/bin
         	$ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip & 
-		echo "OK]"
+                pid=$!
+                echo $pid > /var/run/esgf-dashboard-ip.pid
+		echo "[OK]"
 	fi
         ;;
     stop)
-        echo -n "Shutting down ESGF Information Provider...["
+        echo -n "Shutting down ESGF Information Provider... "
+        kill -9 $(cat /var/run/esgf-dashboard-ip.pid)
+        [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && exit 0
 
-	if ps ax | grep -v grep | grep $SERVICE > /dev/null
+	if ps ax | grep -v grep | grep $SERVICE >& /dev/null
 	then
             ## Stop the esgf information provider 
             killall esgf-dashboard-ip 
-	    echo "OK]"
+	    echo "[OK]"
 	else
-	    echo "ALREADY STOPPED]"
+	    echo "[ALREADY STOPPED]"
 	fi
         ;;
     status)
-        echo -n "Checking the ESGF Information Provider status...["
+        echo -n "Checking the ESGF Information Provider status..."
 
 	if ps ax | grep -v grep | grep $SERVICE > /dev/null
 	then
-	    echo "RUNNING] "
+	    echo "[RUNNING] "
 	else
-		echo "STOPPED]"
+		echo "[STOPPED]"
 	fi
         ;;
     version | --version)
@@ -86,4 +90,4 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
         ;;
 esac
 
-exit 1
+exit 0
