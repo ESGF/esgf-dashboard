@@ -3,11 +3,12 @@
  *
  *      Author: University of Salento and CMCC 
  */
-
+#include <string.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <getopt.h>
 #include "../include/ping.h"
 #include "../include/dbAccess.h"
@@ -37,7 +38,8 @@ main (int argc, char **argv)
 {
 
   char *esgf_properties = NULL;
-  char esgf_properties_default_path[256] = { '\0' };
+  char esgf_properties_default_path[1024] = { '\0' };
+  char esgf_registration_xml_path[1024] = { '\0' };
   int res = 0;
   unsigned numHosts = 0;
   struct host *hosts = NULL;
@@ -45,12 +47,21 @@ main (int argc, char **argv)
 
   int c;
   int option_index = 0;
+  int iterator;
   int opt_t = 0;
+  int mandatory;
+  int allprop;
 
+  /*
+   * this initialize the library and check potential ABI mismatches
+   * between the version it was compiled for and the actual shared
+   * library used.
+   */
+  LIBXML_TEST_VERSION
 // reading the command line arguments
-
-  while ((c =
-	  getopt_long (argc, argv, "v:h", long_options, &option_index)) != -1)
+    while ((c =
+	    getopt_long (argc, argv, "v:h", long_options,
+			 &option_index)) != -1)
     {
       switch (c)
 	{
@@ -82,87 +93,117 @@ main (int argc, char **argv)
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
+      fprintf (stdout,
+	       "ESGF_HOME attribute not found... setting /esg as default");
     }
 
-  printf ("ESGF_HOME = [%s]\n", esgf_properties);
+  fprintf (stdout, "ESGF_HOME = [%s]\n", esgf_properties);
 
 // reading the esgf-dashboard-ip properties
 
-  if (ESGF_properties (esgf_properties))
+  if (ESGF_properties (esgf_properties, &mandatory, &allprop))
     {
-      printf
-	("Some DB properties are missing in the esgf.properties file. Please check!");
-      myfree (esgf_properties);
-      myfree (POSTGRES_HOST);
-      myfree (POSTGRES_DB_NAME);
-      myfree (POSTGRES_USER);
-      return 0;
+      if (mandatory)
+	{
+	  fprintf
+	    (stdout,
+	     "Please note tha %d DB properties are missing in the esgf.properties file. Please check! Exit\n",
+	     mandatory);
+	  myfree (esgf_properties);
+	  myfree (POSTGRES_HOST);
+	  myfree (POSTGRES_DB_NAME);
+	  myfree (POSTGRES_USER);
+	  return 0;
+	}
+      if (allprop)
+	fprintf
+	  (stdout,
+	   "Please note that %d non-mandatory properties are missing in the esgf.properties file. Default have been loaded\n",
+	   allprop);
     }
 
-  printf ("POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
-  printf ("POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
-  printf ("POSTGRES_USER value = [%s]\n", POSTGRES_USER);
-  printf ("POSTGRES_PORT_NUMBER value = [%d]\n", POSTGRES_PORT_NUMBER);
-  printf ("CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
-  printf ("THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
-  printf ("PING_SPAN = [%d]\n", PING_SPAN);
-  printf ("PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
-  printf ("HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
+  fprintf (stdout, "POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
+  fprintf (stdout, "POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
+  fprintf (stdout, "POSTGRES_USER value = [%s]\n", POSTGRES_USER);
+  fprintf (stdout, "POSTGRES_PORT_NUMBER value = [%d]\n",
+	   POSTGRES_PORT_NUMBER);
+  fprintf (stdout, "CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
+  fprintf (stdout, "THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
+  fprintf (stdout, "PING_SPAN = [%d]\n", PING_SPAN);
+  fprintf (stdout, "PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
+  fprintf (stdout, "HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
+  fprintf (stdout, "REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
 
 // reading the postgres password
 
   if ((ESGF_passwd (esgf_properties)))
     {
-      printf
-	("Some error occurred while opening the .esg_pg_pass file Please check!");
+      fprintf
+	(stdout,
+	 "Some error occurred while opening the .esg_pg_pass file Please check!");
       myfree (esgf_properties);
       myfree (POSTGRES_HOST);
       myfree (POSTGRES_DB_NAME);
       myfree (POSTGRES_USER);
+      myfree (REGISTRATION_XML_PATH);
       return 0;
     }
 
-  printf ("POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
+  fprintf (stdout, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
 
-  printf ("All of the properties have been found\n");
-  printf ("Information provider startup...\n");
+  fprintf (stdout, "All of the properties have been found\n");
+  fprintf (stdout, "Information provider startup...\n");
+
+  sprintf (esgf_registration_xml_path, "%s/registration.xml",
+	   REGISTRATION_XML_PATH);
+  fprintf (stdout, "Feeding %s\n", esgf_registration_xml_path);
 
   counter = 0;
-  while (1)
+  iterator=30;
+  while (iterator)
+  //while (1)
     {
+      //load_information_from_registration_xml();       
+      automatic_registration_xml_feed (esgf_registration_xml_path);
+      iterator--;	
       if (counter == 0)
 	{
+	  fprintf(stdout,"*** Reloading host configuration ***\n");
 	  if (hosts)
 	    free (hosts);
 	  // reload list of hosts/services
 	  hosts = loadHosts (&numHosts);
-	  //if (numHosts == 0 || hosts == NULL)
-	  //  break;
 	}
       if (numHosts != 0 && hosts != NULL)
 	{
-	  fprintf (stdout, "Host/services found. Let's ping them...");
+	  fprintf (stdout, "Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
 	  writeResults (hosts, numHosts);
 	  counter = (counter + 1) % HOSTS_LOADING_SPAN;
-	  fprintf (stdout, "Waiting for %d sec\n",PING_SPAN);
+	  fprintf (stdout, "Metrics have been collected. Now waiting for %d sec\n", PING_SPAN);
 	  sleep (PING_SPAN);
 	}
       else
 	{
-	  fprintf (stdout, "Host/serices not found...\n");
-	  fprintf (stdout, "Waiting for %d sec\n",PING_SPAN_NO_HOSTS);
+	  fprintf (stdout, "Host/services not found...\n");
+	  fprintf (stdout, "Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
 	  sleep (PING_SPAN_NO_HOSTS);
 	}
-    }
+    }				// forever loop end
 
   // freeing space
+
+  fprintf(stdout,"Releasing memory\n"); 
+  if (hosts)
+	free (hosts);
 
   myfree (esgf_properties);
   myfree (POSTGRES_HOST);
   myfree (POSTGRES_DB_NAME);
   myfree (POSTGRES_USER);
   myfree (POSTGRES_PASSWD);
+  myfree (REGISTRATION_XML_PATH);
+  fprintf(stdout,"END\n"); 
 
   return 0;
 }
@@ -225,12 +266,12 @@ ESGF_config_path (char **esgf_properties_pointer)
 
 
 int
-ESGF_properties (char *esgf_properties_path)
+ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
+		 int *notfound)
 {
 
   char esgf_properties_filename[256] = { '\0' };
   char *position;
-  int notfound;
 
 // this line is ok for local and production env
   sprintf (esgf_properties_filename,
@@ -250,14 +291,16 @@ ESGF_properties (char *esgf_properties_path)
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
 
-  notfound = 9;			// number of mandatory properties to be retrieved from the esgf.properties file
+  *notfound = 10;		// number of total properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
+
   while (notfound)
     {
       char buffer[256] = { '\0' };
       char value_buffer[256] = { '\0' };
 
       if ((fscanf (file, "%s", buffer)) == EOF)	// now reading ATTRIBUTE=VALUE
-	return (notfound);	// it provides the number of missing mandatory properties 
+	return (-1);		// not all of the properties are there 
 
       position = strchr (buffer, '=');
       if (position != NULL)	// the '=' has been found
@@ -270,57 +313,68 @@ ESGF_properties (char *esgf_properties_path)
 	      strcpy (POSTGRES_HOST =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
-	      notfound--;
+	      (*mandatory_properties)--;
+	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "db.database")))
 	    {
 	      strcpy (POSTGRES_DB_NAME =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
-	      notfound--;
+	      (*notfound)--;
+	      (*mandatory_properties)--;
 	    }
 	  if (!(strcmp (buffer, "db.port")))
 	    {
 	      POSTGRES_PORT_NUMBER = atoi (value_buffer);
-	      notfound--;
+	      (*notfound)--;
+	      (*mandatory_properties)--;
 	    }
 	  if (!(strcmp (buffer, "db.user")))
 	    {
 	      strcpy (POSTGRES_USER =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
-	      notfound--;
+	      (*notfound)--;
+	      (*mandatory_properties)--;
+	    }
+	  if (!(strcmp (buffer, "node.manager.app.home")))
+	    {
+	      strcpy (REGISTRATION_XML_PATH =
+		      (char *) malloc (strlen (value_buffer) + 1),
+		      value_buffer);
+	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.connection_timeout")))
 	    {
-   	      CONNECTION_TIMEOUT = atoi (value_buffer);
-	      notfound--;
+	      CONNECTION_TIMEOUT = atoi (value_buffer);
+	      (*notfound)--;
 	    }
-  	  if (!(strcmp (buffer, "esgf.ip.thread_open_max")))
+	  if (!(strcmp (buffer, "esgf.ip.thread_open_max")))
 	    {
-	    THREAD_OPEN_MAX = atoi (value_buffer);
-	      notfound--;
+	      THREAD_OPEN_MAX = atoi (value_buffer);
+	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.ping_span")))
 	    {
-	    PING_SPAN = atoi (value_buffer);
-	      notfound--;
+	      PING_SPAN = atoi (value_buffer);
+	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.ping_span_no_hosts")))
 	    {
-	    PING_SPAN_NO_HOSTS = atoi (value_buffer);
-	      notfound--;
+	      PING_SPAN_NO_HOSTS = atoi (value_buffer);
+	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.hosts_loading_span")))
 	    {
-	    HOSTS_LOADING_SPAN = atoi (value_buffer);
-	    notfound--;
+	      HOSTS_LOADING_SPAN = atoi (value_buffer);
+	      (*notfound)--;
 	    }
 	}
     }
 
   fclose (file);
-  return 0;
+  return 0;			// all of the properties have been found
 }
 
 

@@ -40,6 +40,9 @@ generated/
 /backup
 /web/WEB-INF/
 /web/META-INF/
+/src/c/esgf-dashboard-ip/bin/ip.service.local.in
+/src/c/esgf-dashboard-ip/src/val-ip.sh
+/src/c/GeoIP-1.4.8/data/GeoIP.dat
 
 ################################
 #Generated from templated files

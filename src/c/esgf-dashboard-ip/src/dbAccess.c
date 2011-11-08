@@ -98,14 +98,14 @@ RES_USER, POSTGRES_PASSWD);
 	// QUERY2 === "INSERT INTO service_status(status, elapsedTime, idServiceInstance) "
 
 	unsigned index;
-	printf("numHosts = %d\n",numHosts);
+	fprintf(stdout,"numHosts = %d\n",numHosts);
 	for(index = 0; index < numHosts; index ++) 
 	{
 		char insert_query[2048]= {'\0'};
 
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
-		printf("index %d query %s\n",index, insert_query);
+		fprintf(stdout,"METRICS Query -> index %d query %s\n",index, insert_query);
 
 		res = PQexec(conn, insert_query);
 

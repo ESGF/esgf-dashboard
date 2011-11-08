@@ -47,7 +47,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_esgf_dashboard_ip_OBJECTS =  \
 	esgf_dashboard_ip-esgf-dashboard-ip.$(OBJEXT) \
 	esgf_dashboard_ip-dbAccess.$(OBJEXT) \
-	esgf_dashboard_ip-ping.$(OBJEXT)
+	esgf_dashboard_ip-ping.$(OBJEXT) \
+	esgf_dashboard_ip-esgf-dashboard-parser.$(OBJEXT)
 esgf_dashboard_ip_OBJECTS = $(am_esgf_dashboard_ip_OBJECTS)
 esgf_dashboard_ip_LDADD = $(LDADD)
 esgf_dashboard_ip_LINK = $(CCLD) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) \
@@ -153,9 +154,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = $(OPT) -I../include -Wall
-esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c 
-esgf_dashboard_ip_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include 
-esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto
+esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c 
+esgf_dashboard_ip_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `xml2-config --cflags` 
+esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `xml2-config --libs`
 all: all-am
 
 .SUFFIXES:
@@ -224,6 +225,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-dbAccess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-ip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-ping.Po@am__quote@
 
 .c.o:
@@ -281,6 +283,20 @@ esgf_dashboard_ip-ping.obj: ping.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ping.c' object='esgf_dashboard_ip-ping.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-ping.obj `if test -f 'ping.c'; then $(CYGPATH_W) 'ping.c'; else $(CYGPATH_W) '$(srcdir)/ping.c'; fi`
+
+esgf_dashboard_ip-esgf-dashboard-parser.o: esgf-dashboard-parser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-dashboard-parser.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Tpo -c -o esgf_dashboard_ip-esgf-dashboard-parser.o `test -f 'esgf-dashboard-parser.c' || echo '$(srcdir)/'`esgf-dashboard-parser.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-dashboard-parser.c' object='esgf_dashboard_ip-esgf-dashboard-parser.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-dashboard-parser.o `test -f 'esgf-dashboard-parser.c' || echo '$(srcdir)/'`esgf-dashboard-parser.c
+
+esgf_dashboard_ip-esgf-dashboard-parser.obj: esgf-dashboard-parser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-dashboard-parser.obj -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Tpo -c -o esgf_dashboard_ip-esgf-dashboard-parser.obj `if test -f 'esgf-dashboard-parser.c'; then $(CYGPATH_W) 'esgf-dashboard-parser.c'; else $(CYGPATH_W) '$(srcdir)/esgf-dashboard-parser.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-dashboard-parser.c' object='esgf_dashboard_ip-esgf-dashboard-parser.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-dashboard-parser.obj `if test -f 'esgf-dashboard-parser.c'; then $(CYGPATH_W) 'esgf-dashboard-parser.c'; else $(CYGPATH_W) '$(srcdir)/esgf-dashboard-parser.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
