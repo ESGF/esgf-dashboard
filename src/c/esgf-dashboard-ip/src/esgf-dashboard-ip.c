@@ -47,7 +47,7 @@ main (int argc, char **argv)
 
   int c;
   int option_index = 0;
-  int iterator;
+  //int iterator;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -159,13 +159,13 @@ main (int argc, char **argv)
   fprintf (stdout, "Feeding %s\n", esgf_registration_xml_path);
 
   counter = 0;
-  iterator=30;
-  while (iterator)
-  //while (1)
+  //iterator=30;
+  //while (iterator)
+  while (1)
     {
       //load_information_from_registration_xml();       
       automatic_registration_xml_feed (esgf_registration_xml_path);
-      iterator--;	
+      //iterator--;	
       if (counter == 0)
 	{
 	  fprintf(stdout,"*** Reloading host configuration ***\n");
