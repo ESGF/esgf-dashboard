@@ -42,7 +42,7 @@ generated/
 /web/META-INF/
 /src/c/esgf-dashboard-ip/bin/ip.service.local.in
 /src/c/esgf-dashboard-ip/src/val-ip.sh
-/src/c/GeoIP-1.4.8/data/GeoIP.dat
+src/c/GeoIP-1.4.8/data/GeoLiteCity.dat
 
 ################################
 #Generated from templated files

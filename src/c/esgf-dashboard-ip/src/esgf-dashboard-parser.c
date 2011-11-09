@@ -9,6 +9,7 @@
 //#include "../include/dbAccess.h"
 #include "../include/config.h"
 
+#define APPLICATION_SERVER_NAME		"Application Server"
 // "Node" ELEMENTS 
 #define REG_ELEMENT_REGISTRATION	"Registration"
 #define REG_ELEMENT_NODE		"Node"
@@ -61,8 +62,8 @@
 // QUERY QUERY_PROJECT_AUTHORIZATION, authorize project (peer group) on guest user in the database
 #define QUERY_PROJECT_AUTHORIZATION  "INSERT into esgf_dashboard.join1(iduser,idproject) values(1,%ld);"
 
-// QUERY QUERY_INSERT_SERVICE_INFO, authorize project (peer group) on guest user in the database
-#define QUERY_INSERT_SERVICE_INFO  "INSERT into esgf_dashboard.service_instance(port,name,institution,mail_admin,idhost) values(%ld,'GridFTP_%s','%s','%s',%ld);"
+// QUERY QUERY_INSERT_SERVICE_INFO, add a service instance in the database
+#define QUERY_INSERT_SERVICE_INFO  "INSERT into esgf_dashboard.service_instance(port,name,institution,mail_admin,idhost) values(%ld,'%s','%s','%s',%ld);"
 
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
@@ -178,7 +179,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 	  for (node_node = cur_node->children; node_node; node_node = node_node->next)	// loop on NODE elements
 	    {
-	      char *organization;
+	      char *organization; // TO DO da mettere a NULL mettere controlli su NULL dove serve
 	      char *support_email;
 	      char *npg_project;
 	      char *node_ip;
@@ -279,7 +280,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		  geolocation_found = 0;
 
-		  // loop on internal NODE elements (CA, FrontEnd, etc.)
+		  // loop on internal NODE elements (CA, GeoLocation, GridFTPService, etc.)
 		  for (int_node = node_node->children; int_node;
 		       int_node = int_node->next)
 		    {
@@ -288,7 +289,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		      //printf ("Loop on INTERNALNODE: %d\n", ++iter3);
 
-		      if (int_node->type == XML_ELEMENT_NODE)	// aggiungere switch all'interno 
+		      if (int_node->type == XML_ELEMENT_NODE)	// Internal switch 
 			{
 			  // Start of "if internal node is GeoLocation ELEMENT"
 			  if (!strcmp
@@ -331,6 +332,9 @@ parse_registration_xml_file (xmlNode * a_node)
 			      char buffer_endpoint[2048] = { '\0' };
 			      long int app_server_port=80;
 			      int iteration=0;
+			  int service_id;
+		   	char insert_service_query[2048] = { '\0' };
+			char select_id_service_query[2048] = { '\0' };
 
 			      endpoint =
 				xmlGetProp (int_node,
@@ -355,12 +359,48 @@ parse_registration_xml_file (xmlNode * a_node)
 				    }
 				}
 				      fprintf (stdout,
-					       "Found port for Application server %ld\n",
+					       "Application server port: %ld\n",
 					       app_server_port);
-			      // TO BE added
+
 			      // 1) add service
+				      snprintf (insert_service_query,
+						sizeof (insert_service_query),
+						QUERY_INSERT_SERVICE_INFO,
+						app_server_port,
+						APPLICATION_SERVER_NAME, organization,
+						support_email, host_id);
+				      submit_query (conn,
+						    insert_service_query);
 			      // 2) retrieve service_id
+				      // grab service id servizio from port+host
+				      snprintf (select_id_service_query,
+						sizeof
+						(select_id_service_query),
+						QUERY_GET_SERVICE_ID,
+						app_server_port, host_id);
+				      service_id =
+					get_foreign_key_value (conn,
+							       select_id_service_query);
+
+				      fprintf (stdout,
+					       "Service %s | id : %ld\n",
+					       APPLICATION_SERVER_NAME, service_id);
 			      // 3) add service to peer_groups
+				      // add services to projects
+				      for (i = 0; i < number_of_projects; i++)
+					{
+					  char
+					    insert_service_2_project_query
+					    [2048] = { '\0' };
+					  snprintf
+					    (insert_service_2_project_query,
+					     sizeof
+					     (insert_service_2_project_query),
+					     QUERY_INSERT_SERVICE_TO_PROJECT,
+					     project_ids[i], service_id);
+					  submit_query (conn,
+							insert_service_2_project_query);
+					}
 
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
