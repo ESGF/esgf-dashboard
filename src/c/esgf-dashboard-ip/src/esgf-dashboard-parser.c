@@ -13,6 +13,7 @@
 #define REG_ELEMENT_REGISTRATION	"Registration"
 #define REG_ELEMENT_NODE		"Node"
 #define REG_ELEMENT_GEOLOCATION		"GeoLocation"
+#define REG_ELEMENT_NODEMANAGER		"NodeManager"
 #define REG_ELEMENT_GRIDFTPSERVICE	"GridFTPService"
 #define REG_ELEMENT_CONFIGURATION	"Configuration"
 
@@ -37,6 +38,7 @@
 #define REG_ELEMENT_GEOLOCATION_ATTR_CITY		"city"
 #define REG_ELEMENT_CONFIGURATION_ATTR_TYPE		"serviceType"
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
+#define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
 
 // QUERY_INSERT_PROJECT adds a new project (peer group) in the database
 #define QUERY_INSERT_PROJECT  "INSERT into esgf_dashboard.project_dash(name,description) values('%s','%s');"
@@ -170,7 +172,7 @@ parse_registration_xml_file (xmlNode * a_node)
       if (cur_node->type == XML_ELEMENT_NODE
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
-	  fprintf (stdout,"Element->name: %s\n", cur_node->name);
+	  fprintf (stdout, "Element->name: %s\n", cur_node->name);
 
 	  // Loop on NODE elements
 
@@ -318,6 +320,52 @@ parse_registration_xml_file (xmlNode * a_node)
 			      xmlFree (city);
 			    }	// end of "if internal node is GeoLocation ELEMENT"
 
+			  // Start of "if internal node is NodeManager ELEMENT"
+			  if (!strcmp
+			      (int_node->name, REG_ELEMENT_NODEMANAGER))
+			    {
+			      char insert_query[2048] = { '\0' };
+			      char *endpoint;
+			      char *slashcursor;
+			      char *startcursor;
+			      char buffer_endpoint[2048] = { '\0' };
+			      long int app_server_port=80;
+			      int iteration=0;
+
+			      endpoint =
+				xmlGetProp (int_node,
+					    REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
+
+			      sprintf (buffer_endpoint, "%s", endpoint);
+			   	fprintf(stdout,"%s\n",buffer_endpoint);
+			      slashcursor = &buffer_endpoint[0];
+			      while (slashcursor =
+				     strchr (slashcursor, ':'))
+				{
+				iteration++;
+				fprintf(stdout,"Iteration %d\n",iteration);
+				  if ((*(++slashcursor)) == '/') 
+					continue;
+				  startcursor = slashcursor;
+				  if (slashcursor = strchr (startcursor, '/'))
+				    {
+				      *slashcursor = '\0';
+				      app_server_port = atol (startcursor);
+				      break;
+				    }
+				}
+				      fprintf (stdout,
+					       "Found port for Application server %ld\n",
+					       app_server_port);
+			      // TO BE added
+			      // 1) add service
+			      // 2) retrieve service_id
+			      // 3) add service to peer_groups
+
+			      // free XML endpoint attribute      
+			      xmlFree (endpoint);
+			    }	// end of "if internal node is NodeManager ELEMENT"
+
 			  // Start "if internal node is a GridFTPService ELEMENT"       
 			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_GRIDFTPSERVICE))
@@ -362,7 +410,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      submit_query (conn,
 						    insert_service_query);
 
-				      // To be added 1) estrai id servizio da port+host
+				      // grab service id servizio from port+host
 				      snprintf (select_id_service_query,
 						sizeof
 						(select_id_service_query),
@@ -376,8 +424,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					       "Service %s | id : %ld\n",
 					       service_type, service_id);
 
-				      // To be added 2) cicla su tutti i progetti del nodo e aggiungi servizio a progetto 
-				      //  project_ids[number_of_projects++]
+				      // add services to projects
 				      for (i = 0; i < number_of_projects; i++)
 					{
 					  char
