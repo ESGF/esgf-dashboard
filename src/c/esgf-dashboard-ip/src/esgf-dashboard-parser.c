@@ -202,17 +202,54 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		  organization =
 		    xmlGetProp (node_node, REG_ATTR_NODE_ORGANIZATION);
+		
+		  if (organization==NULL || !strcmp(organization,""))
+		  {
+			fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_ORGANIZATION);
+			xmlFree (organization);
+			continue; 
+		  }
 
 		  npg_project =
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEPEERGROUP);
+		
+		  if (npg_project==NULL || !strcmp(npg_project,""))
+		  {
+			fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEPEERGROUP);
+			xmlFree (organization);
+			xmlFree (npg_project);
+			continue; 
+		  }
 
 		  node_ip = xmlGetProp (node_node, REG_ATTR_NODE_NODEIP);
+	
+		  if (node_ip==NULL || !strcmp(node_ip,""))
+                  {
+                        fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEIP);
+                        xmlFree (organization);
+                        xmlFree (npg_project);
+			xmlFree (node_ip);
+                        continue; 
+                  }
+
+		  node_hostname =
+		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
+
+		  if (node_hostname==NULL || !strcmp(node_hostname,""))
+                  {
+                        fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEHOSTNAME);
+                        xmlFree (organization);
+                        xmlFree (npg_project);
+			xmlFree (node_ip);
+			xmlFree (node_hostname);
+                        continue; 
+                  }
 
 		  support_email =
 		    xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 
-		  node_hostname =
-		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
+                 if (support_email==NULL || !strcmp(support_email,""))
+                        fprintf(stderr,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
 
 		  // print attributes values
 		  fprintf (stderr, "Organization attribute: %s\n",
@@ -310,10 +347,19 @@ parse_registration_xml_file (xmlNode * a_node)
 			      city =
 				xmlGetProp (int_node,
 					    REG_ELEMENT_GEOLOCATION_ATTR_CITY);
-			      snprintf (insert_query, sizeof (insert_query),
+				
+				// if <GeoLocation> is incomplete or corrupted...
+			      if (latitude==NULL || !strcmp(latitude,"") || longitude==NULL || !strcmp(longitude,"")|| city==NULL || !strcmp(city,"")) 
+				{
+				geolocation_found = 0;
+				fprintf(stderr,"The <GeoLocation> element seems to be corrupted or not complete\n");
+				}
+				else {
+			      	snprintf (insert_query, sizeof (insert_query),
 					QUERY_UPDATE_GEOLOCATION_INFO, city,
 					atof(latitude), atof(longitude), host_id);
-			      submit_query (conn, insert_query);
+				  submit_query (conn, insert_query);
+				}
 
 			      // free XML GEOLOCATION attributes      
 			      xmlFree (latitude);
@@ -340,8 +386,15 @@ parse_registration_xml_file (xmlNode * a_node)
 				xmlGetProp (int_node,
 					    REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
 
-			      sprintf (buffer_endpoint, "%s", endpoint);
+			      if (endpoint==NULL || !strcmp(endpoint,"")) {
+					fprintf(stderr,"Attribute [%s] missing/invalid \n",REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
+					fprintf(stderr,"No %s registered in the database \n",APPLICATION_SERVER_NAME);
+				
+					} else {// "if endpoint is valid"			      
+			      
+				sprintf (buffer_endpoint, "%s", endpoint);
 			      fprintf (stderr, "%s\n", buffer_endpoint);
+
 			      slashcursor = &buffer_endpoint[0];
 			      while (slashcursor = strchr (slashcursor, ':'))
 				{
@@ -359,7 +412,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				    }
 				}
 			      fprintf (stderr,
-				       "Application server port: %ld\n",
+				       "%s port: %ld\n",APPLICATION_SERVER_NAME,
 				       app_server_port);
 
 			      // 1) add service
@@ -400,7 +453,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				  submit_query (conn,
 						insert_service_2_project_query);
 				}
-
+				} // end of "if endpoint is valid
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
 			    }	// end of "if internal node is NodeManager ELEMENT"
@@ -440,6 +493,12 @@ parse_registration_xml_file (xmlNode * a_node)
 					xmlGetProp (gridftp_node,
 						    REG_ELEMENT_CONFIGURATION_ATTR_PORT);
 
+		                  if (service_type==NULL || !strcmp(service_type,"") || service_port==NULL || !strcmp(service_port,""))
+                  			{
+                        		fprintf(stderr,"Missing/invalid %s-%s attributes [skip current %s  element]\n",REG_ELEMENT_CONFIGURATION_ATTR_TYPE, REG_ELEMENT_CONFIGURATION_ATTR_PORT, REG_ELEMENT_CONFIGURATION);
+                  			}
+					else { // "if valid serviceType and port"
+
 				      snprintf (insert_service_query,
 						sizeof (insert_service_query),
 						QUERY_INSERT_SERVICE_INFO,
@@ -478,6 +537,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  submit_query (conn,
 							insert_service_2_project_query);
 					}
+					} // end of "if valid serviceType and port"
 
 				      // free XML CONFIGURATION attributes      
 				      xmlFree (service_type);
@@ -498,7 +558,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		      struct geo_output_struct geo_output;
 
 		      fprintf (stderr,
-			       "GeoLocation pieces of info need to be taken from GeoIP library (estimation)");
+			       "GeoLocation pieces of info need to be taken from GeoIP library (estimation)\n");
 
 		      if (!esgf_geolookup (node_ip, &geo_output))
 			{
