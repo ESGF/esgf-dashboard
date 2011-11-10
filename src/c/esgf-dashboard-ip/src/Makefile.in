@@ -30,7 +30,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = esgf-dashboard-ip$(EXEEXT)
+bin_PROGRAMS = esgf-dashboard-ip$(EXEEXT) esgf-iplookup$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -49,11 +49,17 @@ am_esgf_dashboard_ip_OBJECTS =  \
 	esgf_dashboard_ip-dbAccess.$(OBJEXT) \
 	esgf_dashboard_ip-ping.$(OBJEXT) \
 	esgf_dashboard_ip-esgf-dashboard-parser.$(OBJEXT) \
-	esgf_dashboard_ip-esgf-iplookup.$(OBJEXT)
+	esgf_dashboard_ip-esgf-libiplookup.$(OBJEXT)
 esgf_dashboard_ip_OBJECTS = $(am_esgf_dashboard_ip_OBJECTS)
 esgf_dashboard_ip_LDADD = $(LDADD)
 esgf_dashboard_ip_LINK = $(CCLD) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) \
 	$(esgf_dashboard_ip_LDFLAGS) $(LDFLAGS) -o $@
+am_esgf_iplookup_OBJECTS = esgf_iplookup-esgf-iplookup.$(OBJEXT) \
+	esgf_iplookup-esgf-libiplookup.$(OBJEXT)
+esgf_iplookup_OBJECTS = $(am_esgf_iplookup_OBJECTS)
+esgf_iplookup_LDADD = $(LDADD)
+esgf_iplookup_LINK = $(CCLD) $(esgf_iplookup_CFLAGS) $(CFLAGS) \
+	$(esgf_iplookup_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I. -I$(top_builddir)@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -61,8 +67,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(esgf_dashboard_ip_SOURCES)
-DIST_SOURCES = $(esgf_dashboard_ip_SOURCES)
+SOURCES = $(esgf_dashboard_ip_SOURCES) $(esgf_iplookup_SOURCES)
+DIST_SOURCES = $(esgf_dashboard_ip_SOURCES) $(esgf_iplookup_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -157,11 +163,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = $(OPT) -I../include -Wall
-esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-iplookup.c 
-#esgf_dashboard_ip_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `xml2-config --cflags` -I/export/fiore2/install/GeoIP3/include 
+esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c 
 esgf_dashboard_ip_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include 
-#esgf_dashboard_ip_LDFLAGS=-O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `xml2-config --libs` -L/export/fiore2/install/GeoIP3/lib -lGeoIP 
 esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
+esgf_iplookup_SOURCES = esgf-iplookup.c esgf-libiplookup.c 
+esgf_iplookup_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include 
+esgf_iplookup_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
 all: all-am
 
 .SUFFIXES:
@@ -221,6 +228,9 @@ clean-binPROGRAMS:
 esgf-dashboard-ip$(EXEEXT): $(esgf_dashboard_ip_OBJECTS) $(esgf_dashboard_ip_DEPENDENCIES) 
 	@rm -f esgf-dashboard-ip$(EXEEXT)
 	$(esgf_dashboard_ip_LINK) $(esgf_dashboard_ip_OBJECTS) $(esgf_dashboard_ip_LDADD) $(LIBS)
+esgf-iplookup$(EXEEXT): $(esgf_iplookup_OBJECTS) $(esgf_iplookup_DEPENDENCIES) 
+	@rm -f esgf-iplookup$(EXEEXT)
+	$(esgf_iplookup_LINK) $(esgf_iplookup_OBJECTS) $(esgf_iplookup_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -231,8 +241,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-dbAccess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-ip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-ping.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_iplookup-esgf-iplookup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_iplookup-esgf-libiplookup.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -304,19 +316,47 @@ esgf_dashboard_ip-esgf-dashboard-parser.obj: esgf-dashboard-parser.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-dashboard-parser.obj `if test -f 'esgf-dashboard-parser.c'; then $(CYGPATH_W) 'esgf-dashboard-parser.c'; else $(CYGPATH_W) '$(srcdir)/esgf-dashboard-parser.c'; fi`
 
-esgf_dashboard_ip-esgf-iplookup.o: esgf-iplookup.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-iplookup.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Tpo -c -o esgf_dashboard_ip-esgf-iplookup.o `test -f 'esgf-iplookup.c' || echo '$(srcdir)/'`esgf-iplookup.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-iplookup.c' object='esgf_dashboard_ip-esgf-iplookup.o' libtool=no @AMDEPBACKSLASH@
+esgf_dashboard_ip-esgf-libiplookup.o: esgf-libiplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-libiplookup.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Tpo -c -o esgf_dashboard_ip-esgf-libiplookup.o `test -f 'esgf-libiplookup.c' || echo '$(srcdir)/'`esgf-libiplookup.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libiplookup.c' object='esgf_dashboard_ip-esgf-libiplookup.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-iplookup.o `test -f 'esgf-iplookup.c' || echo '$(srcdir)/'`esgf-iplookup.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-libiplookup.o `test -f 'esgf-libiplookup.c' || echo '$(srcdir)/'`esgf-libiplookup.c
 
-esgf_dashboard_ip-esgf-iplookup.obj: esgf-iplookup.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-iplookup.obj -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Tpo -c -o esgf_dashboard_ip-esgf-iplookup.obj `if test -f 'esgf-iplookup.c'; then $(CYGPATH_W) 'esgf-iplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-iplookup.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-iplookup.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-iplookup.c' object='esgf_dashboard_ip-esgf-iplookup.obj' libtool=no @AMDEPBACKSLASH@
+esgf_dashboard_ip-esgf-libiplookup.obj: esgf-libiplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-libiplookup.obj -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Tpo -c -o esgf_dashboard_ip-esgf-libiplookup.obj `if test -f 'esgf-libiplookup.c'; then $(CYGPATH_W) 'esgf-libiplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libiplookup.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Tpo $(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libiplookup.c' object='esgf_dashboard_ip-esgf-libiplookup.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-iplookup.obj `if test -f 'esgf-iplookup.c'; then $(CYGPATH_W) 'esgf-iplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-iplookup.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-libiplookup.obj `if test -f 'esgf-libiplookup.c'; then $(CYGPATH_W) 'esgf-libiplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libiplookup.c'; fi`
+
+esgf_iplookup-esgf-iplookup.o: esgf-iplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -MT esgf_iplookup-esgf-iplookup.o -MD -MP -MF $(DEPDIR)/esgf_iplookup-esgf-iplookup.Tpo -c -o esgf_iplookup-esgf-iplookup.o `test -f 'esgf-iplookup.c' || echo '$(srcdir)/'`esgf-iplookup.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_iplookup-esgf-iplookup.Tpo $(DEPDIR)/esgf_iplookup-esgf-iplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-iplookup.c' object='esgf_iplookup-esgf-iplookup.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -c -o esgf_iplookup-esgf-iplookup.o `test -f 'esgf-iplookup.c' || echo '$(srcdir)/'`esgf-iplookup.c
+
+esgf_iplookup-esgf-iplookup.obj: esgf-iplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -MT esgf_iplookup-esgf-iplookup.obj -MD -MP -MF $(DEPDIR)/esgf_iplookup-esgf-iplookup.Tpo -c -o esgf_iplookup-esgf-iplookup.obj `if test -f 'esgf-iplookup.c'; then $(CYGPATH_W) 'esgf-iplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-iplookup.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_iplookup-esgf-iplookup.Tpo $(DEPDIR)/esgf_iplookup-esgf-iplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-iplookup.c' object='esgf_iplookup-esgf-iplookup.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -c -o esgf_iplookup-esgf-iplookup.obj `if test -f 'esgf-iplookup.c'; then $(CYGPATH_W) 'esgf-iplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-iplookup.c'; fi`
+
+esgf_iplookup-esgf-libiplookup.o: esgf-libiplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -MT esgf_iplookup-esgf-libiplookup.o -MD -MP -MF $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Tpo -c -o esgf_iplookup-esgf-libiplookup.o `test -f 'esgf-libiplookup.c' || echo '$(srcdir)/'`esgf-libiplookup.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Tpo $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libiplookup.c' object='esgf_iplookup-esgf-libiplookup.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -c -o esgf_iplookup-esgf-libiplookup.o `test -f 'esgf-libiplookup.c' || echo '$(srcdir)/'`esgf-libiplookup.c
+
+esgf_iplookup-esgf-libiplookup.obj: esgf-libiplookup.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -MT esgf_iplookup-esgf-libiplookup.obj -MD -MP -MF $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Tpo -c -o esgf_iplookup-esgf-libiplookup.obj `if test -f 'esgf-libiplookup.c'; then $(CYGPATH_W) 'esgf-libiplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libiplookup.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Tpo $(DEPDIR)/esgf_iplookup-esgf-libiplookup.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libiplookup.c' object='esgf_iplookup-esgf-libiplookup.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -c -o esgf_iplookup-esgf-libiplookup.obj `if test -f 'esgf-libiplookup.c'; then $(CYGPATH_W) 'esgf-libiplookup.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libiplookup.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -500,6 +540,8 @@ uninstall-am: uninstall-binPROGRAMS
 # gcc -o geoiplookup2 -I. -I/export/fiore2/install/GeoIP3/include -L/export/fiore2/install/GeoIP3/lib -lGeoIP geoiplookup2.c
 
 #EXTRA_DIST=esgf-dashboard-ip.sh
+#esgf_dashboard_ip_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `xml2-config --cflags` -I/export/fiore2/install/GeoIP3/include 
+#esgf_dashboard_ip_LDFLAGS=-O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `xml2-config --libs` -L/export/fiore2/install/GeoIP3/lib -lGeoIP 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

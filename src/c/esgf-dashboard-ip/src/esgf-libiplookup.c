@@ -53,9 +53,18 @@ int geoiplookup (GeoIP * gi, char *hostname, int i,
 		 struct geo_output_struct *geo_output);
 int esgf_geolookup (char *hostname, struct geo_output_struct *geo_output);
 
-//int info_flag = 0;
+/* extra info used in _say_range_ip */
+int info_flag = 0;
 
-int
+      /*printf ("%s: %s, %s, %s, %s, %f, %f, %d, %d\n",
+         GeoIPDBDescription[i], gir->country_code,
+         _mk_NA (gir->region), _mk_NA (gir->city),
+         _mk_NA (gir->postal_code), gir->latitude,
+         gir->longitude, gir->metro_code, gir->area_code);
+         _say_range_by_ip (gi, ipnum); */
+
+
+/*int
 main (int argc, char *argv[])
 {
   int code;
@@ -65,15 +74,12 @@ main (int argc, char *argv[])
   int iterator = 1000;
 
   geo_outputmask = atol (argv[2]);	 
-  
   sprintf(hostname,"%s",argv[1]);
 
+while (iterator--)
+{
   if (code = esgf_geolookup (hostname,&geo_output))
-   {
-     fprintf (stderr, "Exit code for esgf-lookup [%d]\n", code);
-     return 0;
-   }
-     	
+     continue;	
   if (geo_outputmask & OUTPUT_COUNTRY_CODE)
     fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n", geo_output.country_code);
   if (geo_outputmask & OUTPUT_REGION)
@@ -91,10 +97,13 @@ main (int argc, char *argv[])
   if (geo_outputmask & OUTPUT_AREACODE)
     fprintf (stdout, "[OUTPUT_AREACODE=%d]\n", geo_output.area_code);
 
-  return 0;
+  fprintf (stderr, "Exit code for esgf-lookup [%d]\n", code);
 }
 
-/*int
+  return 0;
+}*/
+
+int
 esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
 {
   char *db_info;
@@ -173,12 +182,12 @@ __addr_to_num (const char *addr)
     return 0;
   ipnum <<= 8;
   return ipnum + octet;
-}*/
+}
 
 
 
 /* ptr must be a memory area with at least 16 bytes */
-/*static char *
+static char *
 __num_to_addr_r (unsigned long ipnum, char *ptr)
 {
   char *cur_str;
@@ -206,8 +215,8 @@ __num_to_addr_r (unsigned long ipnum, char *ptr)
     }
 
   return ptr;
-}*/
-/*
+}
+
 void
 _say_range_by_ip (GeoIP * gi, uint32_t ipnum)
 {
@@ -217,7 +226,7 @@ _say_range_by_ip (GeoIP * gi, uint32_t ipnum)
   char **range;
 
   if (info_flag == 0)
-    return;			// no unless extra information is requested 
+    return;			/* noop unless extra information is requested */
 
   range = GeoIP_range_by_ip (gi, __num_to_addr_r (ipnum, ipaddr));
   if (range == NULL)
@@ -288,5 +297,12 @@ geoiplookup (GeoIP * gi, char *hostname, int i,
       return -2;
     }
   return 0;
-}*/
+}
 
+
+	  /*printf ("%s: %s, %s, %s, %s, %f, %f, %d, %d\n",
+	     GeoIPDBDescription[i], gir->country_code,
+	     _mk_NA (gir->region), _mk_NA (gir->city),
+	     _mk_NA (gir->postal_code), gir->latitude,
+	     gir->longitude, gir->metro_code, gir->area_code);
+	     _say_range_by_ip (gi, ipnum); */
