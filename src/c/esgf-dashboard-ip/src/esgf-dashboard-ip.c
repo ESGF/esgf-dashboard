@@ -47,7 +47,7 @@ main (int argc, char **argv)
 
   int c;
   int option_index = 0;
-  int iterator=10;
+  int iterator=5;
   int opt_t = 0;
   int mandatory;
   int allprop;

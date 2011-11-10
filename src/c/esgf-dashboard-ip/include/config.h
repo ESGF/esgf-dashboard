@@ -19,4 +19,17 @@ int PING_SPAN;
 int PING_SPAN_NO_HOSTS;
 int HOSTS_LOADING_SPAN;
 
+struct geo_output_struct
+{
+  char country_code[256];
+  char region[256];
+  char city[256];
+  char postal_code[256];
+  double latitude;
+  double longitude;
+  long int metro_code;
+  long int area_code;
+};
+
+
 #endif /* CONFIG_H_ */

@@ -5,6 +5,7 @@ esgf-geoiplookup.c
 #include "GeoIP.h"
 #include "GeoIPCity.h"
 #include "GeoIP_internal.h"
+#include "../include/config.h"
 
 // masks definitions
 #define OUTPUT_COUNTRY_CODE	1
@@ -36,7 +37,7 @@ _mk_NA (const char *p)
   return p ? p : "N/A";
 }
 
-struct geo_output_struct
+/*struct geo_output_struct
 {
   char country_code[256];
   char region[256];
@@ -46,12 +47,11 @@ struct geo_output_struct
   double longitude;
   long int metro_code;
   long int area_code;
-};
+};*/
 
-int geoiplookup (GeoIP * gi, char *hostname, int i, long int geo_outputmask,
+int geoiplookup (GeoIP * gi, char *hostname, int i, 
 		 struct geo_output_struct *geo_output);
-int esgf_geolookup (char *hostname, long int geo_outputmask,
-		    struct geo_output_struct *geo_output);
+int esgf_geolookup (char *hostname, struct geo_output_struct *geo_output);
 
 /* extra info used in _say_range_ip */
 int info_flag = 0;
@@ -64,7 +64,7 @@ int info_flag = 0;
          _say_range_by_ip (gi, ipnum); */
 
 
-int
+/*int
 main (int argc, char *argv[])
 {
   int code;
@@ -78,7 +78,7 @@ main (int argc, char *argv[])
 
 while (iterator--)
 {
-  if (code = esgf_geolookup (hostname,geo_outputmask, &geo_output))
+  if (code = esgf_geolookup (hostname,&geo_output))
      continue;	
   if (geo_outputmask & OUTPUT_COUNTRY_CODE)
     fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n", geo_output.country_code);
@@ -97,18 +97,14 @@ while (iterator--)
   if (geo_outputmask & OUTPUT_AREACODE)
     fprintf (stdout, "[OUTPUT_AREACODE=%d]\n", geo_output.area_code);
 
-  //if (geo_outputmask & OUTPUT_NETWORK)
-  //  _say_range_by_ip (gi, ipnum);
-
   fprintf (stderr, "Exit code for esgf-lookup [%d]\n", code);
 }
 
   return 0;
-}
+}*/
 
 int
-esgf_geolookup (char *hostname, long int geo_outputmask,
-		struct geo_output_struct *geo_output)
+esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
 {
   char *db_info;
   GeoIP *gi;
@@ -124,7 +120,7 @@ esgf_geolookup (char *hostname, long int geo_outputmask,
     {
       i = GeoIP_database_edition (gi);
       fprintf (stderr, " GeoIP database found [Ok]\n");
-      ret_code = geoiplookup (gi, hostname, i, geo_outputmask, geo_output);
+      ret_code = geoiplookup (gi, hostname, i, geo_output);
     }
   else
     {
@@ -254,7 +250,7 @@ _say_range_by_ip (GeoIP * gi, uint32_t ipnum)
 }
 
 int
-geoiplookup (GeoIP * gi, char *hostname, int i, long int geo_outputmask,
+geoiplookup (GeoIP * gi, char *hostname, int i,
 	     struct geo_output_struct *geo_output)
 {
   GeoIPRecord *gir;

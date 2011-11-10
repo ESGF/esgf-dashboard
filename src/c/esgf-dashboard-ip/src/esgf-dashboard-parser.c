@@ -179,7 +179,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 	  for (node_node = cur_node->children; node_node; node_node = node_node->next)	// loop on NODE elements
 	    {
-	      char *organization; // TO DO da mettere a NULL mettere controlli su NULL dove serve
+	      char *organization;	// TO DO da mettere a NULL mettere controlli su NULL dove serve
 	      char *support_email;
 	      char *npg_project;
 	      char *node_ip;
@@ -330,26 +330,26 @@ parse_registration_xml_file (xmlNode * a_node)
 			      char *slashcursor;
 			      char *startcursor;
 			      char buffer_endpoint[2048] = { '\0' };
-			      long int app_server_port=80;
-			      int iteration=0;
-			  int service_id;
-		   	char insert_service_query[2048] = { '\0' };
-			char select_id_service_query[2048] = { '\0' };
+			      long int app_server_port = 80;
+			      int iteration = 0;
+			      int service_id;
+			      char insert_service_query[2048] = { '\0' };
+			      char select_id_service_query[2048] = { '\0' };
 
 			      endpoint =
 				xmlGetProp (int_node,
 					    REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
 
 			      sprintf (buffer_endpoint, "%s", endpoint);
-			   	fprintf(stdout,"%s\n",buffer_endpoint);
+			      fprintf (stdout, "%s\n", buffer_endpoint);
 			      slashcursor = &buffer_endpoint[0];
-			      while (slashcursor =
-				     strchr (slashcursor, ':'))
+			      while (slashcursor = strchr (slashcursor, ':'))
 				{
-				iteration++;
-				fprintf(stdout,"Iteration %d\n",iteration);
-				  if ((*(++slashcursor)) == '/') 
-					continue;
+				  iteration++;
+				  fprintf (stdout, "Iteration %d\n",
+					   iteration);
+				  if ((*(++slashcursor)) == '/')
+				    continue;
 				  startcursor = slashcursor;
 				  if (slashcursor = strchr (startcursor, '/'))
 				    {
@@ -358,49 +358,48 @@ parse_registration_xml_file (xmlNode * a_node)
 				      break;
 				    }
 				}
-				      fprintf (stdout,
-					       "Application server port: %ld\n",
-					       app_server_port);
+			      fprintf (stdout,
+				       "Application server port: %ld\n",
+				       app_server_port);
 
 			      // 1) add service
-				      snprintf (insert_service_query,
-						sizeof (insert_service_query),
-						QUERY_INSERT_SERVICE_INFO,
-						app_server_port,
-						APPLICATION_SERVER_NAME, organization,
-						support_email, host_id);
-				      submit_query (conn,
-						    insert_service_query);
+			      snprintf (insert_service_query,
+					sizeof (insert_service_query),
+					QUERY_INSERT_SERVICE_INFO,
+					app_server_port,
+					APPLICATION_SERVER_NAME, organization,
+					support_email, host_id);
+			      submit_query (conn, insert_service_query);
 			      // 2) retrieve service_id
-				      // grab service id servizio from port+host
-				      snprintf (select_id_service_query,
-						sizeof
-						(select_id_service_query),
-						QUERY_GET_SERVICE_ID,
-						app_server_port, host_id);
-				      service_id =
-					get_foreign_key_value (conn,
-							       select_id_service_query);
+			      // grab service id servizio from port+host
+			      snprintf (select_id_service_query,
+					sizeof
+					(select_id_service_query),
+					QUERY_GET_SERVICE_ID,
+					app_server_port, host_id);
+			      service_id =
+				get_foreign_key_value (conn,
+						       select_id_service_query);
 
-				      fprintf (stdout,
-					       "Service %s | id : %ld\n",
-					       APPLICATION_SERVER_NAME, service_id);
+			      fprintf (stdout,
+				       "Service %s | id : %ld\n",
+				       APPLICATION_SERVER_NAME, service_id);
 			      // 3) add service to peer_groups
-				      // add services to projects
-				      for (i = 0; i < number_of_projects; i++)
-					{
-					  char
-					    insert_service_2_project_query
-					    [2048] = { '\0' };
-					  snprintf
-					    (insert_service_2_project_query,
-					     sizeof
-					     (insert_service_2_project_query),
-					     QUERY_INSERT_SERVICE_TO_PROJECT,
-					     project_ids[i], service_id);
-					  submit_query (conn,
-							insert_service_2_project_query);
-					}
+			      // add services to projects
+			      for (i = 0; i < number_of_projects; i++)
+				{
+				  char
+				    insert_service_2_project_query
+				    [2048] = { '\0' };
+				  snprintf
+				    (insert_service_2_project_query,
+				     sizeof
+				     (insert_service_2_project_query),
+				     QUERY_INSERT_SERVICE_TO_PROJECT,
+				     project_ids[i], service_id);
+				  submit_query (conn,
+						insert_service_2_project_query);
+				}
 
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
@@ -494,9 +493,35 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }		// end of loop on INTERNALNODE elements 
 		  if (!geolocation_found)
 		    {
+		      // adding code here related to GeoIP stuff!!!
+		      int code;
+		      struct geo_output_struct geo_output;
+
 		      fprintf (stdout,
 			       "GeoLocation pieces of info need to be taken from GeoIP library (estimation)");
-		      // adding code here related to GeoIP stuff!!!
+
+		      if (!esgf_geolookup (node_ip, &geo_output))
+			{
+			  fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n",
+				   geo_output.country_code);
+			  fprintf (stdout, "[OUTPUT_REGION=%s]\n",
+				   geo_output.region);
+			  fprintf (stdout, "[OUTPUT_CITY=%s]\n",
+				   geo_output.city);
+			  fprintf (stdout, "[OUTPUT_POSTAL_CODE=%s]\n",
+				   geo_output.postal_code);
+			  fprintf (stdout, "[OUTPUT_LATITUDE=%f]\n",
+				   geo_output.latitude);
+			  fprintf (stdout, "[OUTPUT_LONGITUDE=%f]\n",
+				   geo_output.longitude);
+			  fprintf (stdout, "[OUTPUT_METROCODE=%d]\n",
+				   geo_output.metro_code);
+			  fprintf (stdout, "[OUTPUT_AREACODE=%d]\n",
+				   geo_output.area_code);
+			}
+		      else
+			fprintf (stdout, "Esgf-lookup error\n");
+
 		    }
 		}		// end of "if a NODE element"
 
