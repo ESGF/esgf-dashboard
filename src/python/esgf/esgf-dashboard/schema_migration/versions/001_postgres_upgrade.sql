@@ -188,7 +188,7 @@ CREATE TABLE user1 (
     name character varying(45) NOT NULL,
     surname character varying(45) NOT NULL,
     mail character varying(45) NOT NULL,
-    username character varying(25) NOT NULL,
+    username character varying(25) UNIQUE NOT NULL,
     password character varying(32) NOT NULL,
     registrationdate timestamp without time zone DEFAULT now() NOT NULL,
     accountcertified smallint DEFAULT 0 NOT NULL,
@@ -263,8 +263,8 @@ ALTER TABLE ONLY user1
 -- Name: user1_username_key; Type: CONSTRAINT; Schema: esgf_dashboard; Owner: dbsuper; Tablespace: 
 --
 
-ALTER TABLE ONLY user1
-    ADD CONSTRAINT user1_username_key UNIQUE (username);
+--ALTER TABLE ONLY user1
+--    ADD CONSTRAINT user1_username_key UNIQUE (username);
 
 
 --
@@ -302,7 +302,7 @@ SET default_with_oids = false;
 
 CREATE TABLE host (
     id integer NOT NULL,
-    ip character varying(64) NOT NULL,
+    ip character varying(64) UNIQUE NOT NULL,
     name character varying(255),
     city character varying(255),
     latitude numeric(9,6),
@@ -356,8 +356,8 @@ ALTER TABLE host ALTER COLUMN id SET DEFAULT nextval('host_id_seq'::regclass);
 -- Name: host_ip_key; Type: CONSTRAINT; Schema: esgf_dashboard; Owner: dbsuper; Tablespace: 
 --
 
-ALTER TABLE ONLY host
-    ADD CONSTRAINT host_ip_key UNIQUE (ip);
+-- ALTER TABLE ONLY host
+---    ADD CONSTRAINT host_ip_key UNIQUE (ip);
 
 
 --
@@ -395,7 +395,7 @@ SET default_with_oids = false;
 
 CREATE TABLE project_dash (
     id integer NOT NULL,
-    name character varying(255) NOT NULL,
+    name character varying(255) UNIQUE NOT NULL,
     description character varying(2000),
     startdate timestamp without time zone DEFAULT now() NOT NULL,
     enddate timestamp without time zone,
@@ -471,7 +471,8 @@ SET default_with_oids = false;
 
 CREATE TABLE join1 (
     iduser bigint NOT NULL,
-    idproject bigint NOT NULL
+    idproject bigint NOT NULL,
+    UNIQUE (iduser,idproject)
 );
 
 
@@ -529,7 +530,8 @@ CREATE TABLE service_instance (
     name character varying(255),
     institution character varying(255),
     mail_admin character varying(255),
-    idhost bigint NOT NULL
+    idhost bigint NOT NULL,
+    UNIQUE(port,idhost)
 );
 
 
@@ -620,7 +622,8 @@ CREATE TABLE uses (
     idproject bigint NOT NULL,
     idserviceinstance bigint NOT NULL,
     startdate timestamp without time zone DEFAULT now() NOT NULL,
-    enddate timestamp without time zone
+    enddate timestamp without time zone,
+    UNIQUE(idproject,idserviceinstance)
 );
 
 
