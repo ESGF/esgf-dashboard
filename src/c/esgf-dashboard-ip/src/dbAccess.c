@@ -43,11 +43,11 @@ struct host * loadHosts(unsigned *numHosts) {
 	/* send SQL query */
 	/* QUERY1 === "SELECT s.id, h.ip, s.port FROM service_instance s INNER JOIN host h ON h.id=s.idHost ORDER BY h.ip, s.port;"*/
 	
-	//fprintf(stdout,"Query1 = %s \n",QUERY1);
+	//fprintf(stderr,"Query1 = %s \n",QUERY1);
 
 	res = PQexec(conn, QUERY1);
 
-	fprintf(stdout,"numTuples = %d \n",numTuples = PQntuples(res));
+	fprintf(stderr,"numTuples = %d \n",numTuples = PQntuples(res));
 
 	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
@@ -98,14 +98,14 @@ RES_USER, POSTGRES_PASSWD);
 	// QUERY2 === "INSERT INTO service_status(status, elapsedTime, idServiceInstance) "
 
 	unsigned index;
-	fprintf(stdout,"numHosts = %d\n",numHosts);
+	fprintf(stderr,"numHosts = %d\n",numHosts);
 	for(index = 0; index < numHosts; index ++) 
 	{
 		char insert_query[2048]= {'\0'};
 
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
-		fprintf(stdout,"METRICS Query -> index %d query %s\n",index, insert_query);
+		fprintf(stderr,"METRICS Query -> index %d query %s\n",index, insert_query);
 
 		res = PQexec(conn, insert_query);
 

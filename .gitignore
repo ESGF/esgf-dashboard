@@ -45,6 +45,7 @@ generated/
 /src/c/esgf-dashboard-ip/src/val-ip.sh
 /src/c/GeoIP-1.4.8/data/GeoLiteCity.dat
 /src/c/esgf-dashboard-ip/configure.sh
+/src/c/esgf-dashboard-ip/src/val-iplookup.sh
 
 ################################
 #Generated from templated files

@@ -22,7 +22,7 @@ esgf-geoiplookup.c
 
 //#define GEOIPINSTALLDIR "@geoipinstalldir@"
 //#define GEOIPIDATABASE "@geoipinstallfile@" 
-#define GEOIPINSTALLDIR "/export/fiore2/workspace/esgf-dashboard/src/c/GeoIP-1.4.8/data/"
+//#define GEOIPINSTALLDIR "/export/fiore2/workspace/esgf-dashboard/src/c/GeoIP-1.4.8/data/"
 #define GEOIPIDATABASE "GeoLiteCity.dat"
 
 #if defined(_WIN32)
@@ -37,71 +37,12 @@ _mk_NA (const char *p)
   return p ? p : "N/A";
 }
 
-/*struct geo_output_struct
-{
-  char country_code[256];
-  char region[256];
-  char city[256];
-  char postal_code[256];
-  double latitude;
-  double longitude;
-  long int metro_code;
-  long int area_code;
-};*/
-
 int geoiplookup (GeoIP * gi, char *hostname, int i, 
 		 struct geo_output_struct *geo_output);
 int esgf_geolookup (char *hostname, struct geo_output_struct *geo_output);
 
 /* extra info used in _say_range_ip */
 int info_flag = 0;
-
-      /*printf ("%s: %s, %s, %s, %s, %f, %f, %d, %d\n",
-         GeoIPDBDescription[i], gir->country_code,
-         _mk_NA (gir->region), _mk_NA (gir->city),
-         _mk_NA (gir->postal_code), gir->latitude,
-         gir->longitude, gir->metro_code, gir->area_code);
-         _say_range_by_ip (gi, ipnum); */
-
-
-/*int
-main (int argc, char *argv[])
-{
-  int code;
-  struct geo_output_struct geo_output;
-  int geo_outputmask;
-  char hostname[1024]={'\0'};
-  int iterator = 1000;
-
-  geo_outputmask = atol (argv[2]);	 
-  sprintf(hostname,"%s",argv[1]);
-
-while (iterator--)
-{
-  if (code = esgf_geolookup (hostname,&geo_output))
-     continue;	
-  if (geo_outputmask & OUTPUT_COUNTRY_CODE)
-    fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n", geo_output.country_code);
-  if (geo_outputmask & OUTPUT_REGION)
-    fprintf (stdout, "[OUTPUT_REGION=%s]\n", _mk_NA (geo_output.region));
-  if (geo_outputmask & OUTPUT_CITY)
-    fprintf (stdout, "[OUTPUT_CITY=%s]\n", _mk_NA (geo_output.city));
-  if (geo_outputmask & OUTPUT_POSTAL_CODE)
-    fprintf (stdout, "[OUTPUT_POSTAL_CODE=%s]\n", _mk_NA (geo_output.postal_code));
-  if (geo_outputmask & OUTPUT_LATITUDE)
-    fprintf (stdout, "[OUTPUT_LATITUDE=%f]\n", geo_output.latitude);
-  if (geo_outputmask & OUTPUT_LONGITUDE)
-    fprintf (stdout, "[OUTPUT_LONGITUDE=%f]\n", geo_output.longitude);
-  if (geo_outputmask & OUTPUT_METROCODE)
-    fprintf (stdout, "[OUTPUT_METROCODE=%d]\n", geo_output.metro_code);
-  if (geo_outputmask & OUTPUT_AREACODE)
-    fprintf (stdout, "[OUTPUT_AREACODE=%d]\n", geo_output.area_code);
-
-  fprintf (stderr, "Exit code for esgf-lookup [%d]\n", code);
-}
-
-  return 0;
-}*/
 
 int
 esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
@@ -113,14 +54,18 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
   char *custom_file = NULL;
   char geoipdat[1024] = { '\0' };
 
-  sprintf (geoipdat, "%s/%s", GEOIPINSTALLDIR, GEOIPIDATABASE);
+  sprintf (geoipdat, "%s/share/GeoIP/%s", GEOIP_DATA_PATH, GEOIPIDATABASE);
 
-  fprintf (stderr, "Loading GeoLiteCity...");
+  fprintf (stderr, "Loading GeoLiteCity from %s...",geoipdat);
   if (gi = GeoIP_open (geoipdat, GEOIP_STANDARD))
     {
       i = GeoIP_database_edition (gi);
       fprintf (stderr, " GeoIP database found [Ok]\n");
-      ret_code = geoiplookup (gi, hostname, i, geo_output);
+      if (ret_code = geoiplookup (gi, hostname, i, geo_output))
+	{
+	GeoIP_delete (gi);
+	return ret_code;
+	}
     }
   else
     {
@@ -130,7 +75,7 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
     }
 
   GeoIP_delete (gi);
-  fprintf (stderr, "Exit code for geoiplookup [%d]\n", ret_code);
+  fprintf (stderr, "Geoiplookup ok [code=%d]\n", ret_code);
   return 0;
 }
 

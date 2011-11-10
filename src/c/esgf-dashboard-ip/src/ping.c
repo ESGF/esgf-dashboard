@@ -23,7 +23,7 @@ my_freeaddrinfo (struct addrinfo *res, int where)
 {
   if (res)
     {
-      fprintf (stdout, "Callinfo freehostname %d\n",where);
+      fprintf (stderr, "Callinfo freehostname %d\n",where);
       freeaddrinfo (res);
     }
   return 0;	

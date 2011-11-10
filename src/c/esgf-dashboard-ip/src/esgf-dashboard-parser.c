@@ -86,12 +86,12 @@ get_foreign_key_value (PGconn * conn, char *query)
 {
   PGresult *res;
   long int fk;
-  fprintf (stdout, "Query: %s\n", query);
+  fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
-      fprintf (stdout, "SELECT command did not return tuples properly\n");
+      fprintf (stderr, "SELECT command did not return tuples properly\n");
       PQclear (res);
       return -1;
     }
@@ -105,7 +105,7 @@ get_foreign_key_value (PGconn * conn, char *query)
   fk = atol (PQgetvalue (res, 0, 0));
 
   PQclear (res);
-  fprintf (stdout, "The fk is %ld\n", fk);
+  fprintf (stderr, "The fk is %ld\n", fk);
   return fk;
 }
 
@@ -115,13 +115,13 @@ int
 submit_query (PGconn * conn, char *query)
 {
   PGresult *res;
-  fprintf (stdout, "Query: %s\n", query);
+  fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     {
-      fprintf (stdout, "Insert query failed\n");
+      fprintf (stderr, "Insert query failed\n");
       PQclear (res);
       return -1;
     }
@@ -153,11 +153,11 @@ parse_registration_xml_file (xmlNode * a_node)
 	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER,
 	    POSTGRES_PASSWD);
 
-  fprintf (stdout, "Open connection to: %s\n", conninfo);
+  fprintf (stderr, "Open connection to: %s\n", conninfo);
   conn = PQconnectdb ((const char *) conninfo);
   if (PQstatus (conn) != CONNECTION_OK)
     {
-      fprintf (stdout, "Connection to database failed: %s",
+      fprintf (stderr, "Connection to database failed: %s",
 	       PQerrorMessage (conn));
       PQfinish (conn);
       return -1;
@@ -173,7 +173,7 @@ parse_registration_xml_file (xmlNode * a_node)
       if (cur_node->type == XML_ELEMENT_NODE
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
-	  fprintf (stdout, "Element->name: %s\n", cur_node->name);
+	  fprintf (stderr, "Element->name: %s\n", cur_node->name);
 
 	  // Loop on NODE elements
 
@@ -215,11 +215,11 @@ parse_registration_xml_file (xmlNode * a_node)
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
 
 		  // print attributes values
-		  fprintf (stdout, "Organization attribute: %s\n",
+		  fprintf (stderr, "Organization attribute: %s\n",
 			   organization);
-		  fprintf (stdout, "PeerGroups attribute: %s\n", npg_project);
-		  fprintf (stdout, "Hostname attribute: %s\n", node_hostname);
-		  fprintf (stdout, "IP attribute: %s\n", node_ip);
+		  fprintf (stderr, "PeerGroups attribute: %s\n", npg_project);
+		  fprintf (stderr, "Hostname attribute: %s\n", node_hostname);
+		  fprintf (stderr, "IP attribute: %s\n", node_ip);
 
 		  // adding host entry in the Host table without geolocation information
 		  snprintf (insert_new_host_query,
@@ -233,7 +233,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  host_id =
 		    get_foreign_key_value (conn, select_id_host_query);
 
-		  fprintf (stdout, "Host %s | id : %ld\n", node_ip, host_id);
+		  fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
 
 		  // isolate PeerGroups adding them to the DB
 		  sprintf (buffer, "%s", npg_project);
@@ -251,7 +251,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			  *position = '\0';	// now cursor_buf points to the isolated PeerGroup
 			  position++;	// position points to the new string (if any)   
 			}
-		      fprintf (stdout, "PeerGroup %s\n", cursor_buf);
+		      fprintf (stderr, "PeerGroup %s\n", cursor_buf);
 
 		      // add PeerGroup to project_dash table
 		      snprintf (insert_query, sizeof (insert_query),
@@ -274,9 +274,9 @@ parse_registration_xml_file (xmlNode * a_node)
 		  while (position);
 
 		  for (i = 0; i < number_of_projects; i++)
-		    fprintf (stdout, "Valore %d %ld\n", i, project_ids[i]);
+		    fprintf (stderr, "Valore %d %ld\n", i, project_ids[i]);
 
-		  fprintf (stdout, "Element->name: %s\n", node_node->name);
+		  fprintf (stderr, "Element->name: %s\n", node_node->name);
 
 		  geolocation_found = 0;
 
@@ -341,12 +341,12 @@ parse_registration_xml_file (xmlNode * a_node)
 					    REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
 
 			      sprintf (buffer_endpoint, "%s", endpoint);
-			      fprintf (stdout, "%s\n", buffer_endpoint);
+			      fprintf (stderr, "%s\n", buffer_endpoint);
 			      slashcursor = &buffer_endpoint[0];
 			      while (slashcursor = strchr (slashcursor, ':'))
 				{
 				  iteration++;
-				  fprintf (stdout, "Iteration %d\n",
+				  fprintf (stderr, "Iteration %d\n",
 					   iteration);
 				  if ((*(++slashcursor)) == '/')
 				    continue;
@@ -358,7 +358,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      break;
 				    }
 				}
-			      fprintf (stdout,
+			      fprintf (stderr,
 				       "Application server port: %ld\n",
 				       app_server_port);
 
@@ -381,7 +381,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				get_foreign_key_value (conn,
 						       select_id_service_query);
 
-			      fprintf (stdout,
+			      fprintf (stderr,
 				       "Service %s | id : %ld\n",
 				       APPLICATION_SERVER_NAME, service_id);
 			      // 3) add service to peer_groups
@@ -459,7 +459,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					get_foreign_key_value (conn,
 							       select_id_service_query);
 
-				      fprintf (stdout,
+				      fprintf (stderr,
 					       "Service %s | id : %ld\n",
 					       service_type, service_id);
 
@@ -497,37 +497,37 @@ parse_registration_xml_file (xmlNode * a_node)
 		      int code;
 		      struct geo_output_struct geo_output;
 
-		      fprintf (stdout,
+		      fprintf (stderr,
 			       "GeoLocation pieces of info need to be taken from GeoIP library (estimation)");
 
 		      if (!esgf_geolookup (node_ip, &geo_output))
 			{
 			  char update_query[2048] = { '\0' };
-			  fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n",
+			  fprintf (stderr, "[OUTPUT_COUNTRY_CODE=%s]\n",
 				   geo_output.country_code);
-			  fprintf (stdout, "[OUTPUT_REGION=%s]\n",
+			  fprintf (stderr, "[OUTPUT_REGION=%s]\n",
 				   geo_output.region);
-			  fprintf (stdout, "[OUTPUT_CITY=%s]\n",
+			  fprintf (stderr, "[OUTPUT_CITY=%s]\n",
 				   geo_output.city);
-			  fprintf (stdout, "[OUTPUT_POSTAL_CODE=%s]\n",
+			  fprintf (stderr, "[OUTPUT_POSTAL_CODE=%s]\n",
 				   geo_output.postal_code);
-			  fprintf (stdout, "[OUTPUT_LATITUDE=%f]\n",
+			  fprintf (stderr, "[OUTPUT_LATITUDE=%f]\n",
 				   geo_output.latitude);
-			  fprintf (stdout, "[OUTPUT_LONGITUDE=%f]\n",
+			  fprintf (stderr, "[OUTPUT_LONGITUDE=%f]\n",
 				   geo_output.longitude);
-			  fprintf (stdout, "[OUTPUT_METROCODE=%d]\n",
+			  fprintf (stderr, "[OUTPUT_METROCODE=%d]\n",
 				   geo_output.metro_code);
-			  fprintf (stdout, "[OUTPUT_AREACODE=%d]\n",
+			  fprintf (stderr, "[OUTPUT_AREACODE=%d]\n",
 				   geo_output.area_code);
 			  snprintf (update_query, sizeof (update_query),
 					QUERY_UPDATE_GEOLOCATION_INFO, geo_output.city,
 					geo_output.latitude, geo_output.longitude, host_id);
-			  fprintf(stdout,"I got the geolocation info from the DB (estimation)\n%s\n",update_query);
+			  fprintf(stderr,"I got the geolocation info from the DB (estimation)\n%s\n",update_query);
 			  submit_query (conn, update_query);
 		          
 			}
 		      else
-			fprintf (stdout, "Esgf-lookup error\n");
+			fprintf (stderr, "Esgf-lookup error\n");
 
 		    } // end of "if !geolocation_found" 
 		}		// end of "if a NODE element"
@@ -559,7 +559,7 @@ automatic_registration_xml_feed (char *registration_xml_file)
 
   if (doc == NULL)
     {
-      fprintf (stdout, "error: could not parse file %s\n",
+      fprintf (stderr, "error: could not parse file %s\n",
 	       registration_xml_file);
       return -1;		// error parsing the file       
     }
@@ -597,7 +597,7 @@ main (int argc, char **argv)
    */
 /*  LIBXML_TEST_VERSION 
   
-  fprintf (stdout, "return code %d\n", automatic_registration_xml_feed (argv[1]));
+  fprintf (stderr, "return code %d\n", automatic_registration_xml_feed (argv[1]));
 
   return 0;
 }*/
