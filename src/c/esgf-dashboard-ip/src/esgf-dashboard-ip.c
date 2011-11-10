@@ -162,7 +162,7 @@ main (int argc, char **argv)
   while (iterator--)
   //while (1)
     {
-      //load_information_from_registration_xml();       
+      //load information from registration.xml();       
       automatic_registration_xml_feed (esgf_registration_xml_path);
       	
       if (counter == 0)

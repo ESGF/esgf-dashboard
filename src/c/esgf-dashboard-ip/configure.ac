@@ -53,11 +53,45 @@ AC_ARG_ENABLE(postgresql,
            ]
            )
 
+AC_ARG_WITH([xml2-config], [  --with-xml2-config      libxml2 config program],
+if test "x${with_xml2_config}" = "xno" ; then
+  XML2_CONFIG=
+else
+  XML2_CONFIG="${with_xml2_config}"
+fi
+,
+  XML2_CONFIG=
+)
+if test "x${XML2_CONFIG}" != "x" ; then
+   if test ! -x "${XML2_CONFIG}" ; then
+     AC_MSG_ERROR([Unusable or missing xml2-config: ${XML2_CONFIG}])
+   fi
+else
+  AC_PATH_PROG([XML2_CONFIG], [xml2-config], , [${PATH}])
+  if test "x${XML2_CONFIG}" = "x" ; then
+    AC_MSG_ERROR([Cannot configure without xml2-config])
+  fi
+fi
+
+
+AC_SUBST(XML2_CONFIG)
+
+
+
+AC_ARG_WITH(geoip_prefix_path,
+           [  --with-geoip-prefix-path=PATH          Location of GeoIP],
+           [
+                geoip_prefix_path="$withval"
+           ])
+
+GEOIP_PREFIX_PATH=$"${geoip_prefix_path}"
+AC_SUBST(GEOIP_PREFIX_PATH)
+
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")
 
 INSTALLATION_PATH=$"${prefix}"
 AC_SUBST(INSTALLATION_PATH)
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile  bin/ip.service bin/ip.service.local])
+                 src/Makefile  bin/ip.service]) # bin/ip.service.local])
 AC_OUTPUT

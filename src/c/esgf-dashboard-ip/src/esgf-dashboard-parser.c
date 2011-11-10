@@ -44,8 +44,8 @@
 // QUERY_INSERT_PROJECT adds a new project (peer group) in the database
 #define QUERY_INSERT_PROJECT  "INSERT into esgf_dashboard.project_dash(name,description) values('%s','%s');"
 
-// QUERY QUERY_INSERT_GEOLOCATION_INFO adds geolocation info to an existing host (P2P node) in the database
-#define QUERY_INSERT_GEOLOCATION_INFO  "UPDATE esgf_dashboard.host set city='%s',latitude=%s,longitude=%s where id=%ld;"
+// QUERY QUERY_UPDATE_GEOLOCATION_INFO update geolocation info to an existing host (P2P node) in the database
+#define QUERY_UPDATE_GEOLOCATION_INFO  "UPDATE esgf_dashboard.host set city='%s',latitude=%f,longitude=%f where id=%ld;"
 
 // QUERY QUERY_INSERT_HOST adds a new host (P2P node) in the database
 #define QUERY_INSERT_NEW_HOST  "INSERT into esgf_dashboard.host(name,ip) values('%s','%s');"
@@ -311,8 +311,8 @@ parse_registration_xml_file (xmlNode * a_node)
 				xmlGetProp (int_node,
 					    REG_ELEMENT_GEOLOCATION_ATTR_CITY);
 			      snprintf (insert_query, sizeof (insert_query),
-					QUERY_INSERT_GEOLOCATION_INFO, city,
-					latitude, longitude, host_id);
+					QUERY_UPDATE_GEOLOCATION_INFO, city,
+					atof(latitude), atof(longitude), host_id);
 			      submit_query (conn, insert_query);
 
 			      // free XML GEOLOCATION attributes      
@@ -502,6 +502,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		      if (!esgf_geolookup (node_ip, &geo_output))
 			{
+			  char update_query[2048] = { '\0' };
 			  fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n",
 				   geo_output.country_code);
 			  fprintf (stdout, "[OUTPUT_REGION=%s]\n",
@@ -518,11 +519,17 @@ parse_registration_xml_file (xmlNode * a_node)
 				   geo_output.metro_code);
 			  fprintf (stdout, "[OUTPUT_AREACODE=%d]\n",
 				   geo_output.area_code);
+			  snprintf (update_query, sizeof (update_query),
+					QUERY_UPDATE_GEOLOCATION_INFO, geo_output.city,
+					geo_output.latitude, geo_output.longitude, host_id);
+			  fprintf(stdout,"I got the geolocation info from the DB (estimation)\n%s\n",update_query);
+			  submit_query (conn, update_query);
+		          
 			}
 		      else
 			fprintf (stdout, "Esgf-lookup error\n");
 
-		    }
+		    } // end of "if !geolocation_found" 
 		}		// end of "if a NODE element"
 
 	      // free XML NODE attributes

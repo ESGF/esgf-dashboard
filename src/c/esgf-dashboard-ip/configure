@@ -604,6 +604,8 @@ ac_unique_file="src"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 INSTALLATION_PATH
+GEOIP_PREFIX_PATH
+XML2_CONFIG
 pq_LIB_FILE
 pq_LIB_FIND
 pq_LDFLAGS
@@ -693,6 +695,8 @@ with_postgres_header_path
 with_postgres_lib_path
 with_postgres_path
 enable_postgresql
+with_xml2_config
+with_geoip_prefix_path
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1339,6 +1343,8 @@ Optional Packages:
   --with-postgres-header-path=PATH          Location of libpq-fe.h
   --with-postgres-lib-path=PATH             Location of libpq.a
   --with-postgres-path=PATH                 Location of postgresql
+  --with-xml2-config      libxml2 config program
+  --with-geoip-prefix-path=PATH          Location of GeoIP
 
 Some influential environment variables:
   CC          C compiler command
@@ -4778,13 +4784,98 @@ $as_echo "$as_me: WARNING: POSTGRESQL header file not found!" >&2;}
 fi
 
 
+
+# Check whether --with-xml2-config was given.
+if test "${with_xml2_config+set}" = set; then
+  withval=$with_xml2_config; if test "x${with_xml2_config}" = "xno" ; then
+  XML2_CONFIG=
+else
+  XML2_CONFIG="${with_xml2_config}"
+fi
+
+else
+  XML2_CONFIG=
+
+fi
+
+if test "x${XML2_CONFIG}" != "x" ; then
+   if test ! -x "${XML2_CONFIG}" ; then
+     { { $as_echo "$as_me:$LINENO: error: Unusable or missing xml2-config: ${XML2_CONFIG}" >&5
+$as_echo "$as_me: error: Unusable or missing xml2-config: ${XML2_CONFIG}" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+else
+  # Extract the first word of "xml2-config", so it can be a program name with args.
+set dummy xml2-config; ac_word=$2
+{ $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_XML2_CONFIG+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  case $XML2_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_XML2_CONFIG="$XML2_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in ${PATH}
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_XML2_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+XML2_CONFIG=$ac_cv_path_XML2_CONFIG
+if test -n "$XML2_CONFIG"; then
+  { $as_echo "$as_me:$LINENO: result: $XML2_CONFIG" >&5
+$as_echo "$XML2_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+  if test "x${XML2_CONFIG}" = "x" ; then
+    { { $as_echo "$as_me:$LINENO: error: Cannot configure without xml2-config" >&5
+$as_echo "$as_me: error: Cannot configure without xml2-config" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+
+
+
+
+
+
+# Check whether --with-geoip_prefix_path was given.
+if test "${with_geoip_prefix_path+set}" = set; then
+  withval=$with_geoip_prefix_path;
+                geoip_prefix_path="$withval"
+
+fi
+
+
+GEOIP_PREFIX_PATH=$"${geoip_prefix_path}"
+
+
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")
 
 INSTALLATION_PATH=$"${prefix}"
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile bin/ip.service bin/ip.service.local"
-
+ac_config_files="$ac_config_files Makefile src/Makefile bin/ip.service"
+ # bin/ip.service.local])
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5416,7 +5507,6 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "bin/ip.service") CONFIG_FILES="$CONFIG_FILES bin/ip.service" ;;
-    "bin/ip.service.local") CONFIG_FILES="$CONFIG_FILES bin/ip.service.local" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
