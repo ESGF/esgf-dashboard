@@ -8,6 +8,7 @@
 //#include "../include/ping.h"
 //#include "../include/dbAccess.h"
 #include "../include/config.h"
+#include "../include/hashtbl.h"
 
 #define APPLICATION_SERVER_NAME		"Application Server"
 // "Node" ELEMENTS 
@@ -148,6 +149,9 @@ parse_registration_xml_file (xmlNode * a_node)
   PGresult *res;
   char conninfo[1024] = { '\0' };
 
+  
+
+
   snprintf (conninfo, sizeof (conninfo),
 	    "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST,
 	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER,
@@ -202,54 +206,64 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		  organization =
 		    xmlGetProp (node_node, REG_ATTR_NODE_ORGANIZATION);
-		
-		  if (organization==NULL || !strcmp(organization,""))
-		  {
-			fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_ORGANIZATION);
-			xmlFree (organization);
-			continue; 
-		  }
+
+		  if (organization == NULL || !strcmp (organization, ""))
+		    {
+		      fprintf (stderr,
+			       "Missing/invalid %s [skip current NODE element]\n",
+			       REG_ATTR_NODE_ORGANIZATION);
+		      xmlFree (organization);
+		      continue;
+		    }
 
 		  npg_project =
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEPEERGROUP);
-		
-		  if (npg_project==NULL || !strcmp(npg_project,""))
-		  {
-			fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEPEERGROUP);
-			xmlFree (organization);
-			xmlFree (npg_project);
-			continue; 
-		  }
+
+		  if (npg_project == NULL || !strcmp (npg_project, ""))
+		    {
+		      fprintf (stderr,
+			       "Missing/invalid %s [skip current NODE element]\n",
+			       REG_ATTR_NODE_NODEPEERGROUP);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      continue;
+		    }
 
 		  node_ip = xmlGetProp (node_node, REG_ATTR_NODE_NODEIP);
-	
-		  if (node_ip==NULL || !strcmp(node_ip,""))
-                  {
-                        fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEIP);
-                        xmlFree (organization);
-                        xmlFree (npg_project);
-			xmlFree (node_ip);
-                        continue; 
-                  }
+
+		  if (node_ip == NULL || !strcmp (node_ip, ""))
+		    {
+		      fprintf (stderr,
+			       "Missing/invalid %s [skip current NODE element]\n",
+			       REG_ATTR_NODE_NODEIP);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      continue;
+		    }
 
 		  node_hostname =
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
 
-		  if (node_hostname==NULL || !strcmp(node_hostname,""))
-                  {
-                        fprintf(stderr,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEHOSTNAME);
-                        xmlFree (organization);
-                        xmlFree (npg_project);
-			xmlFree (node_ip);
-			xmlFree (node_hostname);
-                        continue; 
-                  }
+		  if (node_hostname == NULL || !strcmp (node_hostname, ""))
+		    {
+		      fprintf (stderr,
+			       "Missing/invalid %s [skip current NODE element]\n",
+			       REG_ATTR_NODE_NODEHOSTNAME);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      xmlFree (node_hostname);
+		      continue;
+		    }
 
 		  support_email =
 		    xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 
-                 if (support_email==NULL || !strcmp(support_email,""))
-                        fprintf(stderr,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
+		  if (support_email == NULL || !strcmp (support_email, ""))
+		    fprintf (stderr,
+			     "Missing/invalid %s [No problem... the attribute is not mandatory]\n",
+			     REG_ATTR_NODE_SUPPORTEMAIL);
 
 		  // print attributes values
 		  fprintf (stderr, "Organization attribute: %s\n",
@@ -347,17 +361,24 @@ parse_registration_xml_file (xmlNode * a_node)
 			      city =
 				xmlGetProp (int_node,
 					    REG_ELEMENT_GEOLOCATION_ATTR_CITY);
-				
-				// if <GeoLocation> is incomplete or corrupted...
-			      if (latitude==NULL || !strcmp(latitude,"") || longitude==NULL || !strcmp(longitude,"")|| city==NULL || !strcmp(city,"")) 
+
+			      // if <GeoLocation> is incomplete or corrupted...
+			      if (latitude == NULL || !strcmp (latitude, "")
+				  || longitude == NULL
+				  || !strcmp (longitude, "") || city == NULL
+				  || !strcmp (city, ""))
 				{
-				geolocation_found = 0;
-				fprintf(stderr,"The <GeoLocation> element seems to be corrupted or not complete\n");
+				  geolocation_found = 0;
+				  fprintf (stderr,
+					   "The <GeoLocation> element seems to be corrupted or not complete\n");
 				}
-				else {
-			      	snprintf (insert_query, sizeof (insert_query),
-					QUERY_UPDATE_GEOLOCATION_INFO, city,
-					atof(latitude), atof(longitude), host_id);
+			      else
+				{
+				  snprintf (insert_query,
+					    sizeof (insert_query),
+					    QUERY_UPDATE_GEOLOCATION_INFO,
+					    city, atof (latitude),
+					    atof (longitude), host_id);
 				  submit_query (conn, insert_query);
 				}
 
@@ -386,74 +407,87 @@ parse_registration_xml_file (xmlNode * a_node)
 				xmlGetProp (int_node,
 					    REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
 
-			      if (endpoint==NULL || !strcmp(endpoint,"")) {
-					fprintf(stderr,"Attribute [%s] missing/invalid \n",REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
-					fprintf(stderr,"No %s registered in the database \n",APPLICATION_SERVER_NAME);
-				
-					} else {// "if endpoint is valid"			      
-			      
-				sprintf (buffer_endpoint, "%s", endpoint);
-			      fprintf (stderr, "%s\n", buffer_endpoint);
-
-			      slashcursor = &buffer_endpoint[0];
-			      while (slashcursor = strchr (slashcursor, ':'))
+			      if (endpoint == NULL || !strcmp (endpoint, ""))
 				{
-				  iteration++;
-				  fprintf (stderr, "Iteration %d\n",
-					   iteration);
-				  if ((*(++slashcursor)) == '/')
-				    continue;
-				  startcursor = slashcursor;
-				  if (slashcursor = strchr (startcursor, '/'))
+				  fprintf (stderr,
+					   "Attribute [%s] missing/invalid \n",
+					   REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
+				  fprintf (stderr,
+					   "No %s registered in the database \n",
+					   APPLICATION_SERVER_NAME);
+
+				}
+			      else
+				{	// "if endpoint is valid"                             
+
+				  sprintf (buffer_endpoint, "%s", endpoint);
+				  fprintf (stderr, "%s\n", buffer_endpoint);
+
+				  slashcursor = &buffer_endpoint[0];
+				  while (slashcursor =
+					 strchr (slashcursor, ':'))
 				    {
-				      *slashcursor = '\0';
-				      app_server_port = atol (startcursor);
-				      break;
+				      iteration++;
+				      fprintf (stderr, "Iteration %d\n",
+					       iteration);
+				      if ((*(++slashcursor)) == '/')
+					continue;
+				      startcursor = slashcursor;
+				      if (slashcursor =
+					  strchr (startcursor, '/'))
+					{
+					  *slashcursor = '\0';
+					  app_server_port =
+					    atol (startcursor);
+					  break;
+					}
 				    }
-				}
-			      fprintf (stderr,
-				       "%s port: %ld\n",APPLICATION_SERVER_NAME,
-				       app_server_port);
+				  fprintf (stderr,
+					   "%s port: %ld\n",
+					   APPLICATION_SERVER_NAME,
+					   app_server_port);
 
-			      // 1) add service
-			      snprintf (insert_service_query,
-					sizeof (insert_service_query),
-					QUERY_INSERT_SERVICE_INFO,
-					app_server_port,
-					APPLICATION_SERVER_NAME, organization,
-					support_email, host_id);
-			      submit_query (conn, insert_service_query);
-			      // 2) retrieve service_id
-			      // grab service id servizio from port+host
-			      snprintf (select_id_service_query,
-					sizeof
-					(select_id_service_query),
-					QUERY_GET_SERVICE_ID,
-					app_server_port, host_id);
-			      service_id =
-				get_foreign_key_value (conn,
-						       select_id_service_query);
+				  // 1) add service
+				  snprintf (insert_service_query,
+					    sizeof (insert_service_query),
+					    QUERY_INSERT_SERVICE_INFO,
+					    app_server_port,
+					    APPLICATION_SERVER_NAME,
+					    organization, support_email,
+					    host_id);
+				  submit_query (conn, insert_service_query);
+				  // 2) retrieve service_id
+				  // grab service id servizio from port+host
+				  snprintf (select_id_service_query,
+					    sizeof
+					    (select_id_service_query),
+					    QUERY_GET_SERVICE_ID,
+					    app_server_port, host_id);
+				  service_id =
+				    get_foreign_key_value (conn,
+							   select_id_service_query);
 
-			      fprintf (stderr,
-				       "Service %s | id : %ld\n",
-				       APPLICATION_SERVER_NAME, service_id);
-			      // 3) add service to peer_groups
-			      // add services to projects
-			      for (i = 0; i < number_of_projects; i++)
-				{
-				  char
-				    insert_service_2_project_query
-				    [2048] = { '\0' };
-				  snprintf
-				    (insert_service_2_project_query,
-				     sizeof
-				     (insert_service_2_project_query),
-				     QUERY_INSERT_SERVICE_TO_PROJECT,
-				     project_ids[i], service_id);
-				  submit_query (conn,
-						insert_service_2_project_query);
-				}
-				} // end of "if endpoint is valid
+				  fprintf (stderr,
+					   "Service %s | id : %ld\n",
+					   APPLICATION_SERVER_NAME,
+					   service_id);
+				  // 3) add service to peer_groups
+				  // add services to projects
+				  for (i = 0; i < number_of_projects; i++)
+				    {
+				      char
+					insert_service_2_project_query
+					[2048] = { '\0' };
+				      snprintf
+					(insert_service_2_project_query,
+					 sizeof
+					 (insert_service_2_project_query),
+					 QUERY_INSERT_SERVICE_TO_PROJECT,
+					 project_ids[i], service_id);
+				      submit_query (conn,
+						    insert_service_2_project_query);
+				    }
+				}	// end of "if endpoint is valid
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
 			    }	// end of "if internal node is NodeManager ELEMENT"
@@ -493,51 +527,63 @@ parse_registration_xml_file (xmlNode * a_node)
 					xmlGetProp (gridftp_node,
 						    REG_ELEMENT_CONFIGURATION_ATTR_PORT);
 
-		                  if (service_type==NULL || !strcmp(service_type,"") || service_port==NULL || !strcmp(service_port,""))
-                  			{
-                        		fprintf(stderr,"Missing/invalid %s-%s attributes [skip current %s  element]\n",REG_ELEMENT_CONFIGURATION_ATTR_TYPE, REG_ELEMENT_CONFIGURATION_ATTR_PORT, REG_ELEMENT_CONFIGURATION);
-                  			}
-					else { // "if valid serviceType and port"
-
-				      snprintf (insert_service_query,
-						sizeof (insert_service_query),
-						QUERY_INSERT_SERVICE_INFO,
-						atol (service_port),
-						service_type, organization,
-						support_email, host_id);
-				      submit_query (conn,
-						    insert_service_query);
-
-				      // grab service id servizio from port+host
-				      snprintf (select_id_service_query,
-						sizeof
-						(select_id_service_query),
-						QUERY_GET_SERVICE_ID,
-						atol (service_port), host_id);
-				      service_id =
-					get_foreign_key_value (conn,
-							       select_id_service_query);
-
-				      fprintf (stderr,
-					       "Service %s | id : %ld\n",
-					       service_type, service_id);
-
-				      // add services to projects
-				      for (i = 0; i < number_of_projects; i++)
+				      if (service_type == NULL
+					  || !strcmp (service_type, "")
+					  || service_port == NULL
+					  || !strcmp (service_port, ""))
 					{
-					  char
-					    insert_service_2_project_query
-					    [2048] = { '\0' };
-					  snprintf
-					    (insert_service_2_project_query,
-					     sizeof
-					     (insert_service_2_project_query),
-					     QUERY_INSERT_SERVICE_TO_PROJECT,
-					     project_ids[i], service_id);
-					  submit_query (conn,
-							insert_service_2_project_query);
+					  fprintf (stderr,
+						   "Missing/invalid %s-%s attributes [skip current %s  element]\n",
+						   REG_ELEMENT_CONFIGURATION_ATTR_TYPE,
+						   REG_ELEMENT_CONFIGURATION_ATTR_PORT,
+						   REG_ELEMENT_CONFIGURATION);
 					}
-					} // end of "if valid serviceType and port"
+				      else
+					{	// "if valid serviceType and port"
+
+					  snprintf (insert_service_query,
+						    sizeof
+						    (insert_service_query),
+						    QUERY_INSERT_SERVICE_INFO,
+						    atol (service_port),
+						    service_type,
+						    organization,
+						    support_email, host_id);
+					  submit_query (conn,
+							insert_service_query);
+
+					  // grab service id servizio from port+host
+					  snprintf (select_id_service_query,
+						    sizeof
+						    (select_id_service_query),
+						    QUERY_GET_SERVICE_ID,
+						    atol (service_port),
+						    host_id);
+					  service_id =
+					    get_foreign_key_value (conn,
+								   select_id_service_query);
+
+					  fprintf (stderr,
+						   "Service %s | id : %ld\n",
+						   service_type, service_id);
+
+					  // add services to projects
+					  for (i = 0; i < number_of_projects;
+					       i++)
+					    {
+					      char
+						insert_service_2_project_query
+						[2048] = { '\0' };
+					      snprintf
+						(insert_service_2_project_query,
+						 sizeof
+						 (insert_service_2_project_query),
+						 QUERY_INSERT_SERVICE_TO_PROJECT,
+						 project_ids[i], service_id);
+					      submit_query (conn,
+							    insert_service_2_project_query);
+					    }
+					}	// end of "if valid serviceType and port"
 
 				      // free XML CONFIGURATION attributes      
 				      xmlFree (service_type);
@@ -580,16 +626,19 @@ parse_registration_xml_file (xmlNode * a_node)
 			  fprintf (stderr, "[OUTPUT_AREACODE=%d]\n",
 				   geo_output.area_code);
 			  snprintf (update_query, sizeof (update_query),
-					QUERY_UPDATE_GEOLOCATION_INFO, geo_output.city,
-					geo_output.latitude, geo_output.longitude, host_id);
-			  fprintf(stderr,"I got the geolocation info from the DB (estimation)\n%s\n",update_query);
+				    QUERY_UPDATE_GEOLOCATION_INFO,
+				    geo_output.city, geo_output.latitude,
+				    geo_output.longitude, host_id);
+			  fprintf (stderr,
+				   "I got the geolocation info from the DB (estimation)\n%s\n",
+				   update_query);
 			  submit_query (conn, update_query);
-		          
+
 			}
 		      else
 			fprintf (stderr, "Esgf-lookup error\n");
 
-		    } // end of "if !geolocation_found" 
+		    }		// end of "if !geolocation_found" 
 		}		// end of "if a NODE element"
 
 	      // free XML NODE attributes
