@@ -71,7 +71,8 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
     {
       fprintf (stderr, " %s not available, skipping.Please check ! [Exit]\n",
 	       geoipdat);
-      ret_code = -4;
+      GeoIP_delete (gi);
+      return (-4);
     }
 
   GeoIP_delete (gi);

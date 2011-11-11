@@ -36,8 +36,11 @@ struct host * loadHosts(unsigned *numHosts) {
 
 	if (PQstatus(conn) != CONNECTION_OK)
         {
-                printf("Connection to database failed: %s", PQerrorMessage(conn));
-                exit_nicely(conn);
+                fprintf(stderr,"Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		*numHosts = 0;
+		struct host* hosts = NULL; 
+		return hosts;
         }
 
 	/* send SQL query */
@@ -47,16 +50,18 @@ struct host * loadHosts(unsigned *numHosts) {
 
 	res = PQexec(conn, QUERY1);
 
-	fprintf(stderr,"numTuples = %d \n",numTuples = PQntuples(res));
-
 	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
 	        fprintf(stderr, "SELECT command did not return tuples properly\n");
 	        PQclear(res);
-		exit_nicely(conn);
+		PQfinish(conn);
+		*numHosts = 0;
+		struct host* hosts = NULL;
+		return hosts;
     	}
 
 	numTuples = PQntuples(res);
+	fprintf(stderr,"Number of Host/Services loaded from the DB = %d \n",numTuples);
 
 	struct host* hosts = (struct host *) malloc(sizeof(struct host) * numTuples);
 	unsigned t;
@@ -72,7 +77,7 @@ struct host * loadHosts(unsigned *numHosts) {
 	return hosts;
 }
 
-void writeResults(struct host *hosts, const unsigned numHosts) {
+int writeResults(struct host *hosts, const unsigned numHosts) {
 
 	PGconn * conn;
 	PGresult *res;
@@ -91,14 +96,16 @@ RES_USER, POSTGRES_PASSWD);
 
         if (PQstatus(conn) != CONNECTION_OK)
         {
-                printf("Connection to database failed: %s", PQerrorMessage(conn));
-                exit_nicely(conn);
+                fprintf(stderr,"Connection to database failed: %s", PQerrorMessage(conn));
+		PQfinish(conn);
+	  	return -1;	
+                //exit_nicely(conn);
         }
 
 	// QUERY2 === "INSERT INTO service_status(status, elapsedTime, idServiceInstance) "
 
 	unsigned index;
-	fprintf(stderr,"numHosts = %d\n",numHosts);
+	fprintf(stderr,"Number of Hosts = %d\n",numHosts);
 	for(index = 0; index < numHosts; index ++) 
 	{
 		char insert_query[2048]= {'\0'};
@@ -110,12 +117,10 @@ RES_USER, POSTGRES_PASSWD);
 		res = PQexec(conn, insert_query);
 
   		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
-		{
        		 	fprintf(stderr, "Insert query failed\n");
-        		//PQclear(res);
-        		//exit_nicely(conn);
-		}
+
     		PQclear(res);
 	}
         PQfinish(conn);
+	return 0;
 }

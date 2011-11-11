@@ -82,22 +82,23 @@ main (int argc, char **argv)
 	}
     }
 
-  fprintf (stdout, "Starting esgf-dashboard-ip\n");
+  fprintf (stderr,"Starting esgf-dashboard-ip\n");
 
 // reading the ESGF_HOME attribute
 
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
       //strcpy (esgf_properties_default_path, "/esg/");
-      strcpy (esgf_properties_default_path, "/export/fiore2/esg/");
+      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");
+      strcpy (esgf_properties_default_path, "/root/workspace/install/esg/");
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
-      fprintf (stdout,
+      fprintf (stderr,
 	       "ESGF_HOME attribute not found... setting /esg as default");
     }
 
-  fprintf (stdout, "ESGF_HOME = [%s]\n", esgf_properties);
+  fprintf (stderr, "ESGF_HOME = [%s]\n", esgf_properties);
 
 // reading the esgf-dashboard-ip properties
 
@@ -106,7 +107,7 @@ main (int argc, char **argv)
       if (mandatory)
 	{
 	  fprintf
-	    (stdout,
+	    (stderr,
 	     "Please note tha %d DB properties are missing in the esgf.properties file. Please check! Exit\n",
 	     mandatory);
 	  myfree (esgf_properties);
@@ -117,30 +118,30 @@ main (int argc, char **argv)
 	}
       if (allprop)
 	fprintf
-	  (stdout,
+	  (stderr,
 	   "Please note that %d non-mandatory properties are missing in the esgf.properties file. Default have been loaded\n",
 	   allprop);
     }
 
-  fprintf (stdout, "POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
-  fprintf (stdout, "POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
-  fprintf (stdout, "POSTGRES_USER value = [%s]\n", POSTGRES_USER);
-  fprintf (stdout, "POSTGRES_PORT_NUMBER value = [%d]\n",
+  fprintf (stderr, "POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
+  fprintf (stderr, "POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
+  fprintf (stderr, "POSTGRES_USER value = [%s]\n", POSTGRES_USER);
+  fprintf (stderr, "POSTGRES_PORT_NUMBER value = [%d]\n",
 	   POSTGRES_PORT_NUMBER);
-  fprintf (stdout, "CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
-  fprintf (stdout, "THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
-  fprintf (stdout, "PING_SPAN = [%d]\n", PING_SPAN);
-  fprintf (stdout, "PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
-  fprintf (stdout, "HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
-  fprintf (stdout, "REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
+  fprintf (stderr, "CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
+  fprintf (stderr, "THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
+  fprintf (stderr, "PING_SPAN = [%d]\n", PING_SPAN);
+  fprintf (stderr, "PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
+  fprintf (stderr, "HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
+  fprintf (stderr, "REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
 
 // reading the postgres password
 
   if ((ESGF_passwd (esgf_properties)))
     {
       fprintf
-	(stdout,
-	 "Some error occurred while opening the .esg_pg_pass file Please check!");
+	(stderr,
+	 "Some error occurred while opening the .esgf_pass file Please check!\n");
       myfree (esgf_properties);
       myfree (POSTGRES_HOST);
       myfree (POSTGRES_DB_NAME);
@@ -149,14 +150,14 @@ main (int argc, char **argv)
       return 0;
     }
 
-  fprintf (stdout, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
+  fprintf (stderr, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
 
-  fprintf (stdout, "All of the properties have been found\n");
-  fprintf (stdout, "Information provider startup...\n");
+  fprintf (stderr, "All of the properties have been found\n");
+  fprintf (stderr, "Information provider startup...\n");
 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
-  fprintf (stdout, "Feeding %s\n", esgf_registration_xml_path);
+  fprintf (stderr, "Feeding %s\n", esgf_registration_xml_path);
 
   counter = 0;
   while (iterator--)
@@ -167,7 +168,7 @@ main (int argc, char **argv)
       	
       if (counter == 0)
 	{
-	  fprintf(stdout,"*** Reloading host configuration ***\n");
+	  fprintf(stderr,"*** Reloading host configuration ***\n");
 	  if (hosts)
 	    free (hosts);
 	  // reload list of hosts/services
@@ -175,24 +176,24 @@ main (int argc, char **argv)
 	}
       if (numHosts != 0 && hosts != NULL)
 	{
-	  fprintf (stdout, "Host/services found. Let's check them...\n");
+	  fprintf (stderr, "Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
 	  writeResults (hosts, numHosts);
 	  counter = (counter + 1) % HOSTS_LOADING_SPAN;
-	  fprintf (stdout, "Metrics have been collected. Now waiting for %d sec\n", PING_SPAN);
+	  fprintf (stderr, "Metrics have been collected. Now waiting for %d sec\n", PING_SPAN);
 	  sleep (PING_SPAN);
 	}
       else
 	{
-	  fprintf (stdout, "Host/services not found...\n");
-	  fprintf (stdout, "Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
+	  fprintf (stderr, "Host/services not found...\n");
+	  fprintf (stderr, "Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
 	  sleep (PING_SPAN_NO_HOSTS);
 	}
     }				// forever loop end
 
   // freeing space
 
-  fprintf(stdout,"Releasing memory\n"); 
+  fprintf(stderr,"Releasing memory\n"); 
   if (hosts)
 	free (hosts);
 
@@ -202,7 +203,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_USER);
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
-  fprintf(stdout,"END\n"); 
+  fprintf(stderr,"END\n"); 
 
   return 0;
 }
@@ -276,7 +277,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   sprintf (esgf_properties_filename,
 	   "/%s/config/esgf.properties", esgf_properties_path);
 
-  fprintf (stdout, esgf_properties_filename);
+  fprintf (stderr,"%s\n",esgf_properties_filename);
   FILE *file = fopen (esgf_properties_filename, "r");
 
   if (file == NULL)		// /esg/config/esgf.properties not found
@@ -299,8 +300,10 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
       char value_buffer[256] = { '\0' };
 
       if ((fscanf (file, "%s", buffer)) == EOF)	// now reading ATTRIBUTE=VALUE
+    	{
+  	fclose (file);
 	return (-1);		// not all of the properties are there 
-
+	    }
       position = strchr (buffer, '=');
       if (position != NULL)	// the '=' has been found
 	{
@@ -390,7 +393,7 @@ ESGF_passwd (char *esgf_passwd_path)
 // this line is ok for local and production env
   sprintf (esgf_passwd_filename, "/%s/config/.esgf_pass", esgf_passwd_path);
 
-  fprintf (stdout, esgf_passwd_filename);
+  fprintf (stderr,"%s\n",esgf_passwd_filename);
   FILE *file = fopen (esgf_passwd_filename, "r");
 
   if (file == NULL)		// /esg/config/.esg_pg_pass not found

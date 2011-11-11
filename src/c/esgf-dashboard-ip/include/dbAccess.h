@@ -18,6 +18,6 @@
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);
-void writeResults(struct host *hosts, const unsigned numHosts);
+int writeResults(struct host *hosts, const unsigned numHosts);
 
 #endif /* DBACCESS_H_ */
