@@ -42,6 +42,11 @@
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
 #define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
 
+// Get list of PROJECTS
+#define QUERY_GET_LIST_OF_PROJECTS  "SELECT name,id from esgf_dashboard.project_dash;"
+#define QUERY_GET_LIST_OF_SERVICES  "select id, (CAST(port as varchar) || ':' || CAST(idhost as varchar)) as key from esgf_dashboard.service_instance;"
+#define QUERY_GET_LIST_OF_HOSTS  "SELECT ip,id from esgf_dashboard.host;"
+
 // QUERY_INSERT_PROJECT adds a new project (peer group) in the database
 #define QUERY_INSERT_PROJECT  "INSERT into esgf_dashboard.project_dash(name,description) values('%s','%s');"
 
@@ -131,6 +136,72 @@ submit_query (PGconn * conn, char *query)
 }
 
 
+int htable_test()
+{
+        HASHTBL *hashtbl;
+        char *spain, *italy;
+
+        if(!(hashtbl=hashtbl_create(16, NULL))) {
+                fprintf(stderr, "ERROR: hashtbl_create() failed\n");
+                exit(EXIT_FAILURE);
+        }
+
+        hashtbl_insert(hashtbl, "Italy", "111");
+        hashtbl_insert(hashtbl, "Spain", "444");
+
+        printf("After insert:\n");
+        italy=hashtbl_get(hashtbl, "Italy");
+        printf("Italy: %s\n", italy?italy:"-");
+        spain=hashtbl_get(hashtbl, "Spain");
+        printf("Spain: %s\n", spain?spain:"-");
+
+        hashtbl_remove(hashtbl, "Spain");
+
+        printf("After remove:\n");
+        spain=hashtbl_get(hashtbl, "Spain");
+        printf("Spain: %s\n", spain?spain:"-");
+
+        hashtbl_resize(hashtbl, 8);
+
+        printf("After resize:\n");
+        italy=hashtbl_get(hashtbl, "Italy");
+        printf("Italy: %s\n", italy?italy:"-");
+
+        hashtbl_destroy(hashtbl);
+
+        return 0;
+}
+
+int create_project_hash_table(PGconn * conn, char* query)
+{
+
+  PGresult * res;
+  int i, num_records;
+	
+  fprintf(stderr,"Creating the hashtable for [%s]\n",query);
+
+  res = PQexec(conn,query);
+  if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    {
+        fprintf(stderr, "Error running query [%s]\n",query);
+        PQclear(res);
+	return -1;
+    }
+
+    num_records = PQntuples(res);
+
+    for(i = 0 ; i < num_records ; i++)
+    {
+        fprintf(stderr, "%s %s\n", PQgetvalue(res, i, 0), PQgetvalue(res, i, 1));
+    }
+
+    PQclear(res);
+
+    fprintf(stderr,"Hashtable properly created!\n",query);
+    return 0; 
+}
+
+
 int
 parse_registration_xml_file (xmlNode * a_node)
 {
@@ -150,7 +221,7 @@ parse_registration_xml_file (xmlNode * a_node)
   char conninfo[1024] = { '\0' };
 
   
-
+  htable_test();
 
   snprintf (conninfo, sizeof (conninfo),
 	    "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST,
@@ -166,6 +237,12 @@ parse_registration_xml_file (xmlNode * a_node)
       PQfinish (conn);
       return -1;
     }
+
+  // Hash tables creation
+	
+  create_project_hash_table(conn,QUERY_GET_LIST_OF_PROJECTS);
+  create_project_hash_table(conn,QUERY_GET_LIST_OF_HOSTS);
+  create_project_hash_table(conn,QUERY_GET_LIST_OF_SERVICES);
 
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
