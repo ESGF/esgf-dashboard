@@ -88,8 +88,8 @@ main (int argc, char **argv)
 
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
-      //strcpy (esgf_properties_default_path, "/esg/"); // setting for release
-      strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
+      strcpy (esgf_properties_default_path, "/esg/"); // setting for release
+      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
       //strcpy (esgf_properties_default_path, "/root/workspace/install/esg/"); // setting for my VM
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
@@ -160,8 +160,8 @@ main (int argc, char **argv)
   fprintf (stderr, "Feeding %s\n", esgf_registration_xml_path);
 
   counter = 0;
-  while (iterator--)
-  //while (1)
+  //while (iterator--)
+  while (1)
     {
       //load information from registration.xml();       
       automatic_registration_xml_feed (esgf_registration_xml_path);
