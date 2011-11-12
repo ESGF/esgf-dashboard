@@ -44,8 +44,12 @@
 
 // Get list of PROJECTS
 #define QUERY_GET_LIST_OF_PROJECTS  "SELECT name,id from esgf_dashboard.project_dash;"
-#define QUERY_GET_LIST_OF_SERVICES  "select id, (CAST(port as varchar) || ':' || CAST(idhost as varchar)) as key from esgf_dashboard.service_instance;"
+// Get list of SERVICES 
+#define QUERY_GET_LIST_OF_SERVICES  "select (CAST(idhost as varchar) || ':' || CAST(port as varchar)) as key,id from esgf_dashboard.service_instance;"
+// Get list of HOST
 #define QUERY_GET_LIST_OF_HOSTS  "SELECT ip,id from esgf_dashboard.host;"
+// Get list of "USES" 
+#define QUERY_GET_LIST_OF_USES  "SELECT (CAST(idproject as varchar ) || ':' || CAST(idserviceinstance as varchar)) as key, idproject from esgf_dashboard.uses;"
 
 // QUERY_INSERT_PROJECT adds a new project (peer group) in the database
 #define QUERY_INSERT_PROJECT  "INSERT into esgf_dashboard.project_dash(name,description) values('%s','%s');"
@@ -136,69 +140,76 @@ submit_query (PGconn * conn, char *query)
 }
 
 
-int htable_test()
+int
+htable_test ()
 {
-        HASHTBL *hashtbl;
-        char *spain, *italy;
+  HASHTBL *hashtbl;
+  char *spain, *italy;
 
-        if(!(hashtbl=hashtbl_create(16, NULL))) {
-                fprintf(stderr, "ERROR: hashtbl_create() failed\n");
-                exit(EXIT_FAILURE);
-        }
+  if (!(hashtbl = hashtbl_create (16, NULL)))
+    {
+      fprintf (stderr, "ERROR: hashtbl_create() failed\n");
+      exit (EXIT_FAILURE);
+    }
 
-        hashtbl_insert(hashtbl, "Italy", "111");
-        hashtbl_insert(hashtbl, "Spain", "444");
+  hashtbl_insert (hashtbl, "Italy", "111");
+  hashtbl_insert (hashtbl, "Spain", "444");
 
-        printf("After insert:\n");
-        italy=hashtbl_get(hashtbl, "Italy");
-        printf("Italy: %s\n", italy?italy:"-");
-        spain=hashtbl_get(hashtbl, "Spain");
-        printf("Spain: %s\n", spain?spain:"-");
+  printf ("After insert:\n");
+  italy = hashtbl_get (hashtbl, "Italy");
+  printf ("Italy: %s\n", italy ? italy : "-");
+  spain = hashtbl_get (hashtbl, "Spain");
+  printf ("Spain: %s\n", spain ? spain : "-");
 
-        hashtbl_remove(hashtbl, "Spain");
+  hashtbl_remove (hashtbl, "Spain");
 
-        printf("After remove:\n");
-        spain=hashtbl_get(hashtbl, "Spain");
-        printf("Spain: %s\n", spain?spain:"-");
+  printf ("After remove:\n");
+  spain = hashtbl_get (hashtbl, "Spain");
+  printf ("Spain: %s\n", spain ? spain : "-");
 
-        hashtbl_resize(hashtbl, 8);
+  hashtbl_resize (hashtbl, 8);
 
-        printf("After resize:\n");
-        italy=hashtbl_get(hashtbl, "Italy");
-        printf("Italy: %s\n", italy?italy:"-");
+  printf ("After resize:\n");
+  italy = hashtbl_get (hashtbl, "Italy");
+  printf ("Italy: %s\n", italy ? italy : "-");
 
-        hashtbl_destroy(hashtbl);
+  hashtbl_destroy (hashtbl);
 
-        return 0;
+  return 0;
 }
 
-int create_project_hash_table(PGconn * conn, char* query)
+int
+populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
 {
 
-  PGresult * res;
+  PGresult *res;
   int i, num_records;
-	
-  fprintf(stderr,"Creating the hashtable for [%s]\n",query);
 
-  res = PQexec(conn,query);
-  if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+
+  fprintf (stderr, "Retrieving data for hashtable [QUERY=%s]\n", query);
+  res = PQexec (conn, query);
+  if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
-        fprintf(stderr, "Error running query [%s]\n",query);
-        PQclear(res);
-	return -1;
+      fprintf (stderr, "Error running query [%s]\n", query);
+      PQclear (res);
+      return -1;
     }
 
-    num_records = PQntuples(res);
+  num_records = PQntuples (res);
 
-    for(i = 0 ; i < num_records ; i++)
+
+  for (i = 0; i < num_records; i++)
     {
-        fprintf(stderr, "%s %s\n", PQgetvalue(res, i, 0), PQgetvalue(res, i, 1));
+      hashtbl_insert (*pointer, (char *) PQgetvalue (res, i, 0),
+		      (char *) PQgetvalue (res, i, 1));
+      fprintf (stderr, "To be stored into the hashtable [%s]#[%s]\n",
+	       (char *) PQgetvalue (res, i, 0), (char *) PQgetvalue (res, i,
+								     1));
     }
+  PQclear (res);
 
-    PQclear(res);
-
-    fprintf(stderr,"Hashtable properly created!\n",query);
-    return 0; 
+  fprintf (stderr, "Hashtable properly created!\n", query);
+  return 0;
 }
 
 
@@ -219,9 +230,12 @@ parse_registration_xml_file (xmlNode * a_node)
   PGconn *conn;
   PGresult *res;
   char conninfo[1024] = { '\0' };
-
-  
-  htable_test();
+  HASHTBL *hashtbl_projects;
+  HASHTBL *hashtbl_hosts;
+  HASHTBL *hashtbl_services;
+  HASHTBL *hashtbl_uses;
+  char *hashtbl_result;
+  static long int success_lookup[2] = { 0 };	// [0] success [1] missing
 
   snprintf (conninfo, sizeof (conninfo),
 	    "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST,
@@ -229,6 +243,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	    POSTGRES_PASSWD);
 
   fprintf (stderr, "Open connection to: %s\n", conninfo);
+
   conn = PQconnectdb ((const char *) conninfo);
   if (PQstatus (conn) != CONNECTION_OK)
     {
@@ -239,10 +254,52 @@ parse_registration_xml_file (xmlNode * a_node)
     }
 
   // Hash tables creation
-	
-  create_project_hash_table(conn,QUERY_GET_LIST_OF_PROJECTS);
-  create_project_hash_table(conn,QUERY_GET_LIST_OF_HOSTS);
-  create_project_hash_table(conn,QUERY_GET_LIST_OF_SERVICES);
+  fprintf (stderr, "Creating the hashtable for PROJECTS\n");
+  if (!(hashtbl_projects = hashtbl_create (16, NULL)))
+    {
+      fprintf (stderr,
+	       "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
+      PQfinish (conn);
+      return -2;
+    }
+
+  fprintf (stderr, "Creating the hashtable for HOST\n");
+  if (!(hashtbl_hosts = hashtbl_create (16, NULL)))
+    {
+      fprintf (stderr,
+	       "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
+      hashtbl_destroy (hashtbl_projects);
+      PQfinish (conn);
+      return -2;
+    }
+
+  fprintf (stderr, "Creating the hashtable for SERVICES\n");
+  if (!(hashtbl_services = hashtbl_create (16, NULL)))
+    {
+      fprintf (stderr,
+	       "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
+      hashtbl_destroy (hashtbl_projects);
+      hashtbl_destroy (hashtbl_hosts);
+      PQfinish (conn);
+      return -2;
+    }
+
+  fprintf (stderr, "Creating the hashtable for USES\n");
+  if (!(hashtbl_uses = hashtbl_create (16, NULL)))
+    {
+      fprintf (stderr,
+	       "ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+      hashtbl_destroy (hashtbl_projects);
+      hashtbl_destroy (hashtbl_hosts);
+      hashtbl_destroy (hashtbl_services);
+      PQfinish (conn);
+      return -2;
+    }
+
+  populate_hash_table (conn, QUERY_GET_LIST_OF_PROJECTS, &hashtbl_projects);
+  populate_hash_table (conn, QUERY_GET_LIST_OF_HOSTS, &hashtbl_hosts);
+  populate_hash_table (conn, QUERY_GET_LIST_OF_SERVICES, &hashtbl_services);
+  populate_hash_table (conn, QUERY_GET_LIST_OF_USES, &hashtbl_uses);
 
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
@@ -255,19 +312,29 @@ parse_registration_xml_file (xmlNode * a_node)
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
 	  fprintf (stderr, "Element->name: %s\n", cur_node->name);
+	  // to be done: check on the REGISTRATION timestamp    
+
+	  // test and extract some data
+	  hashtbl_result = hashtbl_get (hashtbl_projects, "esgf");
+	  fprintf (stderr, "The key related to this project is %s\n",
+		   hashtbl_result);
+	  hashtbl_result = hashtbl_get (hashtbl_projects, "cssef1");
+	  fprintf (stderr, "The key related to this project is %s\n",
+		   hashtbl_result);
+
 
 	  // Loop on NODE elements
 
 	  for (node_node = cur_node->children; node_node; node_node = node_node->next)	// loop on NODE elements
 	    {
-	      char *organization;	// TO DO da mettere a NULL mettere controlli su NULL dove serve
+	      char *organization;
 	      char *support_email;
 	      char *npg_project;
 	      char *node_ip;
 	      char *node_hostname;
 	      int number_of_projects;
-	      long int project_ids[1024] = { 0 };
-	      long int service_ids[1024] = { 0 };
+	      long int project_ids[1024] = { 0 };	// this should be dynamically allocated starting from the total number of projects in the hashtable
+	      long int service_ids[1024] = { 0 };	// this should be dynamically allocated starting from the total number of services in the hashtable
 	      long int host_id = 0;
 	      int geolocation_found;
 	      int i;
@@ -349,17 +416,37 @@ parse_registration_xml_file (xmlNode * a_node)
 		  fprintf (stderr, "Hostname attribute: %s\n", node_hostname);
 		  fprintf (stderr, "IP attribute: %s\n", node_ip);
 
-		  // adding host entry in the Host table without geolocation information
-		  snprintf (insert_new_host_query,
-			    sizeof (insert_new_host_query),
-			    QUERY_INSERT_NEW_HOST, node_hostname, node_ip);
-		  submit_query (conn, insert_new_host_query);
 
-		  snprintf (select_id_host_query,
-			    sizeof (select_id_host_query), QUERY_GET_HOST_ID,
-			    node_ip);
-		  host_id =
-		    get_foreign_key_value (conn, select_id_host_query);
+		  if (hashtbl_result = hashtbl_get (hashtbl_hosts, node_ip))
+		    {
+		      fprintf (stderr, "Lookup HostTable hit! [%s] [%s]\n",
+			       node_ip, hashtbl_result);
+		      host_id = atol (hashtbl_result);
+		      success_lookup[0]++;
+		    }
+		  else
+		    {		// add host entry in DB (and hashtable too) without geolocation information
+
+		      char host_id_str[128] = { '\0' };
+		      success_lookup[1]++;
+		      snprintf (insert_new_host_query,
+				sizeof (insert_new_host_query),
+				QUERY_INSERT_NEW_HOST, node_hostname,
+				node_ip);
+		      submit_query (conn, insert_new_host_query);
+
+		      snprintf (select_id_host_query,
+				sizeof (select_id_host_query),
+				QUERY_GET_HOST_ID, node_ip);
+		      host_id =
+			get_foreign_key_value (conn, select_id_host_query);
+		      // add entry to hash table
+		      sprintf (host_id_str, "%ld", host_id);
+		      hashtbl_insert (hashtbl_hosts, node_ip, host_id_str);
+		      fprintf (stderr,
+			       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+			       node_ip, host_id_str);
+		    }
 
 		  fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
 
@@ -381,23 +468,50 @@ parse_registration_xml_file (xmlNode * a_node)
 			}
 		      fprintf (stderr, "PeerGroup %s\n", cursor_buf);
 
-		      // add PeerGroup to project_dash table
-		      snprintf (insert_query, sizeof (insert_query),
-				QUERY_INSERT_PROJECT, cursor_buf, cursor_buf);
-		      submit_query (conn, insert_query);
+		      if (hashtbl_result =
+			  hashtbl_get (hashtbl_projects, cursor_buf))
+			{
+			  fprintf (stderr,
+				   "Lookup ProjectTable hit! [%s] [%s]\n",
+				   cursor_buf, hashtbl_result);
+			  success_lookup[0]++;
+			  project_ids[number_of_projects++] =
+			    atol (hashtbl_result);
+			}
+		      else
+			{	// add host entry in DB (and hashtable too) without geolocation information
 
-		      // get project ID (servira' successivamente)
-		      snprintf (select_query, sizeof (select_query),
-				QUERY_GET_PROJECT_ID, cursor_buf);
-		      project_ids[number_of_projects++] =
-			get_foreign_key_value (conn, select_query);
+			  char project_id_str[128] = { '\0' };
+			  success_lookup[1]++;
+			  // add PeerGroup to project_dash table
+			  snprintf (insert_query, sizeof (insert_query),
+				    QUERY_INSERT_PROJECT, cursor_buf,
+				    cursor_buf);
+			  submit_query (conn, insert_query);
 
-		      // add user to peer group (authorization) TO BE ADDED
-		      snprintf (authorization_query,
-				sizeof (authorization_query),
-				QUERY_PROJECT_AUTHORIZATION,
-				project_ids[number_of_projects - 1]);
-		      submit_query (conn, authorization_query);
+			  // get project ID (servira' successivamente)
+			  snprintf (select_query, sizeof (select_query),
+				    QUERY_GET_PROJECT_ID, cursor_buf);
+			  project_ids[number_of_projects++] =
+			    get_foreign_key_value (conn, select_query);
+
+			  // added new project into the hashtable
+			  sprintf (project_id_str, "%ld",
+				   project_ids[number_of_projects - 1]);
+			  hashtbl_insert (hashtbl_projects, cursor_buf,
+					  project_id_str);
+			  fprintf (stderr,
+				   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+				   cursor_buf, project_id_str);
+
+			  // add user to peer group (authorization) 
+			  snprintf (authorization_query,
+				    sizeof (authorization_query),
+				    QUERY_PROJECT_AUTHORIZATION,
+				    project_ids[number_of_projects - 1]);
+			  submit_query (conn, authorization_query);
+
+			}
 		    }
 		  while (position);
 
@@ -423,7 +537,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_GEOLOCATION))
 			    {
-			      char insert_query[2048] = { '\0' };
+			      char update_query[2048] = { '\0' };
 			      char *latitude;
 			      char *longitude;
 			      char *city;
@@ -451,12 +565,12 @@ parse_registration_xml_file (xmlNode * a_node)
 				}
 			      else
 				{
-				  snprintf (insert_query,
-					    sizeof (insert_query),
+				  snprintf (update_query,
+					    sizeof (update_query),
 					    QUERY_UPDATE_GEOLOCATION_INFO,
 					    city, atof (latitude),
 					    atof (longitude), host_id);
-				  submit_query (conn, insert_query);
+				  submit_query (conn, update_query);
 				}
 
 			      // free XML GEOLOCATION attributes      
@@ -497,6 +611,8 @@ parse_registration_xml_file (xmlNode * a_node)
 			      else
 				{	// "if endpoint is valid"                             
 
+				  char service_id_str[128] = { '\0' };
+				  char service_key[128] = { '\0' };
 				  sprintf (buffer_endpoint, "%s", endpoint);
 				  fprintf (stderr, "%s\n", buffer_endpoint);
 
@@ -524,26 +640,53 @@ parse_registration_xml_file (xmlNode * a_node)
 					   APPLICATION_SERVER_NAME,
 					   app_server_port);
 
-				  // 1) add service
-				  snprintf (insert_service_query,
-					    sizeof (insert_service_query),
-					    QUERY_INSERT_SERVICE_INFO,
-					    app_server_port,
-					    APPLICATION_SERVER_NAME,
-					    organization, support_email,
-					    host_id);
-				  submit_query (conn, insert_service_query);
-				  // 2) retrieve service_id
-				  // grab service id servizio from port+host
-				  snprintf (select_id_service_query,
-					    sizeof
-					    (select_id_service_query),
-					    QUERY_GET_SERVICE_ID,
-					    app_server_port, host_id);
-				  service_id =
-				    get_foreign_key_value (conn,
-							   select_id_service_query);
+				  sprintf (service_key, "%ld:%ld", host_id,
+					   app_server_port);
+				  if (hashtbl_result =
+				      hashtbl_get (hashtbl_services,
+						   service_key))
+				    {
+				      fprintf (stderr,
+					       "Lookup HostServices hit! [%s] [%s]\n",
+					       service_key, hashtbl_result);
+				      service_id = atol (hashtbl_result);
+				      success_lookup[0]++;
+				    }
+				  else
+				    {	// add service entry in DB (and hashtable too) without geolocation information
+				      // 1) add service
+				      char service_id_str[128] = { '\0' };
+				      success_lookup[1]++;
+				      snprintf (insert_service_query,
+						sizeof (insert_service_query),
+						QUERY_INSERT_SERVICE_INFO,
+						app_server_port,
+						APPLICATION_SERVER_NAME,
+						organization, support_email,
+						host_id);
+				      submit_query (conn,
+						    insert_service_query);
+				      // 2) retrieve service_id
+				      // grab service id servizio from port+host
+				      snprintf (select_id_service_query,
+						sizeof
+						(select_id_service_query),
+						QUERY_GET_SERVICE_ID,
+						app_server_port, host_id);
+				      service_id =
+					get_foreign_key_value (conn,
+							       select_id_service_query);
 
+				      // add new entry into the hashtable
+				      sprintf (service_id_str, "%ld",
+					       service_id);
+				      hashtbl_insert (hashtbl_services,
+						      service_key,
+						      service_id_str);
+				      fprintf (stderr,
+					       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+					       service_key, service_id_str);
+				    }
 				  fprintf (stderr,
 					   "Service %s | id : %ld\n",
 					   APPLICATION_SERVER_NAME,
@@ -552,18 +695,45 @@ parse_registration_xml_file (xmlNode * a_node)
 				  // add services to projects
 				  for (i = 0; i < number_of_projects; i++)
 				    {
-				      char
-					insert_service_2_project_query
-					[2048] = { '\0' };
-				      snprintf
-					(insert_service_2_project_query,
-					 sizeof
-					 (insert_service_2_project_query),
-					 QUERY_INSERT_SERVICE_TO_PROJECT,
-					 project_ids[i], service_id);
-				      submit_query (conn,
-						    insert_service_2_project_query);
-				    }
+				      char uses_key[128] = { '\0' };
+				      sprintf (uses_key, "%ld:%ld",
+					       project_ids[i], service_id);
+				      if (hashtbl_result =
+					  hashtbl_get (hashtbl_uses,
+						       uses_key))
+					{
+					  fprintf (stderr,
+						   "Lookup Uses hit! [%s] [%s]\n",
+						   uses_key, hashtbl_result);
+					  success_lookup[0]++;
+					}
+				      else
+					{
+					  char
+					    insert_service_2_project_query
+					    [2048] = { '\0' };
+					  success_lookup[1]++;
+					  char project_ids_str[128] =
+					    { '\0' };
+					  snprintf
+					    (insert_service_2_project_query,
+					     sizeof
+					     (insert_service_2_project_query),
+					     QUERY_INSERT_SERVICE_TO_PROJECT,
+					     project_ids[i], service_id);
+					  submit_query (conn,
+							insert_service_2_project_query);
+					  // add new entry into the hashtable
+					  sprintf (project_ids_str, "%ld",
+						   project_ids[i]);
+					  hashtbl_insert (hashtbl_uses,
+							  uses_key,
+							  project_ids_str);
+					  fprintf (stderr,
+						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+						   uses_key, project_ids_str);
+					}
+				    }	// end for add service to peer groups
 				}	// end of "if endpoint is valid
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
@@ -618,36 +788,91 @@ parse_registration_xml_file (xmlNode * a_node)
 				      else
 					{	// "if valid serviceType and port"
 
-					  snprintf (insert_service_query,
-						    sizeof
-						    (insert_service_query),
-						    QUERY_INSERT_SERVICE_INFO,
-						    atol (service_port),
-						    service_type,
-						    organization,
-						    support_email, host_id);
-					  submit_query (conn,
-							insert_service_query);
+					  char service_key[128] = { '\0' };
 
-					  // grab service id servizio from port+host
-					  snprintf (select_id_service_query,
-						    sizeof
-						    (select_id_service_query),
-						    QUERY_GET_SERVICE_ID,
-						    atol (service_port),
-						    host_id);
-					  service_id =
-					    get_foreign_key_value (conn,
-								   select_id_service_query);
+					  sprintf (service_key, "%ld:%ld",
+						   host_id,
+						   atol (service_port));
+					  fprintf (stderr,
+						   "Service_key: %s\n",
+						   service_key);
+					  if (hashtbl_result =
+					      hashtbl_get (hashtbl_services,
+							   service_key))
+					    {
+					      fprintf (stderr,
+						       "Lookup Services hit! [%s] [%s]\n",
+						       service_key,
+						       hashtbl_result);
+					      service_id =
+						atol (hashtbl_result);
+					      success_lookup[0]++;
+					    }
+					  else
+					    {	// add service entry in DB (and hashtable too) 
+					      // 1) add service
+					      char service_id_str[128] =
+						{ '\0' };
+					      success_lookup[1]++;
 
+					      snprintf (insert_service_query,
+							sizeof
+							(insert_service_query),
+							QUERY_INSERT_SERVICE_INFO,
+							atol (service_port),
+							service_type,
+							organization,
+							support_email,
+							host_id);
+					      submit_query (conn,
+							    insert_service_query);
+
+					      // grab service id servizio from port+host
+					      snprintf
+						(select_id_service_query,
+						 sizeof
+						 (select_id_service_query),
+						 QUERY_GET_SERVICE_ID,
+						 atol (service_port),
+						 host_id);
+					      service_id =
+						get_foreign_key_value (conn,
+								       select_id_service_query);
+					      // add new service into the hashtable
+					      sprintf (service_id_str, "%ld",
+						       service_id);
+					      hashtbl_insert
+						(hashtbl_services,
+						 service_key, service_id_str);
+					      fprintf (stderr,
+						       "[LookupFailed] ** Adding new entry in the hashtable [%s] [%s]\n",
+						       service_key,
+						       service_id_str);
+					    }
 					  fprintf (stderr,
 						   "Service %s | id : %ld\n",
 						   service_type, service_id);
 
 					  // add services to projects
+					  fprintf (stderr,
+						   "ADD SERVICES TO PROJECT: %d\n",
+						   number_of_projects);
 					  for (i = 0; i < number_of_projects;
 					       i++)
 					    {
+				      		char uses_key[128] = { '\0' };
+				      		sprintf (uses_key, "%ld:%ld",project_ids[i], service_id);
+				      if (hashtbl_result = hashtbl_get (hashtbl_uses, uses_key))
+					{
+					  fprintf (stderr,
+						   "Lookup Uses hit! [%s] [%s]\n",
+						   uses_key, hashtbl_result);
+					  success_lookup[0]++;
+					}
+				      else
+					{
+					  success_lookup[1]++;
+					  char project_ids_str[128] = { '\0' };
 					      char
 						insert_service_2_project_query
 						[2048] = { '\0' };
@@ -659,7 +884,21 @@ parse_registration_xml_file (xmlNode * a_node)
 						 project_ids[i], service_id);
 					      submit_query (conn,
 							    insert_service_2_project_query);
-					    }
+
+					      fprintf (stderr,
+						       "ADD SERVICES TO PROJECT: %s\n",
+						       insert_service_2_project_query);
+					  // add new entry into the hashtable
+					  sprintf (project_ids_str, "%ld",
+						   project_ids[i]);
+					  hashtbl_insert (hashtbl_uses,
+							  uses_key,
+							  project_ids_str);
+					  fprintf (stderr,
+						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+						   uses_key, project_ids_str);
+						}
+					    } // end of for "add services to projects"
 					}	// end of "if valid serviceType and port"
 
 				      // free XML CONFIGURATION attributes      
@@ -725,10 +964,20 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (support_email);
 	      xmlFree (node_hostname);
 	    }			// end of loop on NODE element
+
 	}			// end of "if a REGISTRATION element
     }				// end of loop on REGISTRATION element
+
+  // releasing memory for hashtables
+  hashtbl_destroy (hashtbl_projects);
+  hashtbl_destroy (hashtbl_hosts);
+  hashtbl_destroy (hashtbl_services);
+  hashtbl_destroy (hashtbl_uses);
+
+  fprintf(stderr,"*********** Hits %ld Failure %ld ************\n",success_lookup[0],success_lookup[1]);
   // closing database connection
   PQfinish (conn);
+
   return 0;
 }
 

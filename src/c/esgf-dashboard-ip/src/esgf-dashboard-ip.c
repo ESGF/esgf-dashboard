@@ -47,7 +47,7 @@ main (int argc, char **argv)
 
   int c;
   int option_index = 0;
-  int iterator=10;
+  int iterator=1;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -57,7 +57,7 @@ main (int argc, char **argv)
    * between the version it was compiled for and the actual shared
    * library used.
    */
-  LIBXML_TEST_VERSION
+  //LIBXML_TEST_VERSION
 // reading the command line arguments
     while ((c =
 	    getopt_long (argc, argv, "v:h", long_options,

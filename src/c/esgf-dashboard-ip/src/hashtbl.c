@@ -78,6 +78,7 @@ void hashtbl_destroy(HASHTBL *hashtbl)
 		node=hashtbl->nodes[n];
 		while(node) {
 			free(node->key);
+			free(node->data);  // added 
 			oldnode=node;
 			node=node->next;
 			free(oldnode);
@@ -99,7 +100,15 @@ int hashtbl_insert(HASHTBL *hashtbl, const char *key, void *data)
 	node=hashtbl->nodes[hash];
 	while(node) {
 		if(!strcmp(node->key, key)) {
-			node->data=data;
+			//node->data=data; removed old
+
+			// this new code change the existing data with the new one
+			// free(node->data=data);
+       			//node->data = (char *) malloc (strlen ((char*) data) + 1); //added
+			//sprintf(node->data,"%s",data); // added 
+			
+			// this new code does nothing is the key already exists
+			fprintf(stderr,"Key already existing: [key=%s] [data=%s] [skip add element]",node->key, node->data); // added 
 			return 0;
 		}
 		node=node->next;
@@ -111,7 +120,10 @@ int hashtbl_insert(HASHTBL *hashtbl, const char *key, void *data)
 		free(node);
 		return -1;
 	}
-	node->data=data;
+	//node->data=data;
+       	node->data = (char *) malloc (strlen ((char*) data) + 1); //added
+	sprintf(node->data,"%s",data); // added 
+
 	node->next=hashtbl->nodes[hash];
 	hashtbl->nodes[hash]=node;
 
@@ -129,6 +141,7 @@ int hashtbl_remove(HASHTBL *hashtbl, const char *key)
 	while(node) {
 		if(!strcmp(node->key, key)) {
 			free(node->key);
+			free(node->data); // added
 			if(prevnode) prevnode->next=node->next;
 			else hashtbl->nodes[hash]=node->next;
 			free(node);
