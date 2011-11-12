@@ -529,10 +529,16 @@ clean_dashboard_webapp_subsystem() {
                 rm -rf ${dashboard_app_home}
                 [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
                 perl -n -i -e'print unless m!webapp:esgf-dashboard!' ${install_logfile}
+                clean_geoip
             fi
         fi
     fi 
     return 0
+}
+
+clean_geoip() {
+    echo "cleaning out geoip software... "
+    ([ -n "${geoip_install_dir}" ] && [ -d "${geoip_install_dir}" ] &&  grep ${install_prefix} <(echo "${geoip_install_dir}") >& /dev/null && rm -rf ${geoip_install_dir} && perl -n -i -e'print unless m!geoip!' ${install_logfile} && echo "[OK]") || echo "[FAIL]"
 }
 
 #NOTE: There are certain fields that we are not pulling from (node_db_name and postgress_host).
