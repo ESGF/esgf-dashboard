@@ -98,7 +98,6 @@ esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
 geoip_install_dir=${install_prefix}/geoip
 geoip_workdir=${workdir}/extra/geoip
 geoip_dist_url=${esg_dist_url}/geoip/GeoIP.tar.gz
-
 geoip_dat_dist_url=${esg_dist_url}/geoip/GeoLiteCity.dat.gz
 
 init() {
@@ -120,6 +119,7 @@ init() {
     postgress_port=${PGPORT:-5432}
     postgress_user=${PGUSER:-dbsuper}
     pg_sys_acct_passwd=${pg_sys_acct_passwd:=${pg_secret:=changeme}}
+    postgress_install_dir=${PGHOME:-${install_prefix}/pgsql}
 
     #Dashboard Information Provider...
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
@@ -142,7 +142,7 @@ setup_dashboard() {
     init
     setup_dashboard_database $@
     setup_dashboard_webapp $@
-    setup_dashboard_provider $@
+    setup_geoip && setup_geoip_data && setup_dashboard_provider $@
 }
 
 setup_dashboard_webapp() {
@@ -289,6 +289,9 @@ setup_geoip() {
         fi
         popd >& /dev/null
         popd >& /dev/null
+        
+        write_geo_ip_paths
+
     else
         echo "Detected a geoip installation... will not re-install geoip"
     fi
@@ -296,14 +299,33 @@ setup_geoip() {
     return 0
 }
 
-setup_geoip_data() {
-    local geoip_dist_file=${geoip_dist_url##*/}
-    local size=$(stat -c%s ${geoip_dist_file})
-    if [ ! -e ${geoip_install_dir}/share/GeoIP/GeoLiteCity.dat ] || (( size == 0 )); then
-        curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_install_dir}/share/GeoIP; zcat -  > GeoLiteCity.dat)
+write_geoip_paths() {
+    ((show_summary_latch++))
+    (echo ${PATH} | grep ${geoip_install_dir} >& /dev/null)
+    if [ $? != 0 ]; then
+        debug_print "Adding {geoip_install_dir}/bin to PATH..."
+        echo "export PATH=${geoip_install_dir}/bin:$PATH"  >> ${envfile}
+        dedup ${envfile} && source ${envfile}
     fi
-    size=$(stat -c%s ${geoip_dist_file})
-    ((size =! 0)) && return 0 || return 1
+}
+
+# NOTE: The C code is explicitly looking for the file
+# "GeoLiteCity.dat" so regardless of what it may be at the url The
+# file that we write is going to be this one.
+setup_geoip_data() {
+    echo -n "Installing GeoIP data file: "
+    [ ! -d ${geoip_install_dir} ] && echo "[FAIL]" && return 2
+    local geoip_dat_dist_file=${geoip_install_dir}/share/GeoIP/GeoLiteCity.dat
+    echo -n "[${geoip_dat_dist_file}]... "
+    local size=$(stat -c%s ${geoip_dat_dist_file})
+    if [ ! -e ${geoip_dat_dist_file} ] || (( size == 0 )); then
+        mkdir -p ${geoip_dat_dist_file%/*} >& /dev/null
+        curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_dat_dist_file%/*}; zcat -  > ${geoip_dat_dist_file})
+    fi
+    diff <(md5sum ${geoip_dat_dist_file} | tr -s " " | cut -d " " -f 1) <(curl -s -L --insecure ${geoip_dat_dist_url}.md5 | tr -s " " | cut -d " " -f 1) >& /dev/null
+    [ $? != 0 ] && echo "[OK]" && return 0
+    echo "[FAIL]"
+    return 1
 }
 
 setup_dashboard_provider() {
@@ -372,7 +394,7 @@ setup_dashboard_provider() {
     pushd ${esgf_dashboard_ip_dist_dir}
     ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "[FAIL]")
     echo "./configure --prefix=${esgf_dashboard_ip_install_dir}"
-    if ./configure --prefix=${esgf_dashboard_ip_install_dir} \
+    if ./configure --prefix=${esgf_dashboard_ip_install_dir} --with-postgres-path=${postgress_install_dir} --with-geoip-prefix-path=${geoip_install_dir} \
 	&& make \
 	&& make install
     then
