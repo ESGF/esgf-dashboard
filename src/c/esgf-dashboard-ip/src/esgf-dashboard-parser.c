@@ -20,6 +20,7 @@
 #define REG_ELEMENT_CONFIGURATION	"Configuration"
 
 // "Node" ATTRIBUTES
+#define REG_ATTR_REGISTRATION_TIMESTAMP		 	"timeStamp"
 #define REG_ATTR_NODE_ORGANIZATION		 	"organization"
 #define REG_ATTR_NODE_NAMESPACE 			"namespace"
 #define REG_ATTR_NODE_NODEPEERGROUP			"nodePeerGroup"
@@ -235,7 +236,9 @@ parse_registration_xml_file (xmlNode * a_node)
   HASHTBL *hashtbl_services;
   HASHTBL *hashtbl_uses;
   char *hashtbl_result;
-  static long int success_lookup[2] = { 0 };	// [0] success [1] missing
+  int create_populate_done = 0;
+  static long long int success_lookup[2] = { 0 };	// [0] success [1] missing
+  static long long int last_timestamp = 0;
 
   snprintf (conninfo, sizeof (conninfo),
 	    "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST,
@@ -253,14 +256,60 @@ parse_registration_xml_file (xmlNode * a_node)
       return -1;
     }
 
+
+  // "Registration" iteration 
+  for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
+    {
+      char *registration_timestamp;
+      long long int current_timestamp;
+      if (!strcmp (cur_node->name, "text"))
+	continue;
+      //printf ("Loop on REGISTRATION: %d\n", ++iter);
+
+      if (cur_node->type == XML_ELEMENT_NODE
+	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
+	{
+	  fprintf (stderr, "Element->name: %s\n", cur_node->name);
+
+	  // check on the REGISTRATION timestamp    
+	  registration_timestamp =
+	    xmlGetProp (cur_node, REG_ATTR_REGISTRATION_TIMESTAMP);
+
+	  if (registration_timestamp == NULL
+	      || !strcmp (registration_timestamp, ""))
+	    {
+	      fprintf (stderr,
+		       "Missing/invalid %s [skip current %s element]\n",
+		       REG_ATTR_REGISTRATION_TIMESTAMP,
+		       REG_ELEMENT_REGISTRATION);
+	      xmlFree (registration_timestamp);
+	      continue;	
+	    }
+	  current_timestamp = atoll (registration_timestamp);
+	  xmlFree (registration_timestamp);
+
+	  if (current_timestamp <= last_timestamp)
+	    {
+	      fprintf (stderr,
+		       "Skipping %s element - [older/equal timestamp]\n",
+		       REG_ELEMENT_REGISTRATION);
+	      continue;
+	    }
+	  last_timestamp = current_timestamp;
+	  fprintf (stderr, "New timestamp =  %lld", last_timestamp);
+
+	  // create and populate hashtables if not yet
+	  if (!create_populate_done)
+	    {
+ 	      fprintf(stderr,"Populate Hash tables (first iteration) [%d]\n",create_populate_done);
+	      create_populate_done = 1;
   // Hash tables creation
   fprintf (stderr, "Creating the hashtable for PROJECTS\n");
   if (!(hashtbl_projects = hashtbl_create (16, NULL)))
     {
       fprintf (stderr,
 	       "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
-      PQfinish (conn);
-      return -2;
+	      continue;
     }
 
   fprintf (stderr, "Creating the hashtable for HOST\n");
@@ -269,8 +318,7 @@ parse_registration_xml_file (xmlNode * a_node)
       fprintf (stderr,
 	       "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
       hashtbl_destroy (hashtbl_projects);
-      PQfinish (conn);
-      return -2;
+	      continue;
     }
 
   fprintf (stderr, "Creating the hashtable for SERVICES\n");
@@ -280,8 +328,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	       "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
       hashtbl_destroy (hashtbl_projects);
       hashtbl_destroy (hashtbl_hosts);
-      PQfinish (conn);
-      return -2;
+	      continue;
     }
 
   fprintf (stderr, "Creating the hashtable for USES\n");
@@ -292,35 +339,19 @@ parse_registration_xml_file (xmlNode * a_node)
       hashtbl_destroy (hashtbl_projects);
       hashtbl_destroy (hashtbl_hosts);
       hashtbl_destroy (hashtbl_services);
-      PQfinish (conn);
-      return -2;
+	      continue;
     }
-
-  populate_hash_table (conn, QUERY_GET_LIST_OF_PROJECTS, &hashtbl_projects);
-  populate_hash_table (conn, QUERY_GET_LIST_OF_HOSTS, &hashtbl_hosts);
-  populate_hash_table (conn, QUERY_GET_LIST_OF_SERVICES, &hashtbl_services);
-  populate_hash_table (conn, QUERY_GET_LIST_OF_USES, &hashtbl_uses);
-
-  // "Registration" iteration 
-  for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
-    {
-      if (!strcmp (cur_node->name, "text"))
-	continue;
-      //printf ("Loop on REGISTRATION: %d\n", ++iter);
-
-      if (cur_node->type == XML_ELEMENT_NODE
-	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
-	{
-	  fprintf (stderr, "Element->name: %s\n", cur_node->name);
-	  // to be done: check on the REGISTRATION timestamp    
-
-	  // test and extract some data
-	  hashtbl_result = hashtbl_get (hashtbl_projects, "esgf");
-	  fprintf (stderr, "The key related to this project is %s\n",
-		   hashtbl_result);
-	  hashtbl_result = hashtbl_get (hashtbl_projects, "cssef1");
-	  fprintf (stderr, "The key related to this project is %s\n",
-		   hashtbl_result);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_PROJECTS,
+				   &hashtbl_projects);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_HOSTS,
+				   &hashtbl_hosts);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_SERVICES,
+				   &hashtbl_services);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_USES,
+				   &hashtbl_uses);
+	    }
+		else
+		  fprintf(stderr,"Hash tables already in place with the data [%d]\n",create_populate_done);
 
 
 	  // Loop on NODE elements
@@ -860,45 +891,54 @@ parse_registration_xml_file (xmlNode * a_node)
 					  for (i = 0; i < number_of_projects;
 					       i++)
 					    {
-				      		char uses_key[128] = { '\0' };
-				      		sprintf (uses_key, "%ld:%ld",project_ids[i], service_id);
-				      if (hashtbl_result = hashtbl_get (hashtbl_uses, uses_key))
-					{
-					  fprintf (stderr,
-						   "Lookup Uses hit! [%s] [%s]\n",
-						   uses_key, hashtbl_result);
-					  success_lookup[0]++;
-					}
-				      else
-					{
-					  success_lookup[1]++;
-					  char project_ids_str[128] = { '\0' };
-					      char
-						insert_service_2_project_query
-						[2048] = { '\0' };
-					      snprintf
-						(insert_service_2_project_query,
-						 sizeof
-						 (insert_service_2_project_query),
-						 QUERY_INSERT_SERVICE_TO_PROJECT,
-						 project_ids[i], service_id);
-					      submit_query (conn,
-							    insert_service_2_project_query);
-
-					      fprintf (stderr,
-						       "ADD SERVICES TO PROJECT: %s\n",
-						       insert_service_2_project_query);
-					  // add new entry into the hashtable
-					  sprintf (project_ids_str, "%ld",
-						   project_ids[i]);
-					  hashtbl_insert (hashtbl_uses,
-							  uses_key,
-							  project_ids_str);
-					  fprintf (stderr,
-						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-						   uses_key, project_ids_str);
+					      char uses_key[128] = { '\0' };
+					      sprintf (uses_key, "%ld:%ld",
+						       project_ids[i],
+						       service_id);
+					      if (hashtbl_result =
+						  hashtbl_get (hashtbl_uses,
+							       uses_key))
+						{
+						  fprintf (stderr,
+							   "Lookup Uses hit! [%s] [%s]\n",
+							   uses_key,
+							   hashtbl_result);
+						  success_lookup[0]++;
 						}
-					    } // end of for "add services to projects"
+					      else
+						{
+						  success_lookup[1]++;
+						  char project_ids_str[128] =
+						    { '\0' };
+						  char
+						    insert_service_2_project_query
+						    [2048] = { '\0' };
+						  snprintf
+						    (insert_service_2_project_query,
+						     sizeof
+						     (insert_service_2_project_query),
+						     QUERY_INSERT_SERVICE_TO_PROJECT,
+						     project_ids[i],
+						     service_id);
+						  submit_query (conn,
+								insert_service_2_project_query);
+
+						  fprintf (stderr,
+							   "ADD SERVICES TO PROJECT: %s\n",
+							   insert_service_2_project_query);
+						  // add new entry into the hashtable
+						  sprintf (project_ids_str,
+							   "%ld",
+							   project_ids[i]);
+						  hashtbl_insert
+						    (hashtbl_uses, uses_key,
+						     project_ids_str);
+						  fprintf (stderr,
+							   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+							   uses_key,
+							   project_ids_str);
+						}
+					    }	// end of for "add services to projects"
 					}	// end of "if valid serviceType and port"
 
 				      // free XML CONFIGURATION attributes      
@@ -969,12 +1009,16 @@ parse_registration_xml_file (xmlNode * a_node)
     }				// end of loop on REGISTRATION element
 
   // releasing memory for hashtables
+  if (create_populate_done)
+  {
   hashtbl_destroy (hashtbl_projects);
   hashtbl_destroy (hashtbl_hosts);
   hashtbl_destroy (hashtbl_services);
   hashtbl_destroy (hashtbl_uses);
-
-  fprintf(stderr,"*********** Hits %ld Failure %ld ************\n",success_lookup[0],success_lookup[1]);
+  fprintf (stderr, "Releasing memory for hashtables [%d] \n",create_populate_done);
+  }
+  fprintf (stderr, "*********** Hits %lld Failure %lld ************\n",
+	   success_lookup[0], success_lookup[1]);
   // closing database connection
   PQfinish (conn);
 
