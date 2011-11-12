@@ -99,6 +99,7 @@ geoip_install_dir=${install_prefix}/geoip
 geoip_workdir=${workdir}/extra/geoip
 geoip_dist_url=${esg_dist_url}/geoip/GeoIP.tar.gz
 geoip_dat_dist_url=${esg_dist_url}/geoip/GeoLiteCity.dat.gz
+geoip_version=1.4.8
 
 init() {
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
@@ -236,8 +237,10 @@ setup_geoip() {
         #For installing geoip 1.4.8
         #http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
         #
+        #(Note: unzipping the file gives you a dir that is not just this simple because that added a
+        # the version number to the naming of the top level directory.  So appending it here below)
         geoip_dist_file=${geoip_dist_url##*/}
-        geoip_dist_dir=$(echo ${geoip_dist_file} | awk 'gsub(/('$compress_extensions')/,"")')
+        geoip_dist_dir=$(echo ${geoip_dist_file} | awk 'gsub(/('$compress_extensions')/,"")')-"${geoip_version}"
         #------
         
         #There is this pesky case of having a zero sized dist file... WTF!?
@@ -290,7 +293,7 @@ setup_geoip() {
         popd >& /dev/null
         popd >& /dev/null
         
-        write_geo_ip_paths
+        write_geoip_paths
 
     else
         echo "Detected a geoip installation... will not re-install geoip"
@@ -317,13 +320,12 @@ setup_geoip_data() {
     [ ! -d ${geoip_install_dir} ] && echo "[FAIL]" && return 2
     local geoip_dat_dist_file=${geoip_install_dir}/share/GeoIP/GeoLiteCity.dat
     echo -n "[${geoip_dat_dist_file}]... "
-    local size=$(stat -c%s ${geoip_dat_dist_file})
-    if [ ! -e ${geoip_dat_dist_file} ] || (( size == 0 )); then
+    if [ ! -e ${geoip_dat_dist_file} ] || (( $(stat -c%s ${geoip_dat_dist_file}) == 0 )); then
         mkdir -p ${geoip_dat_dist_file%/*} >& /dev/null
-        curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_dat_dist_file%/*}; zcat -  > ${geoip_dat_dist_file})
+        curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_dat_dist_file%/*}; zcat - > ${geoip_dat_dist_file})
     fi
     diff <(md5sum ${geoip_dat_dist_file} | tr -s " " | cut -d " " -f 1) <(curl -s -L --insecure ${geoip_dat_dist_url}.md5 | tr -s " " | cut -d " " -f 1) >& /dev/null
-    [ $? != 0 ] && echo "[OK]" && return 0
+    [ $? != 0 ] && echo "(verified) - [OK]" && return 0
     echo "[FAIL]"
     return 1
 }
