@@ -79,6 +79,9 @@ installer_home=${installer_home:-/usr/local/src/esgf}
 workdir=${workdir:-${installer_home}/workbench/esg}
 
 install_logfile=${install_logfile:-"/etc/esg.install_log"}
+
+compress_extensions=${compress_extensions:-".tar.gz|.tar.bz2|.tgz|.bz2|.tar"}
+
 #--------------
 
 date_format=${date_format:-"+%Y_%m_%d_%H%M%S"}
@@ -91,7 +94,12 @@ python_version=${python_version:-"2.6"}
 config_file=${esg_root_dir}/config/esgf.properties
 
 esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
-    
+
+geoip_install_dir=${install_prefix}/geoip
+geoip_workdir=${workdir}/extra/geoip
+geoip_dist_url=${esg_dist_url}/geoip/GeoIP.tar.gz
+
+geoip_dat_dist_url=${esg_dist_url}/geoip/GeoLiteCity.dat.gz
 
 init() {
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
@@ -213,6 +221,89 @@ write_dashboard_install_log() {
     echo "$(date ${date_format}) webapp:${dashboard_app_context_root}=${esgf_dashboard_version} ${dashboard_app_home}" >> ${install_logfile}
     dedup ${install_logfile}
     return 0
+}
+
+setup_geoip() {
+
+    if [ ! -e ${geoip_install_dir} ]; then
+        mkdir -p ${geoip_workdir}
+        [ $? != 0 ] && checked_done 1
+        chmod a+rw ${geoip_workdir}
+        pushd $geoip_workdir >& /dev/null
+        local geoip_dist_file
+        
+        #------
+        #For installing geoip 1.4.8
+        #http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
+        #
+        geoip_dist_file=${geoip_dist_url##*/}
+        geoip_dist_dir=$(echo ${geoip_dist_file} | awk 'gsub(/('$compress_extensions')/,"")')
+        #------
+        
+        #There is this pesky case of having a zero sized dist file... WTF!?
+        if [ -e ${geoip_dist_file} ]; then
+            ls -l ${geoip_dist_file}
+            #NOTE: I know there must be a cleaner way to get this, maybe stat?
+            local size=$(ls -l | grep ${geoip_dist_file} | tr -s " " | cut -d " " -f 5)
+            (( size == 0 )) && rm -v ${geoip_dist_file}
+        fi
+
+        #Check to see if we have postgres distribution directory
+        if [ ! -e ${geoip_dist_dir} ]; then
+            echo "Don't see geoip distribution dir ${geoip_dist_dir}"
+            if [ ! -e ${geoip_dist_file} ]; then
+                echo "Don't see geoip distribution file ${geoip_dist_file} either"
+                echo "Downloading geoip from ${geoip_dist_url}"
+                checked_get ${geoip_dist_file} ${geoip_dist_url} 
+	        (( $? > 1 )) && echo " ERROR: Could not download GeoIP:${geoip_dist_file}" && popd && checked_done 1
+	        echo "unpacking ${geoip_dist_file}..."
+	        tar xzf ${geoip_dist_file}
+	        [ $? != 0 ] && echo " ERROR: Could not extract GeoIP: ${geoip_dist_file}" && popd && checked_done 1
+            fi
+        fi
+        
+        #If you don't see the directory but see the tar.gz distribution
+        #then expand it and go from there....
+        if [ -e ${geoip_dist_file} ] && [ ! -e ${geoip_dist_dir} ]; then
+	    echo "unpacking ${geoip_dist_file}..."
+	    tar xzf ${geoip_dist_file}
+        fi
+        
+        pwd
+        
+        pushd ${geoip_dist_dir} >& /dev/null
+        ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && gmake clean && echo "[OK]" || echo "[FAIL]")
+        echo "./configure --prefix=${geoip_install_dir}"
+        if ./configure --prefix=${geoip_install_dir} \
+            && make \
+            && make install
+        then
+            echo "Successfully Configured and Built geoip in: ${geoip_install_dir}"
+            echo "$(date ${date_format}) geoip=${geoip_version} ${geoip_install_dir}" >> ${install_manifest}
+            dedup ${install_manifest}
+
+        else
+            echo " ERROR: Could NOT successfully build geoip!"
+            popd >& /dev/null
+            checked_done 1
+        fi
+        popd >& /dev/null
+        popd >& /dev/null
+    else
+        echo "Detected a geoip installation... will not re-install geoip"
+    fi
+
+    return 0
+}
+
+setup_geoip_data() {
+    local geoip_dist_file=${geoip_dist_url##*/}
+    local size=$(stat -c%s ${geoip_dist_file})
+    if [ ! -e ${geoip_install_dir}/share/GeoIP/GeoLiteCity.dat ] || (( size == 0 )); then
+        curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_install_dir}/share/GeoIP; zcat -  > GeoLiteCity.dat)
+    fi
+    size=$(stat -c%s ${geoip_dist_file})
+    ((size =! 0)) && return 0 || return 1
 }
 
 setup_dashboard_provider() {
