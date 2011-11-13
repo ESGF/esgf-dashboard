@@ -108,7 +108,7 @@ init() {
     dashboard_app_context_root=esgf-dashboard
     dashboard_app_home=${tomcat_install_dir}/webapps/${dashboard_app_context_root}
 
-    esgf_dashboard_version=${esgf_dashboard_version:-"0.0.1"}
+    esgf_dashboard_version=${esgf_dashboard_version:-"0.0.9"}
     esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.0.1"}
     esgf_dashboard_egg_file=esgf_dashboard-${esgf_dashboard_db_version}-py${python_version}.egg
     
@@ -125,7 +125,7 @@ init() {
     #Dashboard Information Provider...
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
-    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-"0.0.1"}
+    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"0.0.9"}}
     
 }
 
@@ -419,7 +419,7 @@ setup_dashboard_provider() {
 write_esgf_dashboard_ip_env() {
     ((show_summary_latch++))
     echo "export ESGF_DASHBOARD_IP_HOME=${esgf_dashboard_ip_install_dir}" >> ${envfile}
-    append_to_path PATH {ESGF_DASHBOARD_IP_HOME}/bin >> ${envfile}
+    append_to_path PATH ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
     dedup ${envfile} && source ${envfile}
     return 0
 }
@@ -427,12 +427,6 @@ write_esgf_dashboard_ip_env() {
 write_esgf_dashboard_ip_install_log() {
     echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
     dedup ${install_manifest}
-    return 0
-}
-
-write_ip_properties() {
-    //zoiks
-    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${geoip_install_dir}/lib:${postgress_install_dir}/lib
     return 0
 }
 
