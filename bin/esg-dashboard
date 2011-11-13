@@ -319,6 +319,7 @@ setup_geoip_data() {
     echo -n "[${geoip_dat_dist_file}]... "
     if [ ! -e ${geoip_dat_dist_file} ] || (( $(stat -c%s ${geoip_dat_dist_file}) == 0 )); then
         mkdir -p ${geoip_dat_dist_file%/*} >& /dev/null
+        echo -n "fetching... "
         curl -s -L --insecure ${geoip_dat_dist_url} | (cd ${geoip_dat_dist_file%/*}; zcat - > ${geoip_dat_dist_file})
     fi
     diff <(md5sum ${geoip_dat_dist_file} | tr -s " " | cut -d " " -f 1) <(curl -s -L --insecure ${geoip_dat_dist_url}.md5 | tr -s " " | cut -d " " -f 1) >& /dev/null
