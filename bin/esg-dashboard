@@ -304,12 +304,9 @@ setup_geoip() {
 
 write_geoip_paths() {
     ((show_summary_latch++))
-    (echo ${PATH} | grep ${geoip_install_dir} >& /dev/null)
-    if [ $? != 0 ]; then
-        debug_print "Adding {geoip_install_dir}/bin to PATH..."
-        echo "export PATH=${geoip_install_dir}/bin:$PATH"  >> ${envfile}
-        dedup ${envfile} && source ${envfile}
-    fi
+    append_to_path PATH ${geoip_install_dir}/bin >> ${envfile}
+    append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
+    dedup ${envfile} && source ${envfile}
 }
 
 # NOTE: The C code is explicitly looking for the file
@@ -422,19 +419,20 @@ setup_dashboard_provider() {
 write_esgf_dashboard_ip_env() {
     ((show_summary_latch++))
     echo "export ESGF_DASHBOARD_IP_HOME=${esgf_dashboard_ip_install_dir}" >> ${envfile}
-    ##zoiks TODO: check the path if this is already in the path if so then don't set it again or maybe get sexy and move it to the front and re-write
-    (echo ${PATH} | grep ${ESGF_DASHBOARD_IP_HOME} >& /dev/null)
-    if [ $? != 0 ]; then
-        debug_print "Adding {ESGF_DASHBOARD_IP_HOME}/bin to PATH..."
-        echo "export PATH=${ESGF_DASHBOARD_IP_HOME}/bin:$PATH"  >> ${envfile}
-        dedup ${envfile} && source ${envfile}
-    fi
+    append_to_path PATH {ESGF_DASHBOARD_IP_HOME}/bin >> ${envfile}
+    dedup ${envfile} && source ${envfile}
     return 0
 }
 
 write_esgf_dashboard_ip_install_log() {
     echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
     dedup ${install_manifest}
+    return 0
+}
+
+write_ip_properties() {
+    //zoiks
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${geoip_install_dir}/lib:${postgress_install_dir}/lib
     return 0
 }
 
