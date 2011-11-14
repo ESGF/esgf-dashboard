@@ -35,6 +35,7 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
+#define XMLPARSER_THREAD_FREQ 60 
 
 void readConfig (void);
 int myfree (char *mystring);
@@ -147,19 +148,19 @@ handle_error (int error)
 
 
 /* This is our thread function.  It is like main(), but for a thread*/
-//void *
-//threadFunc (void *arg)
-//{
-//  char *esgf_registration_xml_path;
-//  int iter_count = 5;
+void *
+threadFunc (void *arg)
+{
+  char *esgf_registration_xml_path;
+  //int iter_count = 10;
 
-//  char target[FILENAME_MAX];
-//  int result;
-//  int fd;
+ char target[FILENAME_MAX];
+  int result;
+  int fd;
 //  int wd;			/* watch descriptor */
 
-//  esgf_registration_xml_path = (char *) arg;
-//  sprintf (target, "%s", esgf_registration_xml_path);
+  esgf_registration_xml_path = (char *) arg;
+  sprintf (target, "%s", esgf_registration_xml_path);
 
 //  fd = inotify_init ();
 //  if (fd < 0)
@@ -178,10 +179,11 @@ handle_error (int error)
 //      return NULL;
 //    }
 
-//  while (iter_count--)
-//    {
+  //while (iter_count--)
+  while (1)
+    {
 //      fprintf (stderr, "Waiting for a new event\n");
-      /*printf("ThreadFunc says... calling: %s\n",esgf_registration_xml_path);
+         fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
 
          // l_type   l_whence  l_start  l_len  l_pid  
          struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
@@ -190,43 +192,49 @@ handle_error (int error)
          fl.l_type = F_RDLCK;
 
          if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
-         fprintf(stderr,"Open error... skip parsing\n");
+         fprintf(stderr,"Open error... skip parsing in [%d] seconds\n",XMLPARSER_THREAD_FREQ);
+	 sleep(XMLPARSER_THREAD_FREQ);
          continue;
          }
 
          fprintf(stderr, "Trying to get lock...");
          if (fcntl(fd, F_SETLKW, &fl) == -1) {
-         fprintf(stderr,"Lock error... skip parsing\n");
+         fprintf(stderr,"Lock error... skip parsing in [%d] seconds\n",XMLPARSER_THREAD_FREQ);
+	 close(fd);
+	 sleep(XMLPARSER_THREAD_FREQ);
          continue;
          }
 
-         fprintf(stdout, "Locked\n%s now parsing\n",esgf_registration_xml_path);
-       */
+         fprintf(stdout, "Locked\n%s now parsing\n",target);
+       
 //      get_event (fd, target);
 //      fprintf (stderr, "I got a new event wait 3 sec\n");
-//	sleep(3);
 
-//      automatic_registration_xml_feed (target);
+        automatic_registration_xml_feed (target);
 //      fprintf (stderr, "Now waiting next iNotify event\n");
-/*
+
         fprintf(stderr,"Trying to release lock...");
         fl.l_type = F_UNLCK;  // set to unlock same region 
 
         if (fcntl(fd, F_SETLK, &fl) == -1) {
-               	fprintf(stderr,"Unlock error\n"); 
+               	fprintf(stderr,"Unlock error... Now waiting for [%d] seconds\n",XMLPARSER_THREAD_FREQ); 
+	 	close(fd);
+	 	sleep(XMLPARSER_THREAD_FREQ);
+		continue;
         }
-        fprintf(stderr,"Unlocked.\n");
         close(fd);
-*/
-//    }				// end while
-//
-//  return NULL;
-//}
+        fprintf(stderr,"Unlocked.\n");
+        fprintf(stderr,"Now waiting for [%d] seconds\n",XMLPARSER_THREAD_FREQ);
+	sleep(XMLPARSER_THREAD_FREQ);
+    }				// end while
+
+  return NULL;
+}
 
 int
 main (int argc, char **argv)
 {
-//  pthread_t pth;		// this is our thread identifier
+  pthread_t pth;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -236,7 +244,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 5;
+  //int iterator = 15;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -278,8 +286,8 @@ main (int argc, char **argv)
 
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
-      //strcpy (esgf_properties_default_path, "/esg/"); // setting for release
-      strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
+      strcpy (esgf_properties_default_path, "/esg/"); // setting for release
+      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
       //strcpy (esgf_properties_default_path, "/root/workspace/install/esg/");	// setting for my VM
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
@@ -338,15 +346,15 @@ main (int argc, char **argv)
   print_logs_before_starting (esgf_registration_xml_path);
 
   // start thread 
-//  fprintf (stderr, "Creating the registration.xml thread\n");
-//  pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
+  fprintf (stderr, "Creating the registration.xml thread\n");
+  pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
 
   counter = 0;
   //while (iterator--)
   while (1)
     {
       // Now calling the automatic registration_xml_feed into the parser
-      automatic_registration_xml_feed (esgf_registration_xml_path);
+      //automatic_registration_xml_feed (esgf_registration_xml_path);
       if (counter == 0)
 	{
 	  if (hosts)
@@ -373,13 +381,13 @@ main (int argc, char **argv)
     }				// forever loop end
 
 // end thread
-//  fprintf (stderr,
-//	   "Parser thread joins the main program before existing... waiting for it\n");
-//  if (pthread_join (pth, NULL))
-//      fprintf(stderr,"pthread_join error");
+  fprintf (stderr,
+	   "Parser thread joins the main program before existing... waiting for it\n");
+  if (pthread_join (pth, NULL))
+      fprintf(stderr,"pthread_join error");
 
     // freeing space
-    fprintf (stderr, "Releasing memory\n");
+  fprintf (stderr, "Releasing memory\n");
   if (hosts)
     free (hosts);
 
@@ -412,8 +420,8 @@ ESGF_config_path (char **esgf_properties_pointer)
   char *position;
   int notfound;
 
-  //sprintf (esg_env, "/etc/esg.env");			// path for release
-  sprintf (esg_env, "/export/fiore2/etc/esg.env");	// path for lab VM config
+  sprintf (esg_env, "/etc/esg.env");			// path for release
+  //sprintf (esg_env, "/export/fiore2/etc/esg.env");	// path for lab VM config
 
   FILE *file = fopen (esg_env, "r");
 
