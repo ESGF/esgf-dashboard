@@ -143,7 +143,7 @@ setup_dashboard() {
     init
     setup_dashboard_database $@
     setup_dashboard_webapp $@
-    setup_geoip && setup_geoip_data && setup_dashboard_provider $@
+    setup_geoip && setup_geoip_data && setup_dashboard_provider $@ && write_geolocation_properties
 }
 
 setup_dashboard_webapp() {
@@ -429,6 +429,26 @@ write_esgf_dashboard_ip_install_log() {
     echo "$(date ${date_format}) esgf_dashboard_ip=$(${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip --version) ${esgf_dashboard_ip_install_dir}" >> ${install_manifest}
     dedup ${install_manifest}
     return 0
+}
+
+#NOTES:
+#./esgf-iplookup esgf-node3.llnl.gov 52 2>/dev/null
+#OUTPUT_CITY=Livermore
+#OUTPUT_LATITUDE=37.503799
+#OUTPUT_LONGITUDE=-121.525299
+write_geolocation_properties() {
+    get_property node_geolocation_city
+    get_property node_geolocation_lat
+    get_property node_geolocation_lon
+
+    if [ -z "${node_geolocation_city}"  -o  -z "${node_geolocation_lat}" -o -z "${node_geolocation_lon}" ]; then
+        local command="${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup esgf-node3.llnl.gov 52 2>/dev/null"
+        (eval $(awk 'BEGIN {FS="=";} {print $1"=\""$2"\""}' <(${command}))
+            [ -z "{node_geolocation_city}" ] && write_as_property node_geolocation_city ${OUTPUT_CITY}
+            [ -z "{node_geolocation_lat}" ]  && write_as_property node_geolocation_lat  ${OUTPUT_LATITUDE}
+            [ -z "{node_geolocation_lon}" ]  && write_as_property node_geolocation_lon  ${OUTPUT_LONGITUDE}
+        )
+    fi
 }
 
 start_dashboard_services() {
