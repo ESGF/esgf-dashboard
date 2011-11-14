@@ -210,6 +210,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER,
 	    POSTGRES_PASSWD);
 
+  fprintf (stderr, "*********** Starting parsing routine  ************\n");
   fprintf (stderr, "Open connection to: %s\n", conninfo);
 
   conn = PQconnectdb ((const char *) conninfo);
@@ -1000,8 +1001,9 @@ parse_registration_xml_file (xmlNode * a_node)
 
   // closing database connection
   PQfinish (conn);
-  fprintf (stderr, "*********** Hits %lld Failure %lld ************\n",
+  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n",
 	   success_lookup[0], success_lookup[1]);
+  fprintf (stderr, "*********** End parsing routine  ************\n");
 
   return 0;
 }
