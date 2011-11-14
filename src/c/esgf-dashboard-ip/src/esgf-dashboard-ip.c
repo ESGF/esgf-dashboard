@@ -236,7 +236,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  //int iterator = 15;
+  int iterator = 5;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -279,8 +279,8 @@ main (int argc, char **argv)
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
       //strcpy (esgf_properties_default_path, "/esg/"); // setting for release
-      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
-      strcpy (esgf_properties_default_path, "/root/workspace/install/esg/");	// setting for my VM
+      strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
+      //strcpy (esgf_properties_default_path, "/root/workspace/install/esg/");	// setting for my VM
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
@@ -412,8 +412,8 @@ ESGF_config_path (char **esgf_properties_pointer)
   char *position;
   int notfound;
 
-  //sprintf (esg_env, "/etc/esg.env");
-  sprintf (esg_env, "/export/fiore2/etc/esg.env");
+  //sprintf (esg_env, "/etc/esg.env");			// path for release
+  sprintf (esg_env, "/export/fiore2/etc/esg.env");	// path for lab VM config
 
   FILE *file = fopen (esg_env, "r");
 
