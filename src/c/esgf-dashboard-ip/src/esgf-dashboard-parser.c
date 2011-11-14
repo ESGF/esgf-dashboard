@@ -43,6 +43,12 @@
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
 #define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
 
+// Start transaction and lock tables 
+#define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.project_dash ; lock esgf_dashboard.host ; lock esgf_dashboard.uses ; lock esgf_dashboard.join1 ; lock esgf_dashboard.service_instance ;"
+
+// End transaction and release locks 
+#define QUERY_CLOSE_TRANSACTION  "end transaction;" 
+
 // Get list of PROJECTS
 #define QUERY_GET_LIST_OF_PROJECTS  "SELECT name,id from esgf_dashboard.project_dash;"
 // Get list of SERVICES 
@@ -120,62 +126,21 @@ get_foreign_key_value (PGconn * conn, char *query)
   return fk;
 }
 
-
-
 int
 submit_query (PGconn * conn, char *query)
 {
   PGresult *res;
-  fprintf (stderr, "Query: %s\n", query);
+  //fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     {
-      fprintf (stderr, "Insert query failed\n");
+      fprintf (stderr, "Submit query failed\n");
       PQclear (res);
       return -1;
     }
   PQclear (res);
-  return 0;
-}
-
-
-int
-htable_test ()
-{
-  HASHTBL *hashtbl;
-  char *spain, *italy;
-
-  if (!(hashtbl = hashtbl_create (16, NULL)))
-    {
-      fprintf (stderr, "ERROR: hashtbl_create() failed\n");
-      exit (EXIT_FAILURE);
-    }
-
-  hashtbl_insert (hashtbl, "Italy", "111");
-  hashtbl_insert (hashtbl, "Spain", "444");
-
-  printf ("After insert:\n");
-  italy = hashtbl_get (hashtbl, "Italy");
-  printf ("Italy: %s\n", italy ? italy : "-");
-  spain = hashtbl_get (hashtbl, "Spain");
-  printf ("Spain: %s\n", spain ? spain : "-");
-
-  hashtbl_remove (hashtbl, "Spain");
-
-  printf ("After remove:\n");
-  spain = hashtbl_get (hashtbl, "Spain");
-  printf ("Spain: %s\n", spain ? spain : "-");
-
-  hashtbl_resize (hashtbl, 8);
-
-  printf ("After resize:\n");
-  italy = hashtbl_get (hashtbl, "Italy");
-  printf ("Italy: %s\n", italy ? italy : "-");
-
-  hashtbl_destroy (hashtbl);
-
   return 0;
 }
 
@@ -185,7 +150,6 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
 
   PGresult *res;
   int i, num_records;
-
 
   fprintf (stderr, "Retrieving data for hashtable [QUERY=%s]\n", query);
   res = PQexec (conn, query);
@@ -197,7 +161,6 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
     }
 
   num_records = PQntuples (res);
-
 
   for (i = 0; i < num_records; i++)
     {
@@ -231,6 +194,8 @@ parse_registration_xml_file (xmlNode * a_node)
   PGconn *conn;
   PGresult *res;
   char conninfo[1024] = { '\0' };
+  char open_transaction[2048] = { '\0' };
+  char close_transaction[2048] = { '\0' };
   HASHTBL *hashtbl_projects;
   HASHTBL *hashtbl_hosts;
   HASHTBL *hashtbl_services;
@@ -255,6 +220,11 @@ parse_registration_xml_file (xmlNode * a_node)
       PQfinish (conn);
       return -1;
     }
+ 
+    fprintf (stderr, "Locking the database tables the parser needs...");
+    snprintf (open_transaction,sizeof (open_transaction),QUERY_OPEN_TRANSACTION);
+    submit_query (conn, open_transaction);
+    fprintf (stderr, "database tables locked\n");
 
 
   // "Registration" iteration 
@@ -283,7 +253,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		       REG_ATTR_REGISTRATION_TIMESTAMP,
 		       REG_ELEMENT_REGISTRATION);
 	      xmlFree (registration_timestamp);
-	      continue;	
+	      continue;
 	    }
 	  current_timestamp = atoll (registration_timestamp);
 	  xmlFree (registration_timestamp);
@@ -296,51 +266,53 @@ parse_registration_xml_file (xmlNode * a_node)
 	      continue;
 	    }
 	  last_timestamp = current_timestamp;
-	  fprintf (stderr, "New timestamp =  %lld", last_timestamp);
-
+	  fprintf (stderr, "New timestamp =  %lld\n", last_timestamp);
+		
 	  // create and populate hashtables if not yet
 	  if (!create_populate_done)
 	    {
- 	      fprintf(stderr,"Populate Hash tables (first iteration) [%d]\n",create_populate_done);
+	      fprintf (stderr,
+		       "Populate Hash tables (first iteration) [%d]\n",
+		       create_populate_done);
 	      create_populate_done = 1;
-  // Hash tables creation
-  fprintf (stderr, "Creating the hashtable for PROJECTS\n");
-  if (!(hashtbl_projects = hashtbl_create (16, NULL)))
-    {
-      fprintf (stderr,
-	       "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
-	      continue;
-    }
+	      // Hash tables creation
+	      fprintf (stderr, "Creating the hashtable for PROJECTS\n");
+	      if (!(hashtbl_projects = hashtbl_create (16, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
+		  continue;
+		}
 
-  fprintf (stderr, "Creating the hashtable for HOST\n");
-  if (!(hashtbl_hosts = hashtbl_create (16, NULL)))
-    {
-      fprintf (stderr,
-	       "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
-      hashtbl_destroy (hashtbl_projects);
-	      continue;
-    }
+	      fprintf (stderr, "Creating the hashtable for HOST\n");
+	      if (!(hashtbl_hosts = hashtbl_create (16, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_projects);
+		  continue;
+		}
 
-  fprintf (stderr, "Creating the hashtable for SERVICES\n");
-  if (!(hashtbl_services = hashtbl_create (16, NULL)))
-    {
-      fprintf (stderr,
-	       "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
-      hashtbl_destroy (hashtbl_projects);
-      hashtbl_destroy (hashtbl_hosts);
-	      continue;
-    }
+	      fprintf (stderr, "Creating the hashtable for SERVICES\n");
+	      if (!(hashtbl_services = hashtbl_create (16, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_projects);
+		  hashtbl_destroy (hashtbl_hosts);
+		  continue;
+		}
 
-  fprintf (stderr, "Creating the hashtable for USES\n");
-  if (!(hashtbl_uses = hashtbl_create (16, NULL)))
-    {
-      fprintf (stderr,
-	       "ERROR: hashtbl_create() failed for USES [skip parsing]\n");
-      hashtbl_destroy (hashtbl_projects);
-      hashtbl_destroy (hashtbl_hosts);
-      hashtbl_destroy (hashtbl_services);
-	      continue;
-    }
+	      fprintf (stderr, "Creating the hashtable for USES\n");
+	      if (!(hashtbl_uses = hashtbl_create (16, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_projects);
+		  hashtbl_destroy (hashtbl_hosts);
+		  hashtbl_destroy (hashtbl_services);
+		  continue;
+		}
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_PROJECTS,
 				   &hashtbl_projects);
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_HOSTS,
@@ -350,8 +322,10 @@ parse_registration_xml_file (xmlNode * a_node)
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_USES,
 				   &hashtbl_uses);
 	    }
-		else
-		  fprintf(stderr,"Hash tables already in place with the data [%d]\n",create_populate_done);
+	  else
+	    fprintf (stderr,
+		     "Hash tables already in place with the data [%d]\n",
+		     create_populate_done);
 
 
 	  // Loop on NODE elements
@@ -1010,17 +984,24 @@ parse_registration_xml_file (xmlNode * a_node)
 
   // releasing memory for hashtables
   if (create_populate_done)
-  {
-  hashtbl_destroy (hashtbl_projects);
-  hashtbl_destroy (hashtbl_hosts);
-  hashtbl_destroy (hashtbl_services);
-  hashtbl_destroy (hashtbl_uses);
-  fprintf (stderr, "Releasing memory for hashtables [%d] \n",create_populate_done);
-  }
-  fprintf (stderr, "*********** Hits %lld Failure %lld ************\n",
-	   success_lookup[0], success_lookup[1]);
+    {
+      hashtbl_destroy (hashtbl_projects);
+      hashtbl_destroy (hashtbl_hosts);
+      hashtbl_destroy (hashtbl_services);
+      hashtbl_destroy (hashtbl_uses);
+      fprintf (stderr, "Releasing memory for hashtables [%d] \n",
+	       create_populate_done);
+    }
+
+  fprintf (stderr, "Releasing the database tables lock needed by the parser...");
+  snprintf (close_transaction,sizeof (close_transaction),QUERY_CLOSE_TRANSACTION);
+  submit_query (conn, close_transaction);
+  fprintf (stderr, "database tables locks released!\n");
+
   // closing database connection
   PQfinish (conn);
+  fprintf (stderr, "*********** Hits %lld Failure %lld ************\n",
+	   success_lookup[0], success_lookup[1]);
 
   return 0;
 }

@@ -76,21 +76,21 @@ main (int argc, char *argv[])
    }
      	
   if (geo_outputmask & OUTPUT_COUNTRY_CODE)
-    fprintf (stdout, "[OUTPUT_COUNTRY_CODE=%s]\n", geo_output.country_code);
+    fprintf (stdout, "OUTPUT_COUNTRY_CODE=%s\n", geo_output.country_code);
   if (geo_outputmask & OUTPUT_REGION)
-    fprintf (stdout, "[OUTPUT_REGION=%s]\n", geo_output.region);
+    fprintf (stdout, "OUTPUT_REGION=%s\n", geo_output.region);
   if (geo_outputmask & OUTPUT_CITY)
-    fprintf (stdout, "[OUTPUT_CITY=%s]\n", geo_output.city);
+    fprintf (stdout, "OUTPUT_CITY=%s\n", geo_output.city);
   if (geo_outputmask & OUTPUT_POSTAL_CODE)
-    fprintf (stdout, "[OUTPUT_POSTAL_CODE=%s]\n", geo_output.postal_code);
+    fprintf (stdout, "OUTPUT_POSTAL_CODE=%s\n", geo_output.postal_code);
   if (geo_outputmask & OUTPUT_LATITUDE)
-    fprintf (stdout, "[OUTPUT_LATITUDE=%f]\n", geo_output.latitude);
+    fprintf (stdout, "OUTPUT_LATITUDE=%f\n", geo_output.latitude);
   if (geo_outputmask & OUTPUT_LONGITUDE)
-    fprintf (stdout, "[OUTPUT_LONGITUDE=%f]\n", geo_output.longitude);
+    fprintf (stdout, "OUTPUT_LONGITUDE=%f\n", geo_output.longitude);
   if (geo_outputmask & OUTPUT_METROCODE)
-    fprintf (stdout, "[OUTPUT_METROCODE=%d]\n", geo_output.metro_code);
+    fprintf (stdout, "OUTPUT_METROCODE=%d\n", geo_output.metro_code);
   if (geo_outputmask & OUTPUT_AREACODE)
-    fprintf (stdout, "[OUTPUT_AREACODE=%d]\n", geo_output.area_code);
+    fprintf (stdout, "OUTPUT_AREACODE=%d\n", geo_output.area_code);
 
   return 0;
 }
