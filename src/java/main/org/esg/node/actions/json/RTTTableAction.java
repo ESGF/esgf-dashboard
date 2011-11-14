@@ -59,7 +59,7 @@ public class RTTTableAction extends ChartBaseAction {
 			if (step>0) {
 				while (c.getTimeInMillis() < cF.getTimeInMillis()) {
 			
-				query = "SELECT AVG(elapsedTime) as avgRtt FROM service_status WHERE idServiceInstance=";
+				query = "SELECT AVG(elapsedTime) as avgRtt FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 				query = query + super.idServiceInstance;
 			    query = query + " AND timestamp between '";
 				query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";

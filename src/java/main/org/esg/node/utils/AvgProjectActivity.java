@@ -19,7 +19,7 @@ public class AvgProjectActivity {
 		ResultSet rs = null;
 		try {
 			String query;
-			query = "SELECT AVG(percentage) AS average FROM (SELECT 100* (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=";
+			query = "SELECT AVG(percentage) AS average FROM (SELECT 100* (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND status=";
 			query = query + status;
 			query = query + " AND timestamp BETWEEN '";
 			
@@ -33,11 +33,11 @@ public class AvgProjectActivity {
 			
 			Calendar ce = endDate==null? Calendar.getInstance(): endDate;
 			query = query + (new Timestamp(ce.getTimeInMillis()));
-			query = query + "') / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + "') / (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
 			query = query + (new Timestamp(cs.getTimeInMillis()));
 			query = query + "' AND '";
 			query = query + (new Timestamp(ce.getTimeInMillis()));
-			query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE u.idProject=";
+			query = query + "') AS percentage FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE u.idProject=";
 			query = query + idProject;
 			query = query + " AND u.endDate IS NULL) t";
 			

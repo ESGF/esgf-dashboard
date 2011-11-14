@@ -5,38 +5,38 @@ package org.esg.node.utils;
  */
 public enum SqlQuery {
 	
-	USERNAME_VALIDATION("SELECT id FROM user1 WHERE username=? LIMIT 1;"), 
+	USERNAME_VALIDATION("SELECT id FROM  esgf_dashboard.user1 WHERE username=? LIMIT 1;"), 
 	
-	USER_DN_VALIDATION("SELECT id FROM user1 WHERE dn=? LIMIT 1;"),
+	USER_DN_VALIDATION("SELECT id FROM  esgf_dashboard.user1 WHERE dn=? LIMIT 1;"),
 	
 	// small change 
-	LOGIN("SELECT id, name, surname FROM user1 WHERE username=? AND password=? AND accountCertified=1;"),
+	LOGIN("SELECT id, name, surname FROM  esgf_dashboard.user1 WHERE username=? AND password=? AND accountCertified=1;"),
 //	LOGIN("SELECT id, name, surname FROM user1 WHERE username=? AND accountCertified=1;"),
 	
-	REGISTRATION("INSERT INTO user1(name, surname, idCountry, mail, username, password, dn) VALUES(?, ?, ?, ?, ?, ?, ?);"),
+	REGISTRATION("INSERT INTO  esgf_dashboard.user1(name, surname, idCountry, mail, username, password, dn) VALUES(?, ?, ?, ?, ?, ?, ?);"),
 	
-	ACCOUNT_ACTIVATION("UPDATE user1 SET accountCertified=1 WHERE username=? AND MD5(id)=? AND accountCertified=0;"),
+	ACCOUNT_ACTIVATION("UPDATE  esgf_dashboard.user1 SET accountCertified=1 WHERE username=? AND MD5(id)=? AND accountCertified=0;"),
 	
-	COUNTRIES("SELECT id, name FROM country ORDER BY name ASC;"),
+	COUNTRIES("SELECT id, name FROM  esgf_dashboard.country ORDER BY name ASC;"),
 	
-	PUBLIC_PROJECTS("SELECT id, name FROM project_dash WHERE regPublic=1 ORDER BY name ASC;"),
+	PUBLIC_PROJECTS("SELECT id, name FROM  esgf_dashboard.project_dash WHERE regPublic=1 ORDER BY name ASC;"),
 	
 	USER_PROFILE("SELECT name, surname, idCountry, username, mail, dn " +
-				 "FROM user1 " +
+				 "FROM  esgf_dashboard.user1 " +
 				 "WHERE id=?;"),
 				 
-	EDIT_USER_PROFILE("UPDATE user1 SET name=?, surname=?, idCountry=?, dn=? WHERE id=?;"),
-	EDIT_USER_PASSWORD("UPDATE user1 SET password=? WHERE id=?;"),
+	EDIT_USER_PROFILE("UPDATE  esgf_dashboard.user1 SET name=?, surname=?, idCountry=?, dn=? WHERE id=?;"),
+	EDIT_USER_PASSWORD("UPDATE  esgf_dashboard.user1 SET password=? WHERE id=?;"),
 	
 	MAIL_ADMIN("SELECT s.mail_admin, g.mailAdmin, g.name, h.ip " +
-			   "FROM service_instance s INNER JOIN node n ON n.id=s.id INNER JOIN grid_db g ON g.id_node=n.id INNER JOIN host h ON h.id=s.idHost " +
+			   "FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.node n ON n.id=s.id INNER JOIN  esgf_dashboard.grid_db g ON g.id_node=n.id INNER JOIN  esgf_dashboard.host h ON h.id=s.idHost " +
 			   "WHERE g.id=?;"),
 	
-	USER_DN("SELECT dn FROM user1 WHERE id=?;"),
+	USER_DN("SELECT dn FROM  esgf_dashboard.user1 WHERE id=?;"),
 			   	
 	PROJECT_CONTAINS_OPENDAP_SERVICES("SELECT s.id " +
-									  "FROM uses u INNER JOIN service_instance s ON u.idServiceInstance=s.id " +
-									  "INNER JOIN opendap_node o ON o.id=s.id " +
+									  "FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON u.idServiceInstance=s.id " +
+									  "INNER JOIN  esgf_dashboard.opendap_node o ON o.id=s.id " +
 									  "WHERE u.endDate IS NULL AND u.idProject=? LIMIT 1;"),
 	
 	/**
@@ -45,32 +45,32 @@ public enum SqlQuery {
 									  
 	/** ok **/								  
 	ALL_PROJECTS_ID_AND_NAME("SELECT p.id, p.name " +
-							 "FROM project_dash p INNER JOIN join1 j ON j.idProject=p.id " +
+							 "FROM  esgf_dashboard.project_dash p INNER JOIN  esgf_dashboard.join1 j ON j.idProject=p.id " +
 							 "WHERE j.idUser=?;"),
 							 
 	/** ok **/						 
 	ALL_PROJECTS_START_DATE("SELECT MIN(startDate) as startDate " +
-							"FROM project_dash p INNER JOIN join1 j ON j.idProject=p.id " +
+							"FROM  esgf_dashboard.project_dash p INNER JOIN  esgf_dashboard.join1 j ON j.idProject=p.id " +
 							"WHERE j.idUser=?;"),
 	
 	/** ok **/							
 	ALL_PROJECTS_NUM_HOSTS("SELECT COUNT(DISTINCT s.idHost) as numHosts " + 
-						   "FROM uses u INNER JOIN join1 j ON j.idProject=u.idProject INNER JOIN service_instance s ON s.id=u.idServiceInstance " + 
+						   "FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.join1 j ON j.idProject=u.idProject INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " + 
 						   "WHERE u.endDate IS NULL AND j.idUser=?;"),
 	
 	/** ok **/
 	ALL_PROJECTS_NUM_SERVICES("SELECT COUNT(DISTINCT idServiceInstance) as numServices " +
-							  "FROM uses u INNER JOIN join1 j ON j.idProject=u.idProject " + 
+							  "FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.join1 j ON j.idProject=u.idProject " + 
 							  "WHERE u.endDate IS NULL AND j.idUser=?;"),
 
 	/** ok **/							  
-	USER_CAN_VIEW_PROJECT("SELECT idProject FROM join1 WHERE idUser=? AND idProject=?;"),
+	USER_CAN_VIEW_PROJECT("SELECT idProject FROM  esgf_dashboard.join1 WHERE idUser=? AND idProject=?;"),
 	
 	/**
 	 * @return id, name, endDate
 	 */
 	PROJECTS("SELECT p.id, p.name, p.endDate " +
-			 "FROM project_dash p INNER JOIN join1 j ON j.idProject=p.id " +
+			 "FROM  esgf_dashboard.project_dash p INNER JOIN  esgf_dashboard.join1 j ON j.idProject=p.id " +
 			 "WHERE j.idUser=? " +
 			 "ORDER BY p.name;"),
 	
@@ -79,9 +79,9 @@ public enum SqlQuery {
 	 * @return name, description, startDate, endDate, hostsNumber, servicesNumber
 	 */
 	// ok. Query validated. 		 
-	PROJECT_BY_ID("SELECT p.name, p.description, p.startDate, p.endDate, (SELECT COUNT(DISTINCT s.idHost) FROM uses u INNER JOIN service_instance s ON s.id=u.idServiceInstance WHERE u.idProject=p.id) as hostsNumber, " + 
-				  	   "(SELECT COUNT(*) FROM uses u WHERE u.idProject=p.id) as servicesNumber " +
-				  "FROM project_dash p " +
+	PROJECT_BY_ID("SELECT p.name, p.description, p.startDate, p.endDate, (SELECT COUNT(DISTINCT s.idHost) FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance WHERE u.idProject=p.id) as hostsNumber, " + 
+				  	   "(SELECT COUNT(*) FROM  esgf_dashboard.uses u WHERE u.idProject=p.id) as servicesNumber " +
+				  "FROM  esgf_dashboard.project_dash p " +
 				  "WHERE p.id=?;"),
 	
 	/**
@@ -91,7 +91,7 @@ public enum SqlQuery {
 	// ok. Query validated. Changed adding "h.name, h.ip, h.latitude, h.longitude, h.city" in the group by clause
 				  
 	PROJECT_HOSTS_POSITION("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city " +
-						   "FROM host h INNER JOIN service_instance s ON h.id=s.idHost INNER JOIN uses u ON s.id=u.idServiceInstance " +
+						   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
 						   "WHERE idProject IN (?) AND u.endDate IS NULL " +
 						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city " +
 						   "ORDER BY h.longitude, h.latitude;"),
@@ -104,7 +104,7 @@ public enum SqlQuery {
 						   
 	// ok. query validated.					   
     PROJECTS_ID_FOR_HOST("SELECT DISTINCT p.id " +
-    					  "FROM project_dash p INNER JOIN uses u ON u.idProject=p.id INNER JOIN service_instance s ON s.id=u.idServiceInstance " +
+    					  "FROM  esgf_dashboard.project_dash p INNER JOIN  esgf_dashboard.uses u ON u.idProject=p.id INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " +
     					  "WHERE p.id IN (#) AND s.idHost=? AND u.endDate IS NULL;"),
 
 	/**
@@ -113,7 +113,7 @@ public enum SqlQuery {
 	 */
     // ok. query validated. The query has been changed in the group by clause					  
 	HOSTS_BY_PROJECT("SELECT h.id, h.name, h.ip, COUNT(*) as numInstances " +
-					 "FROM host h INNER JOIN service_instance s ON h.id=s.idHost INNER JOIN uses u ON u.idServiceInstance=s.id " +
+					 "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id " +
 					 "WHERE u.idProject=? AND u.endDate IS NULL " +
 					 "GROUP BY h.id, h.name, h.ip " +
 					 "ORDER BY h.name, h.ip;"),
@@ -126,8 +126,8 @@ public enum SqlQuery {
 					
 	// ok. query validated. The query has been changed in the group by clause
 	HOST_BY_ID_AND_PROJECT("SELECT h.ip, h.name, h.city, h.latitude, h.longitude, COUNT(*) as numInstances, p.name " +
-						   "FROM host h INNER JOIN service_instance s ON h.id=s.idHost INNER JOIN uses u ON u.idServiceInstance=s.id " +
-						   "INNER JOIN project_dash p ON u.idProject=p.id " +
+						   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id " +
+						   "INNER JOIN  esgf_dashboard.project_dash p ON u.idProject=p.id " +
 						   "WHERE p.id=? AND h.id=? AND u.endDate IS NULL " +
 						   "GROUP BY h.id, h.ip, h.name, h.city, h.latitude, h.longitude,p.name;"),
 	
@@ -139,7 +139,7 @@ public enum SqlQuery {
 						   
 	// ok. query validated.					   
 	SERVICE_INSTANCE_FOR_SERVER_IN_PROJECT("SELECT s.id, s.port, s.name, s.mail_admin, s.institution, u.startDate, u.endDate " +
-										   "FROM service_instance s INNER JOIN uses u ON s.id=u.idServiceInstance " +
+										   "FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
 										   "WHERE u.idProject=? AND s.idHost=? AND u.endDate IS NULL " +
 										   "ORDER BY s.name, s.port;"),
 	/**
@@ -148,7 +148,7 @@ public enum SqlQuery {
 	 */
 	// ok. query validated.									   
 	COUNT_SERVICES_ON_HOST("SELECT COUNT(*) as servicesCount " +
-						   "FROM service_instance " +
+						   "FROM  esgf_dashboard.service_instance " +
 						   "WHERE idHost=?;"),
 						   
    /**
@@ -158,7 +158,7 @@ public enum SqlQuery {
 	 */			   
     // ok. query validated.					   
 	COUNT_SERVICES_ON_HOST_BY_PROJECT("SELECT COUNT(*) as servicesCount " +
-									  "FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id " +
+									  "FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id " +
 									  "WHERE s.idHost=? AND u.idProject=? AND u.endDate IS NULL;"), // add a DISTINCT clause?
 
     /**
@@ -169,22 +169,22 @@ public enum SqlQuery {
 	SERVICES_ON_HOSTS_BY_PROJECT("SELECT h.name, h.ip, t.conteggio " +
 								 "FROM ( " +
 								 	"SELECT idHost, COUNT(*) as conteggio " + 
-								 	"FROM uses u INNER JOIN service_instance s ON s.id=u.idServiceInstance " + 
+								 	"FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " + 
 								 	"WHERE idProject=? AND u.endDate IS NULL " + 
 								 	"GROUP BY idHost) t " +
-								 "INNER JOIN host h ON h.id=t.idHost " +
+								 "INNER JOIN  esgf_dashboard.host h ON h.id=t.idHost " +
 								 "ORDER BY name ASC"),
 	
     /**
      * @param idServiceInstance
      * @return MIN timestamp, MAX timestamp
      */
-	MIN_MAX_TIMESTAMP("SELECT MIN(timestamp) as minTimestamp, MAX(timestamp) as maxTimestamp FROM service_status WHERE idServiceInstance=?;"),	
+	MIN_MAX_TIMESTAMP("SELECT MIN(timestamp) as minTimestamp, MAX(timestamp) as maxTimestamp FROM  esgf_dashboard.service_status WHERE idServiceInstance=?;"),	
 
-	AVG_RTT("SELECT AVG(elapsedTime) as avgRtt FROM service_status WHERE idServiceInstance=? AND timestamp BETWEEN ? AND ? AND status<>3;"),
+	AVG_RTT("SELECT AVG(elapsedTime) as avgRtt FROM  esgf_dashboard.service_status WHERE idServiceInstance=? AND timestamp BETWEEN ? AND ? AND status<>3;"),
 	
 	DEV_STD_RTT("SELECT SQRT(SUM(POW(elapsedTime - ?, 2)) / COUNT(*)) as devStdRtt " +
-				"FROM service_status WHERE idServiceInstance=? AND timestamp BETWEEN ? AND ? AND status<>3;"),
+				"FROM  esgf_dashboard.service_status WHERE idServiceInstance=? AND timestamp BETWEEN ? AND ? AND status<>3;"),
 	
 	/**
 	 * @param IdServiceInstance
@@ -194,7 +194,7 @@ public enum SqlQuery {
 	 */				
 	// Query ok.  			
 	STATUS_QUERY("SELECT status*1 as status, COUNT(*) as hitCount " +
-				 "FROM service_status " +
+				 "FROM  esgf_dashboard.service_status " +
 				 "WHERE IdServiceInstance = ? AND timestamp BETWEEN ? AND ? " +
 				 "GROUP BY status;"),
 	
@@ -308,11 +308,11 @@ public enum SqlQuery {
 	 * @return url
 	 */
 	// ok. Query validated
-	OPENDAP_URL("SELECT url FROM opendap_node WHERE id=?;"),
+	OPENDAP_URL("SELECT url FROM  esgf_dashboard.opendap_node WHERE id=?;"),
 	
 	// ok. Query validated.
 	OPENDAP_REGISTRY("SELECT o.id, o.url, h.name, h.ip, s.port " +
-					 "FROM opendap_node o INNER JOIN service_instance s ON s.id=o.id INNER JOIN uses u ON u.idServiceInstance=s.id INNER JOIN host h ON h.id=s.idHost " +
+					 "FROM  esgf_dashboard.opendap_node o INNER JOIN  esgf_dashboard.service_instance s ON s.id=o.id INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id INNER JOIN  esgf_dashboard.host h ON h.id=s.idHost " +
 					 "WHERE u.idProject=? " +
 					 "ORDER BY h.ip, s.port;"),
 	
@@ -322,10 +322,10 @@ public enum SqlQuery {
 	 * @return idService
 	 */
 	// ok. Query validated.
-	IS_OPENDAP_SERVICE("SELECT id FROM opendap_node WHERE id=?;"),
+	IS_OPENDAP_SERVICE("SELECT id FROM  esgf_dashboard.opendap_node WHERE id=?;"),
 	
 	// ok. Query validated.
-	NEWS("SELECT news, dateNews FROM news ORDER BY dateNews DESC LIMIT ?;")
+	NEWS("SELECT news, dateNews FROM  esgf_dashboard.news ORDER BY dateNews DESC LIMIT ?;")
 	;
 	
 	private final String sql;

@@ -53,6 +53,7 @@ public class AvgHostActivityPieChartAction extends ActionSupport {
 			activity = avgHostActivity.getHostActivity(conn,idProject, idServer, timeSpan, cF);
 			avgHostActivity.close();
 		} catch(SQLException e) {
+			System.out.println("Error Message AvgHostActivity " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

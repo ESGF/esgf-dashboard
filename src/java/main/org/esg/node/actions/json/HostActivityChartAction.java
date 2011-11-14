@@ -84,19 +84,19 @@ public class HostActivityChartAction extends ActionSupport {
 			//cStmt.setInt(5, start);
 			//cStmt.setInt(6, limit);
 			
-			query = "SELECT s.id, s.name, 100* (  SELECT COUNT(*)  FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = "SELECT s.id, s.name, 100* (  SELECT COUNT(*)  FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "') / ( SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + "') / ( SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis()); 
 			
 			if(idProject == null)
-				query = query + "') AS percentage FROM service_instance s WHERE s.idHost=";
+				query = query + "') AS percentage FROM  esgf_dashboard.service_instance s WHERE s.idHost=";
 			else
-				query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
+				query = query + "') AS percentage FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
 			
 			query = query + idServer;
 			

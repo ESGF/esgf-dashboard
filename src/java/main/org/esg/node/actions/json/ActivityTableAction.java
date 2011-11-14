@@ -77,7 +77,7 @@ public class ActivityTableAction extends ChartBaseAction {
 				
 			  while (c.getTimeInMillis() < cF.getTimeInMillis()) {
 				
-				query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+				query = "SELECT status*1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 				query = query + super.idServiceInstance;
 				query = query + " AND timestamp between '";
 			    query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";

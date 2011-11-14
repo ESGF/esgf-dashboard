@@ -74,7 +74,7 @@ public class ActivityChartAction extends ChartBaseAction {
 				query="";
 				query2="";
 				if (TYPEQUERY=="SP_ACTIVITY_CHART") {
-					query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+					query = "SELECT status*1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 					query = query + super.idServiceInstance;
 					query = query + " AND timestamp between '";
 					query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
@@ -82,8 +82,8 @@ public class ActivityChartAction extends ChartBaseAction {
 					query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
 				}
 				if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
-					query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
-					query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+					query = "(SELECT 1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
+					query2= "(SELECT -1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 					query = query + super.idServiceInstance;
 					query2 = query2 + super.idServiceInstance;
 					query = query + " AND timestamp between '";
@@ -237,7 +237,7 @@ public class ActivityChartAction extends ChartBaseAction {
 					query="";
 					query2="";
 					if (TYPEQUERY=="SP_ACTIVITY_CHART") {
-						query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = "SELECT status*1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 						query = query + super.idServiceInstance;
 						query = query + " AND timestamp between '";
 						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
@@ -245,8 +245,8 @@ public class ActivityChartAction extends ChartBaseAction {
 						query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
 					}
 					if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
-						query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
-						query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = "(SELECT 1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
+						query2= "(SELECT -1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 						query = query + super.idServiceInstance;
 						query2 = query2 + super.idServiceInstance;
 						query = query + " AND timestamp between '";
@@ -473,7 +473,7 @@ public class ActivityChartAction extends ChartBaseAction {
 					query="";
 					query2="";
 					if (TYPEQUERY=="SP_ACTIVITY_CHART") {
-						query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = "SELECT status*1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 						query = query + super.idServiceInstance;
 						query = query + " AND timestamp between '";
 						query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";
@@ -481,8 +481,8 @@ public class ActivityChartAction extends ChartBaseAction {
 						query = query + new Timestamp(c.getTimeInMillis()) + "' GROUP BY status";
 					}
 					if (TYPEQUERY=="SP_ACTIVITY_CHART_ON_OFF") {
-						query = "(SELECT 1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
-						query2= "(SELECT -1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+						query = "(SELECT 1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
+						query2= "(SELECT -1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 						query = query + super.idServiceInstance;
 						query2 = query2 + super.idServiceInstance;
 						query = query + " AND timestamp between '";

@@ -45,17 +45,17 @@ public class MostActiveProjectsCSVAction extends GridBaseAction implements UserA
 			
 			//cStmt.setTimestamp(2, new Timestamp(c.getTimeInMillis()));
 			cs.add(Calendar.MINUTE, -Constants.TIME_SPANS[pivot]);
-			query = "SELECT p.id, p.name, p.startDate, p.endDate, AVG(percentage) AS average FROM (SELECT u.idProject, 100* ( SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = "SELECT p.id, p.name, p.startDate, p.endDate, AVG(percentage) AS average FROM (SELECT u.idProject, 100* ( SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "') / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + "') / (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id INNER JOIN join1 j ON j.idProject=u.idProject WHERE u.endDate IS NULL AND j.idUser=";
+			query = query + "') AS percentage FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id INNER JOIN  esgf_dashboard.join1 j ON j.idProject=u.idProject WHERE u.endDate IS NULL AND j.idUser=";
 			query = query + userSession.getId();
-			query = query + ") t INNER JOIN project_dash p ON p.id=t.idProject GROUP BY p.id, p.name, p.startDate, p.endDate ORDER BY ";
+			query = query + ") t INNER JOIN  esgf_dashboard.project_dash p ON p.id=t.idProject GROUP BY p.id, p.name, p.startDate, p.endDate ORDER BY ";
 			query = query + (MostActiveProjectsAction.FIELD_MAP.containsKey(sort)? MostActiveProjectsAction.FIELD_MAP.get(sort): "average");
 			
 			if (super.getDir()) 

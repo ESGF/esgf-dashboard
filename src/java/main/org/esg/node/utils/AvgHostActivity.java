@@ -45,15 +45,15 @@ public class AvgHostActivity {
 			cs.add(Calendar.MINUTE, -timeSpan);
 			
 			//cStmt.setTimestamp(3, new Timestamp(c.getTimeInMillis()));
-			query = "SELECT AVG(percentage) as average FROM (SELECT 100* (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = "SELECT AVG(percentage) as average FROM (SELECT 100* (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "' ) / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '" ;
+			query = query + "' ) / (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '" ;
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "')  AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
+			query = query + "')  AS percentage FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
 			query = query + idHost;
 			if (idProject != null)
 		    {

@@ -41,7 +41,7 @@ public class ActivityCSVAction extends ChartBaseAction {
 			//while(hadResults) {
 				//ResultSet rs = cStmt.getResultSet();
 				
-				query = "SELECT status*1 as status, count(*) as hitCount FROM service_status WHERE idServiceInstance=";
+				query = "SELECT status*1 as status, count(*) as hitCount FROM  esgf_dashboard.service_status WHERE idServiceInstance=";
 				query = query + super.idServiceInstance;
 				query = query + " AND timestamp between '";
 				query = query + new Timestamp(c.getTimeInMillis()) + "' AND '";

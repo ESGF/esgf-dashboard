@@ -82,7 +82,7 @@ public class ServerAction extends ActionSupport implements UserAware {
 					service.setEndTime(formatter.formatTime(c));
 				}
 				
-				for(ServiceType serviceType: ServiceType.values()) {
+				/*for(ServiceType serviceType: ServiceType.values()) {
 					PreparedStatement pStmt = conn.prepareStatement(serviceType.getQuery().getSql());
 					try {
 						pStmt.setInt(1, service.getId());
@@ -93,14 +93,15 @@ public class ServerAction extends ActionSupport implements UserAware {
 					} finally {
 						pStmt.close();
 					}
-				}				
+				}*/
+				
 				services.add(service);
 			}
 			rs.close();
 			stmt.close();
 			server.setServices(services);
 		} catch(SQLException e) {
-			//System.out.println("Error Message ServerAction " + e.getMessage());
+			System.out.println("Error Message ServerAction " + e.getMessage());
 			return ERROR;
 		} finally {
 			if(conn != null) conn.close();

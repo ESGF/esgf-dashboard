@@ -52,15 +52,15 @@ public class MostActiveServicesCSVAction extends GridBaseAction {
 			//cStmt.setString(7, MostActiveServicesAction.FIELD_MAP.containsKey(sort)? MostActiveServicesAction.FIELD_MAP.get(sort): "percentage");
 			//cStmt.setBoolean(8, super.getDir());
 			
-			query = "SELECT s.id, s.name, s.port, 100* ( SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
+			query = "SELECT s.id, s.name, s.port, 100* ( SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND status=1 AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "') / (SELECT COUNT(*) FROM service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
+			query = query + "') / (SELECT COUNT(*) FROM  esgf_dashboard.service_status WHERE idServiceInstance=s.id AND timestamp BETWEEN '";
 			query = query + new Timestamp(cs.getTimeInMillis());
 			query = query + "' AND '";
 			query = query + new Timestamp(c.getTimeInMillis());
-			query = query + "') AS percentage FROM service_instance s INNER JOIN uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
+			query = query + "') AS percentage FROM  esgf_dashboard.service_instance s INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE s.idHost=";
 			query = query + idServer;
 			query = query + " AND u.idProject=";
 			query = query + idProject;
