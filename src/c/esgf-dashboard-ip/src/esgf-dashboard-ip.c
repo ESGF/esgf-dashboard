@@ -35,7 +35,8 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
-#define XMLPARSER_THREAD_FREQ 60 
+#define XMLPARSER_THREAD_FREQ 60  // release value 
+//#define XMLPARSER_THREAD_FREQ 3 // test value
 
 void readConfig (void);
 int myfree (char *mystring);
@@ -63,7 +64,7 @@ print_all_properties (void)
 void
 print_logs_before_starting (char *esgf_registration_xml_path)
 {
-  fprintf (stderr, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
+  //fprintf (stderr, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
   fprintf (stderr, "All of the properties have been found\n");
   fprintf (stderr, "Information provider startup...\n");
   fprintf (stderr, "Feeding [%s]\n", esgf_registration_xml_path);
@@ -307,7 +308,7 @@ main (int argc, char **argv)
 	{
 	  fprintf
 	    (stderr,
-	     "Please note tha %d DB properties are missing in the esgf.properties file. Please check! Exit\n",
+	     "Please note that %d DB properties are missing in the esgf.properties file. Please check! Exit\n",
 	     mandatory);
 	  myfree (esgf_properties);
 	  myfree (POSTGRES_HOST);
@@ -323,7 +324,7 @@ main (int argc, char **argv)
 	   allprop);
     }
 
-  print_all_properties ();
+//  print_all_properties ();
 
 // reading the postgres password
 

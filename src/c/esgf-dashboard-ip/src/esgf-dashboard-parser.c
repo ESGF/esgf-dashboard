@@ -103,7 +103,7 @@ get_foreign_key_value (PGconn * conn, char *query)
 {
   PGresult *res;
   long int fk;
-  fprintf (stderr, "Query: %s\n", query);
+  //fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
@@ -122,7 +122,7 @@ get_foreign_key_value (PGconn * conn, char *query)
   fk = atol (PQgetvalue (res, 0, 0));
 
   PQclear (res);
-  fprintf (stderr, "The fk is %ld\n", fk);
+  //fprintf (stderr, "The fk is %ld\n", fk);
   return fk;
 }
 
@@ -211,7 +211,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	    POSTGRES_PASSWD);
 
   fprintf (stderr, "*********** Starting parsing routine  ************\n");
-  fprintf (stderr, "Open connection to: %s\n", conninfo);
+  //fprintf (stderr, "Open connection to: %s\n", conninfo);
 
   conn = PQconnectdb ((const char *) conninfo);
   if (PQstatus (conn) != CONNECTION_OK)
@@ -240,7 +240,7 @@ parse_registration_xml_file (xmlNode * a_node)
       if (cur_node->type == XML_ELEMENT_NODE
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
-	  fprintf (stderr, "Element->name: %s\n", cur_node->name);
+	  //fprintf (stderr, "Element->name: %s\n", cur_node->name);
 
 	  // check on the REGISTRATION timestamp    
 	  registration_timestamp =
@@ -454,7 +454,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			       node_ip, host_id_str);
 		    }
 
-		  fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
+		  //fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
 
 		  // isolate PeerGroups adding them to the DB
 		  sprintf (buffer, "%s", npg_project);
@@ -521,10 +521,10 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 		  while (position);
 
-		  for (i = 0; i < number_of_projects; i++)
+		  /*for (i = 0; i < number_of_projects; i++)
 		    fprintf (stderr, "Valore %d %ld\n", i, project_ids[i]);
 
-		  fprintf (stderr, "Element->name: %s\n", node_node->name);
+		  fprintf (stderr, "Element->name: %s\n", node_node->name);*/
 
 		  geolocation_found = 0;
 
@@ -620,15 +620,15 @@ parse_registration_xml_file (xmlNode * a_node)
 				  char service_id_str[128] = { '\0' };
 				  char service_key[128] = { '\0' };
 				  sprintf (buffer_endpoint, "%s", endpoint);
-				  fprintf (stderr, "%s\n", buffer_endpoint);
+				  //fprintf (stderr, "%s\n", buffer_endpoint);
 
 				  slashcursor = &buffer_endpoint[0];
 				  while (slashcursor =
 					 strchr (slashcursor, ':'))
 				    {
 				      iteration++;
-				      fprintf (stderr, "Iteration %d\n",
-					       iteration);
+				      //fprintf (stderr, "Iteration %d\n",
+					//       iteration);
 				      if ((*(++slashcursor)) == '/')
 					continue;
 				      startcursor = slashcursor;
@@ -799,9 +799,9 @@ parse_registration_xml_file (xmlNode * a_node)
 					  sprintf (service_key, "%ld:%ld",
 						   host_id,
 						   atol (service_port));
-					  fprintf (stderr,
-						   "Service_key: %s\n",
-						   service_key);
+					  //fprintf (stderr,
+					//	   "Service_key: %s\n",
+					//	   service_key);
 					  if (hashtbl_result =
 					      hashtbl_get (hashtbl_services,
 							   service_key))
@@ -855,9 +855,9 @@ parse_registration_xml_file (xmlNode * a_node)
 						       service_key,
 						       service_id_str);
 					    }
-					  fprintf (stderr,
-						   "Service %s | id : %ld\n",
-						   service_type, service_id);
+					  //fprintf (stderr,
+					//	   "Service %s | id : %ld\n",
+					//	   service_type, service_id);
 
 					  // add services to projects
 					  fprintf (stderr,
