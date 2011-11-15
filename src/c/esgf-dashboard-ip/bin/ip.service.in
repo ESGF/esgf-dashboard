@@ -35,10 +35,10 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
   case "$1" in
     start)
         echo -n "Starting the ESGF Information Provider... "
-
-	if ps ax | grep -v grep | grep $SERVICE > /dev/null
-	then
-	    echo "[ALREADY RUNNING] "
+        
+        ps ax | grep -v grep | pgrep $SERVICE
+        if [ $? == 0 ]; then
+            echo "[ALREADY RUNNING] "
 	else
         	## Start the esgf information provider 
 		cd $ESGF_DASHBOARD_IP_HOME/bin
