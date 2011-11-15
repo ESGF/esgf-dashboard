@@ -3,6 +3,7 @@ package org.esg.node.utils;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import org.postgresql.ds.PGSimpleDataSource;
 
 /**
  * @author University of Salento and CMCC
@@ -25,12 +26,19 @@ public abstract class Constants {
 	public final static String DIR_DESCENDANT = "DESC";
 	public final static String USER_SESSION = "user_session";
 	public static DataSource DATASOURCE = null;
-	
+	//public static PGSimpleDataSource DATASOURCE = null;
 	static {
 		try {
 			DATASOURCE = ((DataSource)(new InitialContext()).lookup(Constants.DATASOURCE_NAME));
 		} catch (NamingException e) {
 			e.printStackTrace();
 		}
+
+/*		DATASOURCE = new PGSimpleDataSource();
+		DATASOURCE.setDatabaseName("esgcet");
+		DATASOURCE.setServerName("localhost");
+		DATASOURCE.setUser("fiore2");
+		DATASOURCE.setPassword("abcdef90");
+		DATASOURCE.setPortNumber(5432);*/
 	}
 }
