@@ -442,6 +442,8 @@ write_geolocation_properties() {
     get_property node_geolocation_lon
 
     if [ -z "${node_geolocation_city}"  -o  -z "${node_geolocation_lat}" -o -z "${node_geolocation_lon}" ]; then
+        $(append_to_path PATH ${geoip_install_dir}/bin)
+        $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib)
         local command="${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup ${esgf_host_ip} 52 2>/dev/null"
         (eval $(awk 'BEGIN {FS="=";} {print $1"=\""$2"\""}' <(${command}))
             [ -z "{node_geolocation_city}" ] && write_as_property node_geolocation_city ${OUTPUT_CITY}
