@@ -455,7 +455,7 @@ write_geolocation_properties() {
 
 start_dashboard_services() {
     echo "Starting dashboard provider..."
-    ${esgf_dashboard_ip_install_dir}/bin/ip.service start
+    ((DEBUG)) && ${esgf_dashboard_ip_install_dir}/bin/ip.service start || (${esgf_dashboard_ip_install_dir}/bin/ip.service start >& /dev/null)
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
 }
