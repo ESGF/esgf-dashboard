@@ -4,6 +4,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import org.postgresql.ds.PGSimpleDataSource;
+import esg.common.util.ESGFProperties;
 
 /**
  * @author University of Salento and CMCC
@@ -28,17 +29,28 @@ public abstract class Constants {
 	//public static DataSource DATASOURCE = null;
 	public static PGSimpleDataSource DATASOURCE = null;
 	static {
+
+        
+        try{
+            ESGFProperties esgfProperties = new ESGFProperties();
+            
+            DATASOURCE = new PGSimpleDataSource();
+            DATASOURCE.setDatabaseName(esgfProperties.getProperty("db.database")); //esgcet
+            DATASOURCE.setServerName(esgfProperties.getProperty("db.host")); //localhost
+            DATASOURCE.setUser(esgfProperties.getProperty("db.user")); //dbsuper
+            DATASOURCE.setPassword(esgfProperties.getDatabasePassword()); //****
+            DATASOURCE.setPortNumber(Integer.valueOf(esgfProperties.getProperty("db.port"))); //5432
+        }catch (Throwable e) { e.printStackTrace(); System.out.println(e.getMessage()); }
+        
+        //NOTE: Look at these to see if needed... 
+        //esgfProperties.getProperty("db.protocol");
+        //esgfProperties.getProperty("db.driver");
+        
 		/*try {
 			DATASOURCE = ((DataSource)(new InitialContext()).lookup(Constants.DATASOURCE_NAME));
 		} catch (NamingException e) {
 			e.printStackTrace();
 		}*/
 
-		DATASOURCE = new PGSimpleDataSource();
-		DATASOURCE.setDatabaseName("esgcet");
-		DATASOURCE.setServerName("localhost");
-		DATASOURCE.setUser("fiore2");
-		DATASOURCE.setPassword("abcdef90");
-		DATASOURCE.setPortNumber(5432);
 	}
 }
