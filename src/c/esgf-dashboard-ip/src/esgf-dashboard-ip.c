@@ -289,7 +289,6 @@ main (int argc, char **argv)
     {				// default setting /esg
       strcpy (esgf_properties_default_path, "/esg/"); // setting for release
       //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
-      //strcpy (esgf_properties_default_path, "/root/workspace/install/esg/");	// setting for my VM
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
@@ -349,6 +348,9 @@ main (int argc, char **argv)
   // start thread 
   fprintf (stderr, "Creating the registration.xml thread\n");
   pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
+
+  sleep(10);
+  fprintf (stderr, "Starting the forever loop for the metrics collector\n");
 
   counter = 0;
   //while (iterator--)
@@ -484,7 +486,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 
   CONNECTION_TIMEOUT = 1000000;
   THREAD_OPEN_MAX = 20;
-  PING_SPAN = 295;
+  PING_SPAN = 299;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
 

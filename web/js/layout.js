@@ -67,7 +67,7 @@ Ext.onReady(function() {
     	}),
         rootVisible: true,
         lines: false,
-        singleExpand: true,
+        //singleExpand: true,
         animate: true,
         useArrows: true,
         loader: new Ext.tree.TreeLoader({
