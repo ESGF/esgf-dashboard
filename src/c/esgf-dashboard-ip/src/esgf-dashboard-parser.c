@@ -4,6 +4,9 @@
 #include <string.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <netdb.h>
+#include <netinet/in.h>
+
 #include "libpq-fe.h"
 //#include "../include/ping.h"
 //#include "../include/dbAccess.h"
@@ -11,6 +14,7 @@
 #include "../include/hashtbl.h"
 
 #define APPLICATION_SERVER_NAME		"Application Server"
+
 // "Node" ELEMENTS 
 #define REG_ELEMENT_REGISTRATION	"Registration"
 #define REG_ELEMENT_NODE		"Node"
@@ -84,6 +88,13 @@
 
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
+
+// HashTables dimensions
+#define HAST_TABLE_PROJECT_DIM	16
+#define HAST_TABLE_SERVICE_DIM	32	
+#define HAST_TABLE_HOST_DIM	16
+#define HAST_TABLE_USES_DIM	32	
+
 
 /*
  *To compile this file using gcc you can type
@@ -194,6 +205,7 @@ parse_registration_xml_file (xmlNode * a_node)
   PGconn *conn;
   PGresult *res;
   char conninfo[1024] = { '\0' };
+  char conninfo_printf[1024] = { '\0' };
   char open_transaction[2048] = { '\0' };
   char close_transaction[2048] = { '\0' };
   HASHTBL *hashtbl_projects;
@@ -210,8 +222,11 @@ parse_registration_xml_file (xmlNode * a_node)
 	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER,
 	    POSTGRES_PASSWD);
 
+  snprintf (conninfo_printf, sizeof (conninfo_printf),
+	    "host=%s port=%d dbname=%s user=%s password=******", POSTGRES_HOST,
+	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER);
   fprintf (stderr, "*********** Starting parsing routine  ************\n");
-  //fprintf (stderr, "Open connection to: %s\n", conninfo);
+  fprintf (stderr, "Open connection to: %s\n", conninfo_printf);
 
   conn = PQconnectdb ((const char *) conninfo);
   if (PQstatus (conn) != CONNECTION_OK)
@@ -222,10 +237,16 @@ parse_registration_xml_file (xmlNode * a_node)
       return -1;
     }
  
-    fprintf (stderr, "Locking the database tables the parser needs...");
-    snprintf (open_transaction,sizeof (open_transaction),QUERY_OPEN_TRANSACTION);
-    submit_query (conn, open_transaction);
-    fprintf (stderr, "database tables locked\n");
+  fprintf (stderr, "OPEN Transaction and locking the database tables the parser needs...");
+  snprintf (open_transaction,sizeof (open_transaction),QUERY_OPEN_TRANSACTION);
+  if (submit_query (conn, open_transaction))
+	{
+	  fprintf(stderr,"Transaction FAILED - Database Tables Lock: Failed. [Recovery action: Skip parsing]\n");
+      	  PQfinish (conn);
+          return -1;
+	}
+	else
+  fprintf (stderr, "Transaction OK - Database Tables Lock: Ok\n");
 
 
   // "Registration" iteration 
@@ -278,7 +299,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	      create_populate_done = 1;
 	      // Hash tables creation
 	      fprintf (stderr, "Creating the hashtable for PROJECTS\n");
-	      if (!(hashtbl_projects = hashtbl_create (16, NULL)))
+	      if (!(hashtbl_projects = hashtbl_create (HAST_TABLE_PROJECT_DIM, NULL)))
 		{
 		  fprintf (stderr,
 			   "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
@@ -286,7 +307,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		}
 
 	      fprintf (stderr, "Creating the hashtable for HOST\n");
-	      if (!(hashtbl_hosts = hashtbl_create (16, NULL)))
+	      if (!(hashtbl_hosts = hashtbl_create (HAST_TABLE_HOST_DIM, NULL)))
 		{
 		  fprintf (stderr,
 			   "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
@@ -295,7 +316,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		}
 
 	      fprintf (stderr, "Creating the hashtable for SERVICES\n");
-	      if (!(hashtbl_services = hashtbl_create (16, NULL)))
+	      if (!(hashtbl_services = hashtbl_create (HAST_TABLE_SERVICE_DIM, NULL)))
 		{
 		  fprintf (stderr,
 			   "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
@@ -305,7 +326,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		}
 
 	      fprintf (stderr, "Creating the hashtable for USES\n");
-	      if (!(hashtbl_uses = hashtbl_create (16, NULL)))
+	      if (!(hashtbl_uses = hashtbl_create (HAST_TABLE_USES_DIM, NULL)))
 		{
 		  fprintf (stderr,
 			   "ERROR: hashtbl_create() failed for USES [skip parsing]\n");
@@ -352,6 +373,8 @@ parse_registration_xml_file (xmlNode * a_node)
 		{
 		  char insert_new_host_query[2048] = { '\0' };
 		  char select_id_host_query[2048] = { '\0' };
+		  struct hostent *he;
+
 		  // get NODE attributes values
 
 		  organization =
@@ -395,17 +418,24 @@ parse_registration_xml_file (xmlNode * a_node)
 		  node_hostname =
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
 
-		  if (node_hostname == NULL || !strcmp (node_hostname, ""))
+  		  he = gethostbyname (node_hostname); 
+
+		  if (node_hostname == NULL || !strcmp (node_hostname, "") || (!he))
 		    {
+		      if (!he) 
+			fprintf(stderr,"Gethostbyname failed! Is this node [%s] running on a private network?\n",node_hostname);		
+
 		      fprintf (stderr,
 			       "Missing/invalid %s [skip current NODE element]\n",
 			       REG_ATTR_NODE_NODEHOSTNAME);
+
 		      xmlFree (organization);
 		      xmlFree (npg_project);
 		      xmlFree (node_ip);
 		      xmlFree (node_hostname);
 		      continue;
 		    }
+	
 
 		  support_email =
 		    xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
@@ -641,13 +671,14 @@ parse_registration_xml_file (xmlNode * a_node)
 					  break;
 					}
 				    }
-				  fprintf (stderr,
+				  /*fprintf (stderr,
 					   "%s port: %ld\n",
 					   APPLICATION_SERVER_NAME,
-					   app_server_port);
+					   app_server_port);*/
 
 				  sprintf (service_key, "%ld:%ld", host_id,
 					   app_server_port);
+
 				  if (hashtbl_result =
 				      hashtbl_get (hashtbl_services,
 						   service_key))
@@ -693,10 +724,11 @@ parse_registration_xml_file (xmlNode * a_node)
 					       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
 					       service_key, service_id_str);
 				    }
-				  fprintf (stderr,
+				  /*fprintf (stderr,
 					   "Service %s | id : %ld\n",
 					   APPLICATION_SERVER_NAME,
-					   service_id);
+					   service_id);*/
+
 				  // 3) add service to peer_groups
 				  // add services to projects
 				  for (i = 0; i < number_of_projects; i++)
@@ -819,14 +851,17 @@ parse_registration_xml_file (xmlNode * a_node)
 					      // 1) add service
 					      char service_id_str[128] =
 						{ '\0' };
+					      char service_type_gridftp[256] =
+						{ '\0' };
 					      success_lookup[1]++;
+					      sprintf(service_type_gridftp,"GridFTP-%s",service_type);
 
 					      snprintf (insert_service_query,
 							sizeof
 							(insert_service_query),
 							QUERY_INSERT_SERVICE_INFO,
 							atol (service_port),
-							service_type,
+							service_type_gridftp,
 							organization,
 							support_email,
 							host_id);
@@ -860,9 +895,11 @@ parse_registration_xml_file (xmlNode * a_node)
 					//	   service_type, service_id);
 
 					  // add services to projects
-					  fprintf (stderr,
+
+					  /*fprintf (stderr,
 						   "ADD SERVICES TO PROJECT: %d\n",
-						   number_of_projects);
+						   number_of_projects);*/
+
 					  for (i = 0; i < number_of_projects;
 					       i++)
 					    {

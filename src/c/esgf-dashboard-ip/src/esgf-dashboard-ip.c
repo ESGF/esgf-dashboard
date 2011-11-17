@@ -35,8 +35,10 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
-#define XMLPARSER_THREAD_FREQ 60  // release value 
-//#define XMLPARSER_THREAD_FREQ 3 // test value
+//#define XMLPARSER_THREAD_FREQ 60  // release value 
+#define XMLPARSER_THREAD_FREQ 3 // test value
+
+//pthread_barrier_t barr;
 
 void readConfig (void);
 int myfree (char *mystring);
@@ -153,7 +155,7 @@ void *
 threadFunc (void *arg)
 {
   char *esgf_registration_xml_path;
-  //int iter_count = 10;
+  int iter_count = 10;
 
  char target[FILENAME_MAX];
   int result;
@@ -180,8 +182,8 @@ threadFunc (void *arg)
 //      return NULL;
 //    }
 
-  //while (iter_count--)
-  while (1)
+  while (iter_count--)
+  //while (1)
     {
 //      fprintf (stderr, "Waiting for a new event\n");
          fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
@@ -245,7 +247,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  //int iterator = 15;
+  int iterator = 3;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -288,7 +290,6 @@ main (int argc, char **argv)
   if (ESGF_config_path (&esgf_properties))
     {				// default setting /esg
       strcpy (esgf_properties_default_path, "/esg/"); // setting for release
-      //strcpy (esgf_properties_default_path, "/export/fiore2/esg/");  // setting for computer at lab 
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
@@ -349,12 +350,15 @@ main (int argc, char **argv)
   fprintf (stderr, "Creating the registration.xml thread\n");
   pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
 
-  sleep(10);
   fprintf (stderr, "Starting the forever loop for the metrics collector\n");
 
+  sleep(10);
+
+  fprintf (stderr, "...started\n");
+
   counter = 0;
-  //while (iterator--)
-  while (1)
+  while (iterator--)
+  //while (1)
     {
       // Now calling the automatic registration_xml_feed into the parser
       //automatic_registration_xml_feed (esgf_registration_xml_path);
@@ -424,7 +428,6 @@ ESGF_config_path (char **esgf_properties_pointer)
   int notfound;
 
   sprintf (esg_env, "/etc/esg.env");			// path for release
-  //sprintf (esg_env, "/export/fiore2/etc/esg.env");	// path for lab VM config
 
   FILE *file = fopen (esg_env, "r");
 
