@@ -56,7 +56,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
         #-------
         if [ -e "/var/run/esgf-dashboard-ip.pid" ]; then 
             kill -9 $(cat /var/run/esgf-dashboard-ip.pid)
-            [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && exit 0
+            [ $? == 0 ] && echo "[OK]" && rm /var/run/esgf-dashboard-ip.pid && exit 0
         else
             echo "cannot find PID file [/var/run/esgf-dashboard-ip.pid]"
         fi
@@ -68,7 +68,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
 	then
             ## Stop the esgf information provider 
             killall esgf-dashboard-ip 
-	    echo "[OK]"
+	    echo "[OK]*"
 	else
 	    echo "[ALREADY STOPPED]"
 	fi
