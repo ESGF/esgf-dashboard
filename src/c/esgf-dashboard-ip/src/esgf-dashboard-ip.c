@@ -373,7 +373,7 @@ main (int argc, char **argv)
 	  fprintf (stderr, "Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
 	  writeResults (hosts, numHosts);
-	  counter = (counter + 1) % HOSTS_LOADING_SPAN;
+	  //counter = (counter + 1) % HOSTS_LOADING_SPAN;
 	  fprintf (stderr,
 		   "Metrics have been collected.\nNow waiting for %d sec\n",
 		   PING_SPAN);

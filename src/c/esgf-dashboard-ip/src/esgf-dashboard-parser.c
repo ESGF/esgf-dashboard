@@ -289,7 +289,6 @@ parse_registration_xml_file (xmlNode * a_node)
 	else
   fprintf (stderr, "Transaction OK - Database Tables Lock: Ok\n");
 
-
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
     {
@@ -302,7 +301,6 @@ parse_registration_xml_file (xmlNode * a_node)
       if (cur_node->type == XML_ELEMENT_NODE
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
-	  //fprintf (stderr, "Element->name: %s\n", cur_node->name);
 
 	  // check on the REGISTRATION timestamp    
 	  registration_timestamp =
@@ -335,8 +333,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	  if (!create_populate_done)
 	    {
 	      fprintf (stderr,
-		       "Populate Hash tables (first iteration) [%d]\n",
-		       create_populate_done);
+		       "Create and populate Hash tables (first iteration)\n");
 	      create_populate_done = 1;
 	      // Hash tables creation
 	      fprintf (stderr, "Creating the hashtable for PROJECTS\n");
