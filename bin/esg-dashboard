@@ -128,11 +128,18 @@ init() {
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
     esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"0.0.9"}}
 
-    $(append_to_path PATH ${geoip_install_dir}/bin)
-    $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
+    echo "$(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)"
+    echo "$(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)"
 
+    append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
+    append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
+    dedup ${envfile} && source ${envfile}
+
+    echo ${envfile}
+    cat ${envfile}
     debug_print "(PATH = $PATH)"
     debug_print "(LD_LIBRARY_PATH = $LD_LIBRARY_PATH)"
+
 }
 
 
@@ -443,6 +450,7 @@ write_esgf_dashboard_ip_install_log() {
 #OUTPUT_LATITUDE=37.503799
 #OUTPUT_LONGITUDE=-121.525299
 write_geolocation_properties() {
+    debug_print "write_geolocation_properties() ... "
     get_property node_geolocation_city
     get_property node_geolocation_lat
     get_property node_geolocation_lon
@@ -451,16 +459,30 @@ write_geolocation_properties() {
         $(append_to_path PATH ${geoip_install_dir}/bin)
         $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib)
         local command="${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup ${esgf_host_ip} 52 2>/dev/null"
+        debug_print "${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup ${esgf_host_ip} 52 2>/dev/null"
+        $command
         (eval $(awk 'BEGIN {FS="=";} {print $1"=\""$2"\""}' <(${command}))
-            [ -z "{node_geolocation_city}" ] && write_as_property node_geolocation_city ${OUTPUT_CITY}
-            [ -z "{node_geolocation_lat}" ]  && write_as_property node_geolocation_lat  ${OUTPUT_LATITUDE}
-            [ -z "{node_geolocation_lon}" ]  && write_as_property node_geolocation_lon  ${OUTPUT_LONGITUDE}
-        )
+
+        node_geolocation_city=${OUTPUT_CITY}
+        debug_print "node_geolocation_city = ${node_geolocation_city}"
+        [ -n "{node_geolocation_city}" ] && write_as_property node_geolocation_city
+
+        node_geolocation_lat=${OUTPUT_LATITUDE}
+        debug_print "node_geolocation_lat = ${node_geolocation_lat}"
+        [ -n "{node_geolocation_lat}" ]  && write_as_property node_geolocation_lat
+
+        node_geolocation_lon=${OUTPUT_LONGITUDE}
+        debug_print "node_geolocation_lon = $node_geolocation_lon"
+        [ -n "{node_geolocation_lon}" ]  && write_as_property node_geolocation_lon)
+        echo "OUTPUT_CITY = ${OUTPUT_CITY}"
     fi
+    return 0
 }
 
 start_dashboard_services() {
     echo "Starting dashboard provider..."
+    $(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
+    $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     ((DEBUG)) && ${esgf_dashboard_ip_install_dir}/bin/ip.service start || (${esgf_dashboard_ip_install_dir}/bin/ip.service start >& /dev/null)
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
@@ -468,6 +490,8 @@ start_dashboard_services() {
 
 stop_dashboard_services() {
     echo "Stopping dashboard provider..."
+    $(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
+    $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     ${esgf_dashboard_ip_install_dir}/bin/ip.service stop
     [ $? != 0 ] && echo " ERROR: Could not stop esgf dashboard provider" && popd && return 1
     return 0
@@ -479,7 +503,6 @@ stop_dashboard_services() {
 #      installation/configuration (setup_node_manager) 
 #--------------------------------------------------
 setup_dashboard_database() {
-    init
 
     echo
     echo "*******************************"

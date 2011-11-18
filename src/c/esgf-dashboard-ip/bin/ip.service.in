@@ -50,10 +50,21 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
         ;;
     stop)
         echo -n "Shutting down ESGF Information Provider... "
-        kill -9 $(cat /var/run/esgf-dashboard-ip.pid)
-        [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && exit 0
 
-	if ps ax | grep -v grep | grep $SERVICE >& /dev/null
+        //-------
+        //First try shutting down specific instance we started...
+        //-------
+        if [ -e "/var/run/esgf-dashboard-ip.pid" ]; then 
+            kill -9 $(cat /var/run/esgf-dashboard-ip.pid)
+            [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && return 0
+        else
+            echo "cannot find PID file [/var/run/esgf-dashboard-ip.pid]"
+        fi
+
+        //-------
+        //Otherwise do brute force
+        //-------
+	if ps ax | grep -v grep | pgrep $SERVICE >& /dev/null
 	then
             ## Stop the esgf information provider 
             killall esgf-dashboard-ip 
@@ -65,7 +76,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
     status)
         echo -n "Checking the ESGF Information Provider status..."
 
-	if ps ax | grep -v grep | grep $SERVICE > /dev/null
+	if ps ax | grep -v grep | pgrep $SERVICE > /dev/null
 	then
 	    echo "[RUNNING] "
 	else
