@@ -124,9 +124,9 @@ init() {
     postgress_install_dir=${PGHOME:-${install_prefix}/pgsql}
 
     #Dashboard Information Provider...
+    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"0.0.9"}}
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
-    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"0.0.9"}}
 
     echo "$(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)"
     echo "$(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)"
@@ -349,7 +349,7 @@ setup_dashboard_provider() {
 
     echo
     echo "*******************************"
-    echo "Setting up ESGF Dashboard IP ${esgf-dashboard-ip_version}"
+    echo "Setting up ESGF Dashboard IP v${esgf_dashboard_ip_version}"
     echo "*******************************"
     echo
 
