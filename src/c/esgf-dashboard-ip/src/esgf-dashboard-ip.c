@@ -36,7 +36,7 @@ static char *USAGE =
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
-#define XMLPARSER_THREAD_FREQ 3 // test value
+//#define XMLPARSER_THREAD_FREQ 3 // test value
 
 //pthread_barrier_t barr;
 
@@ -149,95 +149,61 @@ handle_error (int error)
 
 
 
-
 /* This is our thread function.  It is like main(), but for a thread*/
-void *
-threadFunc (void *arg)
+
+//void *
+int threadFunc (void *arg)
 {
   char *esgf_registration_xml_path;
-  int iter_count = 10;
 
  char target[FILENAME_MAX];
   int result;
   int fd;
-//  int wd;			/* watch descriptor */
 
   esgf_registration_xml_path = (char *) arg;
   sprintf (target, "%s", esgf_registration_xml_path);
 
-//  fd = inotify_init ();
-//  if (fd < 0)
-//    {
-//      handle_error (errno);
-//      fprintf (stderr, "Parsing thread off. [iNotify_init error]\n");
-//      return NULL;
-//    }
-
-//  wd = inotify_add_watch (fd, target, IN_CLOSE_WRITE | IN_CLOSE_NOWRITE);
-  //wd = inotify_add_watch (fd, target, IN_ALL_EVENTS);
-//  if (wd < 0)
-//    {
-//      handle_error (errno);
-//      fprintf (stderr, "Parsing thread off. [iNotify_add_watch error]\n");
-//      return NULL;
-//    }
-
-  while (iter_count--)
-  //while (1)
-    {
-//      fprintf (stderr, "Waiting for a new event\n");
          fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
 
          // l_type   l_whence  l_start  l_len  l_pid  
          struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
-         int fd;
          fl.l_pid = getpid();
          fl.l_type = F_RDLCK;
 
          if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
-         fprintf(stderr,"Open error... skip parsing in [%d] seconds\n",XMLPARSER_THREAD_FREQ);
-	 sleep(XMLPARSER_THREAD_FREQ);
-         continue;
+         fprintf(stderr,"Open error... skip parsing\n");
+	 return -1;
          }
 
          fprintf(stderr, "Trying to get lock...");
          if (fcntl(fd, F_SETLKW, &fl) == -1) {
-         fprintf(stderr,"Lock error... skip parsing in [%d] seconds\n",XMLPARSER_THREAD_FREQ);
+         fprintf(stderr,"Lock error... skip parsing\n");
 	 close(fd);
-	 sleep(XMLPARSER_THREAD_FREQ);
-         continue;
+	 return -1;
          }
 
-         fprintf(stdout, "Locked\n%s now parsing\n",target);
+         fprintf(stderr, "Locked\n%s now parsing\n",target);
        
-//      get_event (fd, target);
-//      fprintf (stderr, "I got a new event wait 3 sec\n");
-
         automatic_registration_xml_feed (target);
-//      fprintf (stderr, "Now waiting next iNotify event\n");
 
         fprintf(stderr,"Trying to release lock...");
         fl.l_type = F_UNLCK;  // set to unlock same region 
 
         if (fcntl(fd, F_SETLK, &fl) == -1) {
-               	fprintf(stderr,"Unlock error... Now waiting for [%d] seconds\n",XMLPARSER_THREAD_FREQ); 
+               	fprintf(stderr,"Unlock error... \n"); 
 	 	close(fd);
-	 	sleep(XMLPARSER_THREAD_FREQ);
-		continue;
+		return -1;
         }
         close(fd);
-        fprintf(stderr,"Unlocked.\n");
-        fprintf(stderr,"Now waiting for [%d] seconds\n",XMLPARSER_THREAD_FREQ);
-	sleep(XMLPARSER_THREAD_FREQ);
-    }				// end while
+        fprintf(stderr,"%s Unlocked.\n",target);
 
-  return NULL;
+  return 0;
 }
 
 int
 main (int argc, char **argv)
 {
-  pthread_t pth;		// this is our thread identifier
+  //pthread_t pth;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -247,7 +213,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 3;
+  //int iterator = 5;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -294,7 +260,7 @@ main (int argc, char **argv)
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
       fprintf (stderr,
-	       "ESGF_HOME attribute not found... setting /esg as default");
+	       "ESGF_HOME attribute not found... setting /esg as default\n");
     }
 
   fprintf (stderr, "ESGF_HOME = [%s]\n", esgf_properties);
@@ -347,21 +313,19 @@ main (int argc, char **argv)
   print_logs_before_starting (esgf_registration_xml_path);
 
   // start thread 
-  fprintf (stderr, "Creating the registration.xml thread\n");
-  pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
+  //fprintf (stderr, "Creating the registration.xml thread\n");
+  //pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
+  //sleep(10);
 
   fprintf (stderr, "Starting the forever loop for the metrics collector\n");
 
-  sleep(10);
-
-  fprintf (stderr, "...started\n");
-
   counter = 0;
-  while (iterator--)
-  //while (1)
+  //while (iterator--)
+  while (1)
     {
       // Now calling the automatic registration_xml_feed into the parser
       //automatic_registration_xml_feed (esgf_registration_xml_path);
+      threadFunc (esgf_registration_xml_path);
       if (counter == 0)
 	{
 	  if (hosts)
@@ -373,7 +337,7 @@ main (int argc, char **argv)
 	  fprintf (stderr, "Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
 	  writeResults (hosts, numHosts);
-	  counter = (counter + 1) % HOSTS_LOADING_SPAN;
+	  //counter = (counter + 1) % HOSTS_LOADING_SPAN;
 	  fprintf (stderr,
 		   "Metrics have been collected.\nNow waiting for %d sec\n",
 		   PING_SPAN);
@@ -388,10 +352,10 @@ main (int argc, char **argv)
     }				// forever loop end
 
 // end thread
-  fprintf (stderr,
-	   "Parser thread joins the main program before existing... waiting for it\n");
-  if (pthread_join (pth, NULL))
-      fprintf(stderr,"pthread_join error");
+//  fprintf (stderr,
+//	   "Parser thread joins the main program before existing... waiting for it\n");
+//  if (pthread_join (pth, NULL))
+//      fprintf(stderr,"pthread_join error");
 
     // freeing space
   fprintf (stderr, "Releasing memory\n");
@@ -442,10 +406,16 @@ ESGF_config_path (char **esgf_properties_pointer)
       char value_buffer[256] = { '\0' };
 
       if ((fscanf (file, "%s", export_buffer)) == EOF)	// skip EXPORT
+    {
+  	fclose (file);
 	return -1;
+	}
 
       if ((fscanf (file, "%s", buffer)) == EOF)	// now reading ATTRIBUTE=VALUE
+    {
+  	fclose (file);
 	return -1;
+	}
 
       position = strchr (buffer, '=');
       if (position != NULL)	// the '=' has been found

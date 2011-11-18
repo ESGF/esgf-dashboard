@@ -131,12 +131,17 @@ int check_ip_class(char* buffer)
 
     ip_values[0] = atoi(buffer);
 
+// Check on private ip classes 
+
+//24-bit Block (/8 prefix, 1 × A)	10.0.0.0	10.255.255.255	16777216
     if (ip_values[0]==10)
         return -2;
 
+//20-bit Block (/12 prefix, 16 × B)	172.16.0.0	172.31.255.255	1048576
     if ((ip_values[0]==172) && (ip_values[1]>=16) && (ip_values[1]<=31))
         return -3;
 
+//16-bit Block (/16 prefix, 256 × C)	192.168.0.0	192.168.255.255	65536
     if ((ip_values[0]==192) && (ip_values[1]==168) )
         return -4;
 
@@ -284,7 +289,6 @@ parse_registration_xml_file (xmlNode * a_node)
 	else
   fprintf (stderr, "Transaction OK - Database Tables Lock: Ok\n");
 
-
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
     {
@@ -297,7 +301,6 @@ parse_registration_xml_file (xmlNode * a_node)
       if (cur_node->type == XML_ELEMENT_NODE
 	  && (!strcmp (cur_node->name, REG_ELEMENT_REGISTRATION)))
 	{
-	  //fprintf (stderr, "Element->name: %s\n", cur_node->name);
 
 	  // check on the REGISTRATION timestamp    
 	  registration_timestamp =
@@ -330,8 +333,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	  if (!create_populate_done)
 	    {
 	      fprintf (stderr,
-		       "Populate Hash tables (first iteration) [%d]\n",
-		       create_populate_done);
+		       "Create and populate Hash tables (first iteration)\n");
 	      create_populate_done = 1;
 	      // Hash tables creation
 	      fprintf (stderr, "Creating the hashtable for PROJECTS\n");
