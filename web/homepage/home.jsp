@@ -63,10 +63,10 @@
 				    ]
 				});	
 				
-				loadNews();
+				//loadNews();
 			});
 			
-			function loadNews() {
+			/* function loadNews() {
 				Ext.Ajax.request({
 					url: '<s:url action="News" namespace="/json" encode="false" />',
 					success: function(response, opts) {
@@ -83,7 +83,7 @@
 					},
 					scope: this
 				});
-			}			
+			} */			
 		//]]>
 		</script>
 		<link href="homepage/styles.css" media="screen" rel="Stylesheet" type="text/css">
@@ -97,29 +97,29 @@
 			<div id="bd">
 				<div id="frontpage_body">
 					<center>
-					<div class="box" style="width: 70%;">
+					<div class="box" style="width: 100%;">
 						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
-						<div class="content" style="height: 29em;">
+						<div class="content" style="height: 39em;">
 							<!--  <div id="imageRotator"></div>
 							<img src="rotator/image1.png" width="100%" height="100% "alt="" />-->
 							<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
-								<b>ESGF Dashbard</b>
-							</p>
+								<b>ESGF Dashbard &nbsp;&nbsp;&nbsp;&nbsp;</b>
+								<a href="#" OnClick='login("guest", ""); return false;' title="Login">Login</a>	
 							<img src="img/global_view.png" width="100%" alt="" />
 						</div>
-						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
+						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b> 
 					</div>
 					</center>
 					<!-- Register / Login -->					
-					<div class="box" style="float: right; width: 30%;">
-						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
-						<div class="content" style="height: 29em;">
+					<!-- <div class="box" style="float: right; width: 100%;">
+						 <b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b> 
+						<div class="content" style="height: 7em;">
 						
-							<!-- <center>
+							<center>
 								<s:a action="RegistrationPage" namespace="/secure" title="Register for an account on ESGF Dashboard" cssClass="register_button" onclick="alert('This functionality will be available soon'); return false;"/>
-							</center> -->  
+							</center>  
 						    <p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
-								<b><!-- or --> Login:</b>
+								<b>or Login:</b>
 							</p>
 							
 							<div id="login">
@@ -147,20 +147,20 @@
 										</p>										
 									</form>
 								</div>
-								<b class="xbottom"><b class="xb4"></b><b class="xb3"></b><b class="xb2"></b><b class="xb1"></b></b>
-								<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
-									<b>or try as guest:</b>
+								<b class="xbottom"><b class="xb4"></b><b class="xb3"></b><b class="xb2"></b><b class="xb1"></b></b>								<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
+									<b>Login as guest:</b>
 								</p>
 								<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 								<div class="login">
-									<form onsubmit='alert("This functionality will be available soon"); return false; login(document.getElementById("loginGuest").value, ""); return false;'>
+									<form onsubmit='login(document.getElementById("loginGuest").value, ""); return false;'>
+									<form onsubmit='login("guest", ""); return false;'>
 										<p>
 										  <label for="loginGuest">
-											  Username:
+											  Click here to login:
 										  </label>
 										</p>
 										<p>
-											<input id="loginGuest" type="text" value="guest">
+											<input id="loginGuest" type="hidden" value="guest">
 										</p>
 										<p style="margin-top: 0.8em;">
 											<input name="commit" value="" class="submit" title="Log in to ESGF Dashboard as Guest" type="submit">
@@ -169,8 +169,9 @@
 								</div>
 								<b class="xbottom"><b class="xb4"></b><b class="xb3"></b><b class="xb2"></b><b class="xb1"></b></b>
 								<div style="height: 1.2em"></div>
+								qui
 								<div id="hd" class="frontpage_header">
-									<!-- <img alt="Logo" src="img/title.png" class="logo"> -->
+									<img alt="Logo" src="img/title.png" class="logo">
 									<div class="text">
 									  Welcome to the ESGF-Dashboard, the distributed monitoring system of the Earth System Grid Federation
 									</div>
@@ -179,14 +180,14 @@
 							</div>							
 						</div>						
 						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
-					</div>
+					</div> -->
 								
 					<br class="clearer">&nbsp;<br>
 				
 					<!-- About -->
-					<div class="box" style="width: 30%;">
+					<!--   <div class="box" style="width: 30%;">
 						<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
-						<div class="content" style="height: 16em; padding: 0.3em 1.5em;">
+						 <div class="content" style="height: 16em; padding: 0.3em 1.5em;">
 							<p class="heading">
 								About
 							</p>
@@ -205,9 +206,9 @@
 							<div class="content" style="height: 16em; padding: 0.3em 1.5em; overflow: hidden;">
 							</div>
 							<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
-						</div>
+						</div> -->
 						<!-- Who -->						
-						<div class="box" style="width: 30%;">
+						<!-- <div class="box" style="width: 30%;">
 							<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 							<div class="content" style="height: 16em; padding: 0.3em 1.5em;">
 								<p class="heading">
@@ -224,15 +225,15 @@
 							<div class="content" style="height: 16em; padding: 0.3em 1.5em; overflow: hidden;">
 							</div>
 							<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
-						</div>
-						<!-- Latest Announcements -->
-						<div class="box" style="width: 30%;">
+						</div> -->
+						 <!-- Latest Announcements -->
+						<!-- <div class="box" style="width: 30%;">
 							<b class="xtop"><b class="xb1"></b><b class="xb2"></b><b class="xb3"></b><b class="xb4"></b></b>
 							<div class="content" style="height: 16em; padding: 0.3em 1.5em; overflow: hidden;">
 								<p class="heading">
-								<!-- 
+								
 									<img src="feed-icon.png" alt="Subscribe to site announcements icon" title="Subscribe to site announcements RSS feed">
-								-->
+								
 									Announcements
 								</p>								
 								<marquee id="newsScroller" hspace="5" height="12em" width="100%" onmouseout="javascript:this.start()" onmouseover="javascript:this.stop()" scrollamount="1" scrolldelay="2" direction="up">
@@ -242,16 +243,22 @@
 								</marquee>							
 							</div>
 							<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b>
-						</div>
+						</div> --> 
 						
-						<br class="clearer">&nbsp;<br>						
-	        </div>
+						<!-- <br class="clearer">&nbsp;<br>						
+	        </div>-->
 	      </div>
 				<div id="ft">
-			        <%-- <p class="copyright">
+				  <center>
+				  <a href="http://esgf.org/" target="_other">ESGF</a> &middot;
+                  <a href="http://esgf.org/LICENSE">LICENSE</a> &middot;
+                  <a href="http://esgf.org/releases/">v@version_num@</a> &middot;
+                  <a href="http://esgf.org/releases/">@release_name@ release</a>  
+			        <!-- <p class="copyright">
 						Copyright 2010
-						<a href="http://www.unisalento.it/" target="_blank">The University of Salento</a>						
-					</p>--%>				
+						<a href="" target="_blank">bla bla</a>						
+					</p>	 -->	
+					 </center>		
 			    </div>
 			    <div style="padding-bottom: 0.5em; text-align: center;">
 				</div>
