@@ -109,6 +109,42 @@ The get_foreign_key_value function returns:
 >0 = fk value
 */
 
+int check_ip_class(char* buffer)
+{
+    char value_buffer[50];
+    char* position;
+    int number_dots=0;
+    int ip_values[4]={ 0 };
+    int i;
+
+    number_dots=0;
+    while (number_dots<3)
+        {
+         position = strrchr (buffer, '.');
+         if (!position)
+                return -1;
+         strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE        
+         *position = '\0';
+         ip_values[3-number_dots] = atoi(value_buffer);
+         number_dots++;
+        }
+
+    ip_values[0] = atoi(buffer);
+
+    if (ip_values[0]==10)
+        return -2;
+
+    if ((ip_values[0]==172) && (ip_values[1]>=16) && (ip_values[1]<=31))
+        return -3;
+
+    if ((ip_values[0]==192) && (ip_values[1]==168) )
+        return -4;
+
+ return 0;
+}
+
+
+
 long int
 get_foreign_key_value (PGconn * conn, char *query)
 {
@@ -373,7 +409,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		{
 		  char insert_new_host_query[2048] = { '\0' };
 		  char select_id_host_query[2048] = { '\0' };
-		  struct hostent *he;
+		  char node_ip_test[64] = { '\0' };
 
 		  // get NODE attributes values
 
@@ -403,9 +439,10 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 
 		  node_ip = xmlGetProp (node_node, REG_ATTR_NODE_NODEIP);
-
+		   
 		  if (node_ip == NULL || !strcmp (node_ip, ""))
 		    {
+
 		      fprintf (stderr,
 			       "Missing/invalid %s [skip current NODE element]\n",
 			       REG_ATTR_NODE_NODEIP);
@@ -415,15 +452,22 @@ parse_registration_xml_file (xmlNode * a_node)
 		      continue;
 		    }
 
+ 		  sprintf(node_ip_test,"%s",node_ip); 
+    		  if (check_ip_class(node_ip_test)) {
+		      fprintf(stderr,"IP check failed: Is this node [%s] running on a private network? [skip current NODE element]\n",node_ip);		
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      continue;
+		  }
+		  fprintf(stderr,"IP check on [%s] OK\n",node_ip);		
+
+
 		  node_hostname =
 		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
 
-  		  he = gethostbyname (node_hostname); 
-
-		  if (node_hostname == NULL || !strcmp (node_hostname, "") || (!he))
+		  if (node_hostname == NULL || !strcmp (node_hostname, "") )
 		    {
-		      if (!he) 
-			fprintf(stderr,"Gethostbyname failed! Is this node [%s] running on a private network?\n",node_hostname);		
 
 		      fprintf (stderr,
 			       "Missing/invalid %s [skip current NODE element]\n",
