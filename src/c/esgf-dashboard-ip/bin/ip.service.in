@@ -51,19 +51,19 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
     stop)
         echo -n "Shutting down ESGF Information Provider... "
 
-        //-------
-        //First try shutting down specific instance we started...
-        //-------
+        #-------
+        #First try shutting down specific instance we started...
+        #-------
         if [ -e "/var/run/esgf-dashboard-ip.pid" ]; then 
             kill -9 $(cat /var/run/esgf-dashboard-ip.pid)
-            [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && return 0
+            [ $? == 0 ] && echo "[OK]*" && rm /var/run/esgf-dashboard-ip.pid && exit 0
         else
             echo "cannot find PID file [/var/run/esgf-dashboard-ip.pid]"
         fi
 
-        //-------
-        //Otherwise do brute force
-        //-------
+        #-------
+        #Otherwise do brute force
+        #-------
 	if ps ax | grep -v grep | pgrep $SERVICE >& /dev/null
 	then
             ## Stop the esgf information provider 
