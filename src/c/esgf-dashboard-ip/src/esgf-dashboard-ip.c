@@ -35,8 +35,8 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
-//#define XMLPARSER_THREAD_FREQ 60  // release value 
-#define XMLPARSER_THREAD_FREQ 3 // test value
+#define XMLPARSER_THREAD_FREQ 60  // release value 
+//#define XMLPARSER_THREAD_FREQ 3 // test value
 
 //pthread_barrier_t barr;
 
@@ -155,7 +155,7 @@ void *
 threadFunc (void *arg)
 {
   char *esgf_registration_xml_path;
-  int iter_count = 10;
+  //int iter_count = 10;
 
  char target[FILENAME_MAX];
   int result;
@@ -182,8 +182,8 @@ threadFunc (void *arg)
 //      return NULL;
 //    }
 
-  while (iter_count--)
-  //while (1)
+  //while (iter_count--)
+  while (1)
     {
 //      fprintf (stderr, "Waiting for a new event\n");
          fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
@@ -247,7 +247,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 3;
+  //int iterator = 3;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -357,8 +357,8 @@ main (int argc, char **argv)
   fprintf (stderr, "...started\n");
 
   counter = 0;
-  while (iterator--)
-  //while (1)
+  //while (iterator--)
+  while (1)
     {
       // Now calling the automatic registration_xml_feed into the parser
       //automatic_registration_xml_feed (esgf_registration_xml_path);
