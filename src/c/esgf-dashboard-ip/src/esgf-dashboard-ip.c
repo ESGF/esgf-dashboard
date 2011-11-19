@@ -563,7 +563,7 @@ ESGF_passwd (char *esgf_passwd_path)
   char buffer[256] = { '\0' };
 
 // this line is ok for local and production env
-  sprintf (esgf_passwd_filename, "/%s/config/.esgf_pass", esgf_passwd_path);
+  sprintf (esgf_passwd_filename, "/%s/config/.esg_pg_pass", esgf_passwd_path);
 
   fprintf (stderr, "%s\n", esgf_passwd_filename);
   FILE *file = fopen (esgf_passwd_filename, "r");
