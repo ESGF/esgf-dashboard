@@ -459,7 +459,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 
   CONNECTION_TIMEOUT = 1000000;
   THREAD_OPEN_MAX = 20;
-  PING_SPAN = 299;
+  PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
 
