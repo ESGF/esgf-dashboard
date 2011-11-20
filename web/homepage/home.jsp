@@ -105,7 +105,7 @@
 							<p style="font-size: 108%; margin: 0.2em 0pt 0.2em; text-align: center;">
 								<b>ESGF Dashbard &nbsp;&nbsp;&nbsp;&nbsp;</b>
 								<a href="#" OnClick='login("guest", ""); return false;' title="Login">Login</a>	
-							<img src="img/global_view.png" width="100%" alt="" />
+							<img src="img/global_view2.png" width="100%" alt="" />
 						</div>
 						<b class="xbottom"><b class="xb5"></b><b class="xb6"></b><b class="xb7"></b><b class="xb1"></b></b> 
 					</div>
