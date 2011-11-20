@@ -480,9 +480,11 @@ write_geolocation_properties() {
 }
 
 start_dashboard_services() {
-    echo "Starting dashboard provider..."
+    echo -n "Starting dashboard provider... "
     $(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
     $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
+    pgrep esgf-dashboard && echo " -> Detected already running dashboard service (must explicitly stop or restart to start new instance)" && return 0
+    echo
     ((DEBUG)) && ${esgf_dashboard_ip_install_dir}/bin/ip.service start || ${esgf_dashboard_ip_install_dir}/bin/ip.service start >& /var/log/esgf-dashboard-ip.log
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
@@ -495,6 +497,11 @@ stop_dashboard_services() {
     ${esgf_dashboard_ip_install_dir}/bin/ip.service stop
     [ $? != 0 ] && echo " ERROR: Could not stop esgf dashboard provider" && popd && return 1
     return 0
+}
+
+restart_dashboard_services() {
+    stop_dashboard_services
+    start_dashboard_services
 }
 
 
