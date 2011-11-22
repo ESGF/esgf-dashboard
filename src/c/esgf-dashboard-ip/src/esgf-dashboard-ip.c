@@ -35,6 +35,7 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
+#define _DEBUG 1
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
 //#define XMLPARSER_THREAD_FREQ 3 // test value
 
@@ -213,7 +214,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  //int iterator = 5;
+  int iterator = 5;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -320,8 +321,8 @@ main (int argc, char **argv)
   fprintf (stderr, "Starting the forever loop for the metrics collector\n");
 
   counter = 0;
-  //while (iterator--)
-  while (1)
+  while (iterator--)
+  //while (1)
     {
       // Now calling the automatic registration_xml_feed into the parser
       //automatic_registration_xml_feed (esgf_registration_xml_path);
@@ -369,8 +370,9 @@ main (int argc, char **argv)
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
 
-
+  #ifdef _DEBUG
   fprintf (stderr, "esgf-dashboard-ip end\n");
+  #endif
 
   return 0;
 }
@@ -462,7 +464,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
-
+				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 10;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
 
@@ -571,7 +573,7 @@ ESGF_passwd (char *esgf_passwd_path)
   if (file == NULL)		// /esg/config/.esg_pg_pass not found
     return -1;
 
-  if ((fscanf (file, "%s", buffer)) == EOF)	// now reading pg_passwd 
+  if ((fscanf (file, "%s", buffer)) == EOF)	// now reading passwd TO DO check on mem leak (closing file) 
     return -1;			// no password found 
 
   strcpy (POSTGRES_PASSWD = (char *) malloc (strlen (buffer) + 1), buffer);

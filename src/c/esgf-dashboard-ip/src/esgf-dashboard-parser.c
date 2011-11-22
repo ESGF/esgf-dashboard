@@ -207,7 +207,7 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
-      fprintf (stderr, "Error running query [%s]\n", query);
+      fprintf (stderr, "Populate_hash_table error running query [%s]\n", query);
       PQclear (res);
       return -1;
     }
@@ -228,6 +228,17 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
   return 0;
 }
 
+
+int manage_database_open_close_transaction(PGconn *conn, char* QUERY)
+{
+  char query_transaction[2048] = { '\0' };
+
+  snprintf (query_transaction,sizeof (query_transaction),QUERY);
+  if (submit_query (conn, query_transaction))
+          return -1;
+   
+  return 0;
+}
 
 int
 parse_registration_xml_file (xmlNode * a_node)
@@ -277,17 +288,15 @@ parse_registration_xml_file (xmlNode * a_node)
       PQfinish (conn);
       return -1;
     }
- 
+
   fprintf (stderr, "OPEN Transaction and locking the database tables the parser needs...");
-  snprintf (open_transaction,sizeof (open_transaction),QUERY_OPEN_TRANSACTION);
-  if (submit_query (conn, open_transaction))
-	{
+  if (manage_database_open_close_transaction(conn,QUERY_OPEN_TRANSACTION)) {
 	  fprintf(stderr,"Transaction FAILED - Database Tables Lock: Failed. [Recovery action: Skip parsing]\n");
       	  PQfinish (conn);
-          return -1;
-	}
-	else
+	  return -1;
+	 }
   fprintf (stderr, "Transaction OK - Database Tables Lock: Ok\n");
+
 
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
@@ -571,7 +580,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				    cursor_buf);
 			  submit_query (conn, insert_query);
 
-			  // get project ID (servira' successivamente)
+			  // get project ID 
 			  snprintf (select_query, sizeof (select_query),
 				    QUERY_GET_PROJECT_ID, cursor_buf);
 			  project_ids[number_of_projects++] =
@@ -1077,19 +1086,27 @@ parse_registration_xml_file (xmlNode * a_node)
 	       create_populate_done);
     }
 
-  fprintf (stderr, "Releasing the database tables lock needed by the parser...");
-  snprintf (close_transaction,sizeof (close_transaction),QUERY_CLOSE_TRANSACTION);
-  submit_query (conn, close_transaction);
-  fprintf (stderr, "database tables locks released!\n");
+  fprintf (stderr, "Closing transaction and releasing the database tables lock...");
+  if (manage_database_open_close_transaction(conn,QUERY_CLOSE_TRANSACTION)) {
+	  fprintf(stderr,"closing transaction FAILED\n");
+  	  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
+  	  fprintf (stderr, "*********** End parsing routine  ************\n");
+      	  PQfinish (conn);
+	  return -1;
+	 }
+  fprintf (stderr, "closing transaction OK. Database tables locks released!\n");
 
   // closing database connection
   PQfinish (conn);
-  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n",
-	   success_lookup[0], success_lookup[1]);
+	
+  // end parser call
+  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
   fprintf (stderr, "*********** End parsing routine  ************\n");
 
   return 0;
 }
+
+
 
 
 int
