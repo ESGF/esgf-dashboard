@@ -485,7 +485,7 @@ start_dashboard_services() {
     $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     pgrep esgf-dashboard && echo " -> Detected already running dashboard service (must explicitly stop or restart to start new instance)" && return 0
     echo
-    ${esgf_dashboard_ip_install_dir}/bin/ip.service start | tee /var/log/esgf-dashboard-ip.log.last >(cat >> /var/log/esgf-dashboard-ip.log) >& /dev/null
+    ${esgf_dashboard_ip_install_dir}/bin/ip.service start 2>&1 | tee /var/log/esgf-dashboard-ip.log.last >(cat >> /var/log/esgf-dashboard-ip.log) >& /dev/null &
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
 }
