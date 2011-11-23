@@ -19,6 +19,8 @@
 #define REG_ELEMENT_REGISTRATION	"Registration"
 #define REG_ELEMENT_NODE		"Node"
 #define REG_ELEMENT_GEOLOCATION		"GeoLocation"
+#define REG_ELEMENT_RSSFEEDS		"RSSFeeds"
+#define REG_ELEMENT_SINGLE_RSSFEED	"RSSFeed"
 #define REG_ELEMENT_NODEMANAGER		"NodeManager"
 #define REG_ELEMENT_GRIDFTPSERVICE	"GridFTPService"
 #define REG_ELEMENT_CONFIGURATION	"Configuration"
@@ -46,6 +48,7 @@
 #define REG_ELEMENT_CONFIGURATION_ATTR_TYPE		"serviceType"
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
 #define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
+#define REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL		"url"
 
 // Start transaction and lock tables 
 #define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.project_dash ; lock esgf_dashboard.host ; lock esgf_dashboard.uses ; lock esgf_dashboard.join1 ; lock esgf_dashboard.service_instance ;"
@@ -61,6 +64,11 @@
 #define QUERY_GET_LIST_OF_HOSTS  "SELECT ip,id from esgf_dashboard.host;"
 // Get list of "USES" 
 #define QUERY_GET_LIST_OF_USES  "SELECT (CAST(idproject as varchar ) || ':' || CAST(idserviceinstance as varchar)) as key, idproject from esgf_dashboard.uses;"
+// Get list of "RSSFEEDS" 
+#define QUERY_GET_LIST_OF_RSSFEEDS  "SELECT rssfeed, idrssfeed from esgf_dashboard.rssfeed;"
+
+// Get list of "HASRSSFEEDS" 
+#define QUERY_GET_LIST_OF_HASRSSFEEDS  "SELECT (CAST(idrssfeed as varchar) || ':' || CAST(idhost as varchar)) as key,idrssfeed from esgf_dashboard.hasfeed;"
 
 // QUERY_INSERT_PROJECT adds a new project (peer group) in the database
 #define QUERY_INSERT_PROJECT  "INSERT into esgf_dashboard.project_dash(name,description) values('%s','%s');"
@@ -80,20 +88,31 @@
 // QUERY QUERY_GET_SERVICE_ID retrieves the id value of a specific service 
 #define QUERY_GET_SERVICE_ID "SELECT id from esgf_dashboard.service_instance where port=%ld and idhost=%ld;"
 
+// QUERY QUERY_GET_RSSFEED_ID retrieves the id value of a specific rssfeed 
+#define QUERY_GET_RSSFEED_ID "SELECT idrssfeed from esgf_dashboard.rssfeed where rssfeed='%s';"
+
 // QUERY QUERY_PROJECT_AUTHORIZATION, authorize project (peer group) on guest user in the database
 #define QUERY_PROJECT_AUTHORIZATION  "INSERT into esgf_dashboard.join1(iduser,idproject) values(1,%ld);"
 
 // QUERY QUERY_INSERT_SERVICE_INFO, add a service instance in the database
 #define QUERY_INSERT_SERVICE_INFO  "INSERT into esgf_dashboard.service_instance(port,name,institution,mail_admin,idhost) values(%ld,'%s','%s','%s',%ld);"
 
+// QUERY QUERY_INSERT_RSSFEED_INFO, add an rssfeed instance in the database
+#define QUERY_INSERT_RSSFEED_INFO  "INSERT into esgf_dashboard.rssfeed(rssfeed) values('%s');"
+
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
 
+// QUERY QUERY_INSERT_RSSFEED_TO_HOST binds a rssfeed to a host in the database
+#define QUERY_INSERT_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
+
 // HashTables dimensions
-#define HAST_TABLE_PROJECT_DIM	16
-#define HAST_TABLE_SERVICE_DIM	32	
-#define HAST_TABLE_HOST_DIM	16
-#define HAST_TABLE_USES_DIM	32	
+#define HAST_TABLE_PROJECT_DIM		16
+#define HAST_TABLE_SERVICE_DIM		32	
+#define HAST_TABLE_HOST_DIM		16
+#define HAST_TABLE_USES_DIM		32	
+#define HAST_TABLE_RSSFEED_DIM		32	
+#define HAST_TABLE_HASRSSFEED_DIM	32	
 
 
 /*
@@ -247,6 +266,7 @@ parse_registration_xml_file (xmlNode * a_node)
   xmlNode *node_node = NULL;
   xmlNode *int_node = NULL;
   xmlNode *gridftp_node = NULL;
+  xmlNode *rssfeed_node = NULL;
   int iter = 0;
   int iter2 = 0;
   int iter3 = 0;
@@ -264,6 +284,8 @@ parse_registration_xml_file (xmlNode * a_node)
   HASHTBL *hashtbl_hosts;
   HASHTBL *hashtbl_services;
   HASHTBL *hashtbl_uses;
+  HASHTBL *hashtbl_rssfeed;
+  HASHTBL *hashtbl_hasrssfeed;
   char *hashtbl_result;
   int create_populate_done = 0;
   static long long int success_lookup[2] = { 0 };	// [0] success [1] missing
@@ -382,6 +404,30 @@ parse_registration_xml_file (xmlNode * a_node)
 		  hashtbl_destroy (hashtbl_services);
 		  continue;
 		}
+
+	      fprintf (stderr, "Creating the hashtable for RSSFEED\n");
+	      if (!(hashtbl_rssfeed = hashtbl_create (HAST_TABLE_RSSFEED_DIM, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_projects);
+		  hashtbl_destroy (hashtbl_hosts);
+		  hashtbl_destroy (hashtbl_services);
+		  hashtbl_destroy (hashtbl_uses);
+		  continue;
+		}
+	      fprintf (stderr, "Creating the hashtable for HASRSSFEED\n");
+	      if (!(hashtbl_hasrssfeed = hashtbl_create (HAST_TABLE_HASRSSFEED_DIM, NULL)))
+		{
+		  fprintf (stderr,
+			   "ERROR: hashtbl_create() failed for HASRSSFEED [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_projects);
+		  hashtbl_destroy (hashtbl_hosts);
+		  hashtbl_destroy (hashtbl_services);
+		  hashtbl_destroy (hashtbl_uses);
+		  hashtbl_destroy (hashtbl_rssfeed);
+		  continue;
+		}
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_PROJECTS,
 				   &hashtbl_projects);
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_HOSTS,
@@ -390,6 +436,10 @@ parse_registration_xml_file (xmlNode * a_node)
 				   &hashtbl_services);
 	      populate_hash_table (conn, QUERY_GET_LIST_OF_USES,
 				   &hashtbl_uses);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_RSSFEEDS,
+				   &hashtbl_rssfeed);
+	      populate_hash_table (conn, QUERY_GET_LIST_OF_HASRSSFEEDS,
+				   &hashtbl_hasrssfeed);
 	    }
 	  else
 	    fprintf (stderr,
@@ -407,8 +457,8 @@ parse_registration_xml_file (xmlNode * a_node)
 	      char *node_ip;
 	      char *node_hostname;
 	      int number_of_projects;
-	      long int project_ids[1024] = { 0 };	// this should be dynamically allocated starting from the total number of projects in the hashtable
-	      long int service_ids[1024] = { 0 };	// this should be dynamically allocated starting from the total number of services in the hashtable
+	      long int project_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of projects in the hashtable
+	      long int service_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of services in the hashtable
 	      long int host_id = 0;
 	      int geolocation_found;
 	      int i;
@@ -622,8 +672,11 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		      //printf ("Loop on INTERNALNODE: %d\n", ++iter3);
 
+
 		      if (int_node->type == XML_ELEMENT_NODE)	// Internal switch 
 			{
+
+		/*******************************************************************/
 			  // Start of "if internal node is GeoLocation ELEMENT"
 			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_GEOLOCATION))
@@ -669,7 +722,144 @@ parse_registration_xml_file (xmlNode * a_node)
 			      xmlFree (longitude);
 			      xmlFree (city);
 			    }	// end of "if internal node is GeoLocation ELEMENT"
+			  
+		/*******************************************************************/
 
+			  // Start of "if internal node is an RSSFeed ELEMENT"
+			  if (!strcmp
+			      (int_node->name, REG_ELEMENT_RSSFEEDS))
+			    	{
+			      // loop on internal RSSFEEDS children
+				fprintf(stderr,"[%s] found\n",REG_ELEMENT_RSSFEEDS);
+			      for (rssfeed_node = int_node->children;
+				   rssfeed_node;
+				   rssfeed_node = rssfeed_node->next)
+				{
+				  if (!strcmp (rssfeed_node->name, "text"))
+				    continue;
+				  // Start of "if SINGLE_RSSFEED element"
+				  if (rssfeed_node->type == XML_ELEMENT_NODE
+				      &&
+				      (!strcmp
+				       (rssfeed_node->name,
+					REG_ELEMENT_SINGLE_RSSFEED)))
+				    {
+					fprintf(stderr,"	[%s] found\n",REG_ELEMENT_SINGLE_RSSFEED);
+				      char *rss_feed_url;
+
+				      rss_feed_url =
+					xmlGetProp (rssfeed_node,
+						    REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL);
+
+				      if (rss_feed_url == NULL
+					  || !strcmp (rss_feed_url, ""))
+					{
+					  fprintf (stderr,
+						   "Missing/invalid %s attribute [skip current %s  element]\n",
+						   REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL,
+						   REG_ELEMENT_SINGLE_RSSFEED);
+					} 
+					else  
+					{  // start "if is a VALID SINGLE_RSSFEED element
+					  long int rssfeed_id;
+					  fprintf(stderr,"		Valid [%s] element\n",REG_ELEMENT_SINGLE_RSSFEED);
+					  fprintf(stderr,"		Url [%s] \n",rss_feed_url);
+
+		                          if (hashtbl_result = hashtbl_get (hashtbl_rssfeed, rss_feed_url))
+                        			{
+                          			fprintf (stderr, "Lookup RSSFeedTable hit! [%s] [%s]\n",rss_feed_url, hashtbl_result);
+						rssfeed_id = atol (hashtbl_result);
+                          			success_lookup[0]++;
+                        			}
+						else 
+						{ // start "else rssfeed is not in the rssfeed hashtable
+
+				      // 1) add a rssfeed 
+				      char rssfeed_id_str[128] = { '\0' };
+				      char select_id_rssfeed_query[2048] = { '\0' };
+				      char insert_rssfeed_query[2048] =  { '\0' };
+
+				      success_lookup[1]++;
+				      snprintf (insert_rssfeed_query,
+						sizeof (insert_rssfeed_query),
+						QUERY_INSERT_RSSFEED_INFO,
+						rss_feed_url);
+				      submit_query (conn,
+						    insert_rssfeed_query);
+				      // 2) retrieve rssfeed_id
+				      // grab rssfeed_id from rssfeedurl 
+				      snprintf (select_id_rssfeed_query,
+						sizeof
+						(select_id_rssfeed_query),
+						QUERY_GET_RSSFEED_ID,
+						rss_feed_url);
+				      rssfeed_id =
+					get_foreign_key_value (conn,
+							       select_id_rssfeed_query);
+
+				      // add new entry into the hashtable
+				      sprintf (rssfeed_id_str, "%ld",
+					       rssfeed_id);
+				      hashtbl_insert (hashtbl_rssfeed,
+						      rss_feed_url,
+						      rssfeed_id_str);
+				      fprintf (stderr,
+					       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+					       rss_feed_url, rssfeed_id_str);
+					} // end "else if not in the rssfeed hashtable 
+
+/* TO BE DONE : HASRSSFEED management */
+
+				      char hasrssfeed_key[128] = { '\0' };
+				      sprintf (hasrssfeed_key, "%ld:%ld",
+					       rssfeed_id, host_id);
+				      if (hashtbl_result =
+					  hashtbl_get (hashtbl_hasrssfeed,
+						       hasrssfeed_key))
+					{
+					  fprintf (stderr,
+						   "Lookup HasRSSFeed hit! [%s] [%s]\n",
+						   hasrssfeed_key, hashtbl_result);
+					  success_lookup[0]++;
+					}
+				      else
+					{
+					  char
+					    insert_rssfeed_2_host_query
+					    [2048] = { '\0' };
+					  success_lookup[1]++;
+					  char project_ids_str[128] =
+					    { '\0' };
+					  snprintf
+					    (insert_rssfeed_2_host_query,
+					     sizeof
+					     (insert_rssfeed_2_host_query),
+					     QUERY_INSERT_RSSFEED_TO_HOST,
+					     project_ids[i], service_id);
+					  submit_query (conn,
+							insert_rssfeed_2_host_query);
+					  // add new entry into the hashtable
+					  sprintf (project_ids_str, "%ld",
+						   project_ids[i]);
+					  hashtbl_insert (hashtbl_uses,
+							  uses_key,
+							  project_ids_str);
+					  fprintf (stderr,
+						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
+						   uses_key, project_ids_str);
+					}
+
+/*   */ 
+
+					}  // end "if is a VALID SINGLE_RSSFEED element 
+				
+					xmlFree (rss_feed_url);
+
+				    } // end "if SINGLE_RSSFEED element"
+				} // end loop on internal RSSFEEDS children
+			      }  // end of "if internal node is an RSSFeed ELEMENT"
+
+		/*******************************************************************/
 			  // Start of "if internal node is NodeManager ELEMENT"
 			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_NODEMANAGER))
@@ -785,7 +975,6 @@ parse_registration_xml_file (xmlNode * a_node)
 					   service_id);*/
 
 				  // 3) add service to peer_groups
-				  // add services to projects
 				  for (i = 0; i < number_of_projects; i++)
 				    {
 				      char uses_key[128] = { '\0' };
@@ -831,6 +1020,8 @@ parse_registration_xml_file (xmlNode * a_node)
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
 			    }	// end of "if internal node is NodeManager ELEMENT"
+
+		/***********************************************************************/
 
 			  // Start "if internal node is a GridFTPService ELEMENT"       
 			  if (!strcmp
@@ -1082,6 +1273,8 @@ parse_registration_xml_file (xmlNode * a_node)
       hashtbl_destroy (hashtbl_hosts);
       hashtbl_destroy (hashtbl_services);
       hashtbl_destroy (hashtbl_uses);
+      hashtbl_destroy (hashtbl_rssfeed);
+      hashtbl_destroy (hashtbl_hasrssfeed);
       fprintf (stderr, "Releasing memory for hashtables [%d] \n",
 	       create_populate_done);
     }

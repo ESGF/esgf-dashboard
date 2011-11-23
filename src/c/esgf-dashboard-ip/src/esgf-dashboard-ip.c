@@ -35,7 +35,6 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
-#define _DEBUG 1
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
 //#define XMLPARSER_THREAD_FREQ 3 // test value
 
@@ -164,26 +163,26 @@ int threadFunc (void *arg)
   esgf_registration_xml_path = (char *) arg;
   sprintf (target, "%s", esgf_registration_xml_path);
 
-         fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
+        fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
 
          // l_type   l_whence  l_start  l_len  l_pid  
          struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
          fl.l_pid = getpid();
          fl.l_type = F_RDLCK;
 
-         if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
+        if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
          fprintf(stderr,"Open error... skip parsing\n");
 	 return -1;
          }
 
-         fprintf(stderr, "Trying to get lock...");
+        fprintf(stderr, "Trying to get lock...");
          if (fcntl(fd, F_SETLKW, &fl) == -1) {
          fprintf(stderr,"Lock error... skip parsing\n");
 	 close(fd);
 	 return -1;
          }
 
-         fprintf(stderr, "Locked\n%s now parsing\n",target);
+        fprintf(stderr, "Locked\n%s now parsing\n",target);
        
         automatic_registration_xml_feed (target);
 
@@ -214,7 +213,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 5;
+  int iterator = 3;
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -370,9 +369,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
 
-  #ifdef _DEBUG
   fprintf (stderr, "esgf-dashboard-ip end\n");
-  #endif
 
   return 0;
 }
