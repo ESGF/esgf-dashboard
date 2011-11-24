@@ -103,15 +103,15 @@
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
 
-// QUERY QUERY_INSERT_RSSFEED_TO_HOST binds a rssfeed to a host in the database
-#define QUERY_INSERT_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
+// QUERY QUERY_ADD_RSSFEED_TO_HOST binds a rssfeed to a host in the database
+#define QUERY_ADD_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
 
 // HashTables dimensions
 #define HAST_TABLE_PROJECT_DIM		16
-#define HAST_TABLE_SERVICE_DIM		32	
+#define HAST_TABLE_SERVICE_DIM		64		
 #define HAST_TABLE_HOST_DIM		16
-#define HAST_TABLE_USES_DIM		32	
-#define HAST_TABLE_RSSFEED_DIM		32	
+#define HAST_TABLE_USES_DIM		64	
+#define HAST_TABLE_RSSFEED_DIM		16	
 #define HAST_TABLE_HASRSSFEED_DIM	32	
 
 
@@ -762,6 +762,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					else  
 					{  // start "if is a VALID SINGLE_RSSFEED element
 					  long int rssfeed_id;
+				      	  char hasrssfeed_key[128] = { '\0' };
 					  fprintf(stderr,"		Valid [%s] element\n",REG_ELEMENT_SINGLE_RSSFEED);
 					  fprintf(stderr,"		Url [%s] \n",rss_feed_url);
 
@@ -808,9 +809,6 @@ parse_registration_xml_file (xmlNode * a_node)
 					       rss_feed_url, rssfeed_id_str);
 					} // end "else if not in the rssfeed hashtable 
 
-/* TO BE DONE : HASRSSFEED management */
-
-				      char hasrssfeed_key[128] = { '\0' };
 				      sprintf (hasrssfeed_key, "%ld:%ld",
 					       rssfeed_id, host_id);
 				      if (hashtbl_result =
@@ -823,7 +821,8 @@ parse_registration_xml_file (xmlNode * a_node)
 					  success_lookup[0]++;
 					}
 				      else
-					{
+					{ // if the key is not in hasfeed then...
+				      	  char rssfeed_id_str[128] = { '\0' };
 					  char
 					    insert_rssfeed_2_host_query
 					    [2048] = { '\0' };
@@ -834,22 +833,20 @@ parse_registration_xml_file (xmlNode * a_node)
 					    (insert_rssfeed_2_host_query,
 					     sizeof
 					     (insert_rssfeed_2_host_query),
-					     QUERY_INSERT_RSSFEED_TO_HOST,
-					     project_ids[i], service_id);
+					     QUERY_ADD_RSSFEED_TO_HOST,
+					     rssfeed_id, host_id);
 					  submit_query (conn,
 							insert_rssfeed_2_host_query);
 					  // add new entry into the hashtable
-					  sprintf (project_ids_str, "%ld",
-						   project_ids[i]);
-					  hashtbl_insert (hashtbl_uses,
-							  uses_key,
-							  project_ids_str);
+					  sprintf (rssfeed_id_str, "%ld",
+						   rssfeed_id);
+					  hashtbl_insert (hashtbl_hasrssfeed,
+							  hasrssfeed_key,
+							  rssfeed_id_str);
 					  fprintf (stderr,
 						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-						   uses_key, project_ids_str);
-					}
-
-/*   */ 
+						   hasrssfeed_key, rssfeed_id_str);
+					} // end if the key is not in the hasfeed
 
 					}  // end "if is a VALID SINGLE_RSSFEED element 
 				
