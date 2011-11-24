@@ -14,6 +14,8 @@
 
 @SET_MAKE@
 
+#ACLOCAL_AMFLAGS = -I #m4
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -164,7 +166,6 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ACLOCAL_AMFLAGS = -I #m4
 SUBDIRS = . src
 
 #include_HEADERS=include/config.h include/ping.h include/dbAccess.h

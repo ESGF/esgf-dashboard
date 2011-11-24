@@ -2,7 +2,7 @@ bin_PROGRAMS = esgf-dashboard-ip esgf-iplookup
 
 AM_CFLAGS = $(OPT) -I../include -Wall
 
-esgf_dashboard_ip_SOURCES=esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c
+esgf_dashboard_ip_SOURCES=esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c
 esgf_dashboard_ip_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
 esgf_dashboard_ip_LDFLAGS=-O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
 
