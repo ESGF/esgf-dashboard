@@ -18,6 +18,9 @@
 #include "../include/ping.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
+#include "../include/debug.h"
+
+int msglevel; // global variable for log purposes 
 
 static struct option long_options[] = {
   {"version", 0, 0, 'v'},
@@ -217,6 +220,9 @@ main (int argc, char **argv)
   int opt_t = 0;
   int mandatory;
   int allprop;
+ 
+  // setting log level to the lowest one (DEBUG) 
+  msglevel=3;
 
   /*
    * this initialize the library and check potential ABI mismatches
