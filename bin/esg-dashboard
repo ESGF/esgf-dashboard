@@ -135,8 +135,8 @@ init() {
     append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
     dedup ${envfile} && source ${envfile}
 
-    echo ${envfile}
-    cat ${envfile}
+    ((DEBUG)) && echo ${envfile}
+    ((DEBUG)) && cat ${envfile}
     debug_print "(PATH = $PATH)"
     debug_print "(LD_LIBRARY_PATH = $LD_LIBRARY_PATH)"
 
