@@ -796,6 +796,11 @@ Builds the project via ant (obviously).
     <echo message="dest.dir      = ${dest.dir} "/> 
     <echo message="dest.user     = ${dest.user} "/> 
 
+    <exec executable="bash" dir="${orig.dir}">
+      <arg value="-c"/>
+      <arg value="perl -i -ne 'print unless /passw/' $(find . | xargs grep -i passw | sed -n 's/\(^[^:]*\).*/\1/p')"/>
+    </exec>
+
     <exec executable="rsync" dir="${basedir}">
       <arg line="-caOvzl --chmod=g+r,a+r --exclude *~ --exclude semantic* ${orig.dir} ${dest.user}@${dest.server}:${dest.dir}"/>
     </exec>
