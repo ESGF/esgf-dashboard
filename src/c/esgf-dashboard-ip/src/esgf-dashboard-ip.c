@@ -36,7 +36,7 @@ static char *USAGE =
   "esgf-dashboard-ip version => %s -v \n"
   "esgf-dashboard-ip start ===> %s \n";
 
-#define PRINT_USAGE fprintf(stderr, USAGE, argv[0],argv[0], argv[0])
+#define PRINT_USAGE fprintf(stdout, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
 //#define XMLPARSER_THREAD_FREQ 3 // test value
@@ -53,26 +53,24 @@ void print_logs_before_starting (char *esgf_registration_xml_path);
 void
 print_all_properties (void)
 {
-  fprintf (stderr, "POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
-  fprintf (stderr, "POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
-  fprintf (stderr, "POSTGRES_USER value = [%s]\n", POSTGRES_USER);
-  fprintf (stderr, "POSTGRES_PORT_NUMBER value = [%d]\n",
-	   POSTGRES_PORT_NUMBER);
-  fprintf (stderr, "CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
-  fprintf (stderr, "THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
-  fprintf (stderr, "PING_SPAN = [%d]\n", PING_SPAN);
-  fprintf (stderr, "PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
-  fprintf (stderr, "HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
-  fprintf (stderr, "REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"POSTGRES_HOST value = [%s]\n", POSTGRES_HOST);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"POSTGRES_DB_NAME value = [%s]\n", POSTGRES_DB_NAME);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"POSTGRES_USER value = [%s]\n", POSTGRES_USER);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"POSTGRES_PORT_NUMBER value = [%d]\n",POSTGRES_PORT_NUMBER);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"CONNECTION_TIMEOUT = [%d]\n", CONNECTION_TIMEOUT);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"THREAD_OPEN_MAX = [%d]\n", THREAD_OPEN_MAX);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"PING_SPAN = [%d]\n", PING_SPAN);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
 }
 
 void
 print_logs_before_starting (char *esgf_registration_xml_path)
 {
-  //fprintf (stderr, "POSTGRES_PASSWD value = [%s]\n", POSTGRES_PASSWD);
-  fprintf (stderr, "All of the properties have been found\n");
-  fprintf (stderr, "Information provider startup...\n");
-  fprintf (stderr, "Feeding [%s]\n", esgf_registration_xml_path);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"All of the properties have been found\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Information provider startup...\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Feeding [%s]\n", esgf_registration_xml_path);
 }
 
 
@@ -166,39 +164,40 @@ int threadFunc (void *arg)
   esgf_registration_xml_path = (char *) arg;
   sprintf (target, "%s", esgf_registration_xml_path);
 
-        fprintf(stderr,"ThreadFunction says... calling: %s\n",target);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"ThreadFunction says... calling: %s\n",target);
 
          // l_type   l_whence  l_start  l_len  l_pid  
-         struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
-         fl.l_pid = getpid();
-         fl.l_type = F_RDLCK;
+  struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+  fl.l_pid = getpid();
+  fl.l_type = F_RDLCK;
 
-        if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
-         fprintf(stderr,"Open error... skip parsing\n");
-	 return -1;
-         }
+  if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
+	pmesg(LOG_ERROR,__FILE__,__LINE__,"Open error... skip parsing\n");
+	return -1;
+	}
 
-        fprintf(stderr, "Trying to get lock...");
-         if (fcntl(fd, F_SETLKW, &fl) == -1) {
-         fprintf(stderr,"Lock error... skip parsing\n");
-	 close(fd);
-	 return -1;
-         }
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to get lock...\n");
+  if (fcntl(fd, F_SETLKW, &fl) == -1) {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Lock error... skip parsing\n");
+	close(fd);
+	return -1;
+	}
 
-        fprintf(stderr, "Locked\n%s now parsing\n",target);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Locked (%s)\n",target);
        
-        automatic_registration_xml_feed (target);
+  automatic_registration_xml_feed (target);
 
-        fprintf(stderr,"Trying to release lock...");
-        fl.l_type = F_UNLCK;  // set to unlock same region 
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to release lock...\n");
+  fl.l_type = F_UNLCK;  // set to unlock same region 
 
-        if (fcntl(fd, F_SETLK, &fl) == -1) {
-               	fprintf(stderr,"Unlock error... \n"); 
-	 	close(fd);
-		return -1;
+  if (fcntl(fd, F_SETLK, &fl) == -1) {
+    	pmesg(LOG_ERROR,__FILE__,__LINE__,"Unlock error... \n"); 
+ 	close(fd);
+	return -1;
         }
-        close(fd);
-        fprintf(stderr,"%s Unlocked.\n",target);
+
+ close(fd);
+ pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s Unlocked.\n",target);
 
   return 0;
 }
@@ -216,13 +215,13 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 3;
+  int iterator = 10;
   int opt_t = 0;
   int mandatory;
   int allprop;
  
   // setting log level to the lowest one (DEBUG) 
-  msglevel=3;
+  msglevel=3; //default = DEBUG
 
   /*
    * this initialize the library and check potential ABI mismatches
@@ -254,8 +253,8 @@ main (int argc, char **argv)
 	}
     }
 
-
-  fprintf (stderr, "Starting esgf-dashboard-ip\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting esgf-dashboard-ip\n");	
+  fprintf(stderr,"[START] Starting esgf-dashboard-ip\n");	
 
 // reading the ESGF_HOME attribute
 
@@ -265,11 +264,12 @@ main (int argc, char **argv)
       esgf_properties =
 	(char *) malloc (strlen (esgf_properties_default_path) + 1);
       strcpy (esgf_properties, esgf_properties_default_path);
-      fprintf (stderr,
-	       "ESGF_HOME attribute not found... setting /esg as default\n");
+      //pmesg(LOG_WARNING,__FILE__,__LINE__,"ESGF_HOME attribute not found... setting /esg as default\n");	 
+      fprintf(stderr,"[START] ESGF_HOME attribute not found... setting /esg as default\n");	 
     }
 
-  fprintf (stderr, "ESGF_HOME = [%s]\n", esgf_properties);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"ESGF_HOME = [%s]\n", esgf_properties);	
+  fprintf(stderr,"[START] ESGF_HOME = [%s]\n", esgf_properties);	
 
 // reading the esgf-dashboard-ip properties
 
@@ -278,10 +278,7 @@ main (int argc, char **argv)
       // check on mandatory properties
       if (mandatory)
 	{
-	  fprintf
-	    (stderr,
-	     "Please note that %d DB properties are missing in the esgf.properties file. Please check! Exit\n",
-	     mandatory);
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please note that %d DB properties are missing in the esgf.properties file. Please check! Exit\n",mandatory);
 	  myfree (esgf_properties);
 	  myfree (POSTGRES_HOST);
 	  myfree (POSTGRES_DB_NAME);
@@ -290,21 +287,16 @@ main (int argc, char **argv)
 	}
       // check on non-mandatory properties
       if (allprop)
-	fprintf
-	  (stderr,
-	   "Please note that %d non-mandatory properties are missing in the esgf.properties file. Default have been loaded\n",
-	   allprop);
+	pmesg(LOG_WARNING,__FILE__,__LINE__,"Please note that %d non-mandatory properties are missing in the esgf.properties file. Default have been loaded\n",allprop);
     }
 
-//  print_all_properties ();
+  print_all_properties (); // TEST_ 
 
 // reading the postgres password
 
   if ((ESGF_passwd (esgf_properties)))
     {
-      fprintf
-	(stderr,
-	 "Some error occurred while opening the .esgf_pass file Please check!\n");
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Some error occurred while opening the .esgf_pass file Please check!\n");
       myfree (esgf_properties);
       myfree (POSTGRES_HOST);
       myfree (POSTGRES_DB_NAME);
@@ -323,11 +315,11 @@ main (int argc, char **argv)
   //pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
   //sleep(10);
 
-  fprintf (stderr, "Starting the forever loop for the metrics collector\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
   counter = 0;
-  while (iterator--)
-  //while (1)
+  while (iterator--)   //  TEST_ 
+  //while (1)		// PRODUCTION_ 
     {
       // Now calling the automatic registration_xml_feed into the parser
       //automatic_registration_xml_feed (esgf_registration_xml_path);
@@ -340,19 +332,17 @@ main (int argc, char **argv)
 	}
       if (numHosts != 0 && hosts != NULL)
 	{
-	  fprintf (stderr, "Host/services found. Let's check them...\n");
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
 	  writeResults (hosts, numHosts);
 	  //counter = (counter + 1) % HOSTS_LOADING_SPAN;
-	  fprintf (stderr,
-		   "Metrics have been collected.\nNow waiting for %d sec\n",
-		   PING_SPAN);
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Metrics have been collected. Now waiting for %d sec\n",PING_SPAN);
 	  sleep (PING_SPAN);
 	}
       else
 	{
-	  fprintf (stderr, "Host/services not found...\n");
-	  fprintf (stderr, "Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
+	  pmesg(LOG_WARNING,__FILE__,__LINE__,"Host/services not found...\n");
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
 	  sleep (PING_SPAN_NO_HOSTS);
 	}
     }				// forever loop end
@@ -364,7 +354,9 @@ main (int argc, char **argv)
 //      fprintf(stderr,"pthread_join error");
 
     // freeing space
-  fprintf (stderr, "Releasing memory\n");
+  fprintf(stderr,"***************************************************\n");
+  fprintf(stderr,"[END] esgf-dashboard-ip with a FINITE loop\n");
+  fprintf(stderr,"[END] Releasing memory\n");
   if (hosts)
     free (hosts);
 
@@ -375,7 +367,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
 
-  fprintf (stderr, "esgf-dashboard-ip end\n");
+  fprintf(stderr,"[END] esgf-dashboard-ip end\n");
 
   return 0;
 }
@@ -411,13 +403,13 @@ ESGF_config_path (char **esgf_properties_pointer)
       char value_buffer[256] = { '\0' };
 
       if ((fscanf (file, "%s", export_buffer)) == EOF)	// skip EXPORT
-    {
+        {
   	fclose (file);
 	return -1;
 	}
 
       if ((fscanf (file, "%s", buffer)) == EOF)	// now reading ATTRIBUTE=VALUE
-    {
+        {
   	fclose (file);
 	return -1;
 	}
@@ -454,7 +446,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   sprintf (esgf_properties_filename,
 	   "/%s/config/esgf.properties", esgf_properties_path);
 
-  fprintf (stderr, "%s\n", esgf_properties_filename);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", esgf_properties_filename);
+  fprintf(stderr,"[START] %s\n", esgf_properties_filename);
   FILE *file = fopen (esgf_properties_filename, "r");
 
   if (file == NULL)		// /esg/config/esgf.properties not found
@@ -468,7 +461,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
 				// TO DO: to add the node.manager.app.home as a mandatory property
-  *notfound = 10;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 11;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while (notfound)
@@ -478,6 +471,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 
       if ((fscanf (file, "%s", buffer)) == EOF)	// now reading ATTRIBUTE=VALUE
 	{
+  	  fprintf(stderr,"[START] Debug level %d (1=ERROR, 2=WARNING, 3=DEBUG)\n***************************************************\n",msglevel);
 	  fclose (file);
 	  return (-1);		// not all of the properties are there 
 	}
@@ -539,6 +533,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      PING_SPAN = atoi (value_buffer);
 	      (*notfound)--;
 	    }
+	  if (!(strcmp (buffer, "esgf.ip.debug_level")))
+	    {
+	      msglevel = atoi (value_buffer);
+	      (*notfound)--;
+	    }
 	  if (!(strcmp (buffer, "esgf.ip.ping_span_no_hosts")))
 	    {
 	      PING_SPAN_NO_HOSTS = atoi (value_buffer);
@@ -550,8 +549,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	    }
 	}
-    }
-
+    } 
+  fprintf(stderr,"[START] Debug level %d (1=ERROR, 2=WARNING, 3=DEBUG)\n***************************************************\n",msglevel);
   fclose (file);
   return 0;			// all of the properties have been found
 }
@@ -567,10 +566,10 @@ ESGF_passwd (char *esgf_passwd_path)
   int notfound;
   char buffer[256] = { '\0' };
 
-// this line is ok for local and production env
+  // this line is ok for local and production env
   sprintf (esgf_passwd_filename, "/%s/config/.esg_pg_pass", esgf_passwd_path);
 
-  fprintf (stderr, "%s\n", esgf_passwd_filename);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", esgf_passwd_filename);
   FILE *file = fopen (esgf_passwd_filename, "r");
 
   if (file == NULL)		// /esg/config/.esg_pg_pass not found

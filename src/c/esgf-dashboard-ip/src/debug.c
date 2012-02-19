@@ -6,7 +6,7 @@ extern int msglevel; /* the higher, the more messages... */
 #if defined(NDEBUG) && defined(__GNUC__)
 /* Nothing. pmesg has been "defined away" in debug.h already. */
 #else
-void pmesg(int level, char* format, ...) {
+void pmesg(int level, char* source, long int line_number, char* format, ...) {
 #ifdef NDEBUG
 	/* Empty body, so a good compiler will optimise calls
 	   to pmesg away */
@@ -31,7 +31,7 @@ void pmesg(int level, char* format, ...) {
 		  break;
 		}
 	
-	fprintf(stderr,"[%s][%s][%d] ",log_type, __FILE__,__LINE__);
+	fprintf(stderr,"[%s][%s][%d] ",log_type, source,line_number);
 
         va_start(args, format);
         vfprintf(stderr, format, args);

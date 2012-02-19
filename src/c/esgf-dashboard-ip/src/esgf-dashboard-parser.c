@@ -12,6 +12,7 @@
 //#include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/hashtbl.h"
+#include "../include/debug.h"
 
 #define APPLICATION_SERVER_NAME		"Application Server"
 
@@ -179,7 +180,7 @@ get_foreign_key_value (PGconn * conn, char *query)
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
-      fprintf (stderr, "SELECT command did not return tuples properly\n");
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT command did not return tuples properly\n");
       PQclear (res);
       return -1;
     }
@@ -207,7 +208,7 @@ submit_query (PGconn * conn, char *query)
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     {
-      fprintf (stderr, "Submit query failed\n");
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query failed\n");
       PQclear (res);
       return -1;
     }
@@ -222,11 +223,12 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
   PGresult *res;
   int i, num_records;
 
-  fprintf (stderr, "Retrieving data for hashtable [QUERY=%s]\n", query);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieving data for hashtable\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[QUERY=%s]\n", query);
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
-      fprintf (stderr, "Populate_hash_table error running query [%s]\n", query);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Populate_hash_table error running query [%s]\n", query);
       PQclear (res);
       return -1;
     }
@@ -237,13 +239,13 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
     {
       hashtbl_insert (*pointer, (char *) PQgetvalue (res, i, 0),
 		      (char *) PQgetvalue (res, i, 1));
-      fprintf (stderr, "To be stored into the hashtable [%s]#[%s]\n",
+      pmesg(LOG_DEBUG,__FILE__,__LINE__,"To be stored into the hashtable [%s]#[%s]\n",
 	       (char *) PQgetvalue (res, i, 0), (char *) PQgetvalue (res, i,
 								     1));
     }
   PQclear (res);
 
-  fprintf (stderr, "Hashtable properly created!\n", query);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hashtable properly created!\n", query);
   return 0;
 }
 
@@ -299,25 +301,25 @@ parse_registration_xml_file (xmlNode * a_node)
   snprintf (conninfo_printf, sizeof (conninfo_printf),
 	    "host=%s port=%d dbname=%s user=%s password=******", POSTGRES_HOST,
 	    POSTGRES_PORT_NUMBER, POSTGRES_DB_NAME, POSTGRES_USER);
-  fprintf (stderr, "*********** Starting parsing routine  ************\n");
-  fprintf (stderr, "Open connection to: %s\n", conninfo_printf);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"*********** Starting parsing routine  ************\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Open connection to: %s\n", conninfo_printf);
 
   conn = PQconnectdb ((const char *) conninfo);
   if (PQstatus (conn) != CONNECTION_OK)
     {
-      fprintf (stderr, "Connection to database failed: %s",
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s",
 	       PQerrorMessage (conn));
       PQfinish (conn);
       return -1;
     }
 
-  fprintf (stderr, "OPEN Transaction and locking the database tables the parser needs...");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"OPEN Transaction and locking the database tables the parser needs...\n");
   if (manage_database_open_close_transaction(conn,QUERY_OPEN_TRANSACTION)) {
-	  fprintf(stderr,"Transaction FAILED - Database Tables Lock: Failed. [Recovery action: Skip parsing]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Transaction FAILED - Database Tables Lock: Failed. [Recovery action: Skip parsing]\n");
       	  PQfinish (conn);
 	  return -1;
 	 }
-  fprintf (stderr, "Transaction OK - Database Tables Lock: Ok\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction OK - Database Tables Lock: Ok\n");
 
 
   // "Registration" iteration 
@@ -340,7 +342,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	  if (registration_timestamp == NULL
 	      || !strcmp (registration_timestamp, ""))
 	    {
-	      fprintf (stderr,
+	     pmesg(LOG_WARNING,__FILE__,__LINE__, 
 		       "Missing/invalid %s [skip current %s element]\n",
 		       REG_ATTR_REGISTRATION_TIMESTAMP,
 		       REG_ELEMENT_REGISTRATION);
@@ -352,75 +354,68 @@ parse_registration_xml_file (xmlNode * a_node)
 
 	  if (current_timestamp <= last_timestamp)
 	    {
-	      fprintf (stderr,
+	     pmesg(LOG_WARNING,__FILE__,__LINE__, 
 		       "Skipping %s element - [older/equal timestamp]\n",
 		       REG_ELEMENT_REGISTRATION);
 	      continue;
 	    }
 	  last_timestamp = current_timestamp;
-	  fprintf (stderr, "New timestamp =  %lld\n", last_timestamp);
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"New timestamp =  %lld\n", last_timestamp);
 		
 	  // create and populate hashtables if not yet
 	  if (!create_populate_done)
 	    {
-	      fprintf (stderr,
-		       "Create and populate Hash tables (first iteration)\n");
+	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"Create and populate Hash tables (first iteration)\n");
 	      create_populate_done = 1;
 	      // Hash tables creation
-	      fprintf (stderr, "Creating the hashtable for PROJECTS\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for PROJECTS\n");
 	      if (!(hashtbl_projects = hashtbl_create (HAST_TABLE_PROJECT_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
+		 pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for PROJECTS [skip parsing]\n");
 		  continue;
 		}
 
-	      fprintf (stderr, "Creating the hashtable for HOST\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for HOST\n");
 	      if (!(hashtbl_hosts = hashtbl_create (HAST_TABLE_HOST_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HOST [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_projects);
 		  continue;
 		}
 
-	      fprintf (stderr, "Creating the hashtable for SERVICES\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for SERVICES\n");
 	      if (!(hashtbl_services = hashtbl_create (HAST_TABLE_SERVICE_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for SERVICES [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_projects);
 		  hashtbl_destroy (hashtbl_hosts);
 		  continue;
 		}
 
-	      fprintf (stderr, "Creating the hashtable for USES\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for USES\n");
 	      if (!(hashtbl_uses = hashtbl_create (HAST_TABLE_USES_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_projects);
 		  hashtbl_destroy (hashtbl_hosts);
 		  hashtbl_destroy (hashtbl_services);
 		  continue;
 		}
 
-	      fprintf (stderr, "Creating the hashtable for RSSFEED\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for RSSFEED\n");
 	      if (!(hashtbl_rssfeed = hashtbl_create (HAST_TABLE_RSSFEED_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_projects);
 		  hashtbl_destroy (hashtbl_hosts);
 		  hashtbl_destroy (hashtbl_services);
 		  hashtbl_destroy (hashtbl_uses);
 		  continue;
 		}
-	      fprintf (stderr, "Creating the hashtable for HASRSSFEED\n");
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for HASRSSFEED\n");
 	      if (!(hashtbl_hasrssfeed = hashtbl_create (HAST_TABLE_HASRSSFEED_DIM, NULL)))
 		{
-		  fprintf (stderr,
-			   "ERROR: hashtbl_create() failed for HASRSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HASRSSFEED [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_projects);
 		  hashtbl_destroy (hashtbl_hosts);
 		  hashtbl_destroy (hashtbl_services);
@@ -442,9 +437,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				   &hashtbl_hasrssfeed);
 	    }
 	  else
-	    fprintf (stderr,
-		     "Hash tables already in place with the data [%d]\n",
-		     create_populate_done);
+	    pmesg(LOG_DEBUG,__FILE__,__LINE__, "Hash tables already in place with the data [%d]\n",create_populate_done);
 
 
 	  // Loop on NODE elements
@@ -479,7 +472,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		  if (organization == NULL || !strcmp (organization, ""))
 		    {
-		      fprintf (stderr,
+		      pmesg(LOG_WARNING,__FILE__,__LINE__, 
 			       "Missing/invalid %s [skip current NODE element]\n",
 			       REG_ATTR_NODE_ORGANIZATION);
 		      xmlFree (organization);
@@ -491,9 +484,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 		  if (npg_project == NULL || !strcmp (npg_project, ""))
 		    {
-		      fprintf (stderr,
-			       "Missing/invalid %s [skip current NODE element]\n",
-			       REG_ATTR_NODE_NODEPEERGROUP);
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEPEERGROUP);
 		      xmlFree (organization);
 		      xmlFree (npg_project);
 		      continue;
@@ -504,9 +495,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  if (node_ip == NULL || !strcmp (node_ip, ""))
 		    {
 
-		      fprintf (stderr,
-			       "Missing/invalid %s [skip current NODE element]\n",
-			       REG_ATTR_NODE_NODEIP);
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEIP);
 		      xmlFree (organization);
 		      xmlFree (npg_project);
 		      xmlFree (node_ip);
@@ -515,13 +504,13 @@ parse_registration_xml_file (xmlNode * a_node)
 
  		  sprintf(node_ip_test,"%s",node_ip); 
     		  if (check_ip_class(node_ip_test)) {
-		      fprintf(stderr,"IP check failed: Is this node [%s] running on a private network? [skip current NODE element]\n",node_ip);		
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"IP check failed: Is this node [%s] running on a private network? [skip current NODE element]\n",node_ip);		
 		      xmlFree (organization);
 		      xmlFree (npg_project);
 		      xmlFree (node_ip);
 		      continue;
 		  }
-		  fprintf(stderr,"IP check on [%s] OK\n",node_ip);		
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"IP check on [%s] OK\n",node_ip);		
 
 
 		  node_hostname =
@@ -530,10 +519,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  if (node_hostname == NULL || !strcmp (node_hostname, "") )
 		    {
 
-		      fprintf (stderr,
-			       "Missing/invalid %s [skip current NODE element]\n",
-			       REG_ATTR_NODE_NODEHOSTNAME);
-
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODEHOSTNAME);
 		      xmlFree (organization);
 		      xmlFree (npg_project);
 		      xmlFree (node_ip);
@@ -546,22 +532,17 @@ parse_registration_xml_file (xmlNode * a_node)
 		    xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 
 		  if (support_email == NULL || !strcmp (support_email, ""))
-		    fprintf (stderr,
-			     "Missing/invalid %s [No problem... the attribute is not mandatory]\n",
-			     REG_ATTR_NODE_SUPPORTEMAIL);
+		    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
 
-		  // print attributes values
-		  fprintf (stderr, "Organization attribute: %s\n",
-			   organization);
-		  fprintf (stderr, "PeerGroups attribute: %s\n", npg_project);
-		  fprintf (stderr, "Hostname attribute: %s\n", node_hostname);
-		  fprintf (stderr, "IP attribute: %s\n", node_ip);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Organization attribute: %s\n",organization);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"PeerGroups attribute: %s\n", npg_project);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hostname attribute: %s\n", node_hostname);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"IP attribute: %s\n", node_ip);
 
 
 		  if (hashtbl_result = hashtbl_get (hashtbl_hosts, node_ip))
 		    {
-		      fprintf (stderr, "Lookup HostTable hit! [%s] [%s]\n",
-			       node_ip, hashtbl_result);
+		      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",node_ip, hashtbl_result);
 		      host_id = atol (hashtbl_result);
 		      success_lookup[0]++;
 		    }
@@ -584,9 +565,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		      // add entry to hash table
 		      sprintf (host_id_str, "%ld", host_id);
 		      hashtbl_insert (hashtbl_hosts, node_ip, host_id_str);
-		      fprintf (stderr,
-			       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-			       node_ip, host_id_str);
+		      pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",node_ip, host_id_str);
 		    }
 
 		  //fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
@@ -607,14 +586,12 @@ parse_registration_xml_file (xmlNode * a_node)
 			  *position = '\0';	// now cursor_buf points to the isolated PeerGroup
 			  position++;	// position points to the new string (if any)   
 			}
-		      fprintf (stderr, "PeerGroup %s\n", cursor_buf);
+		      pmesg(LOG_DEBUG,__FILE__,__LINE__,"PeerGroup %s\n", cursor_buf);
 
 		      if (hashtbl_result =
 			  hashtbl_get (hashtbl_projects, cursor_buf))
 			{
-			  fprintf (stderr,
-				   "Lookup ProjectTable hit! [%s] [%s]\n",
-				   cursor_buf, hashtbl_result);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup ProjectTable hit! [%s] [%s]\n",cursor_buf, hashtbl_result);
 			  success_lookup[0]++;
 			  project_ids[number_of_projects++] =
 			    atol (hashtbl_result);
@@ -641,9 +618,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				   project_ids[number_of_projects - 1]);
 			  hashtbl_insert (hashtbl_projects, cursor_buf,
 					  project_id_str);
-			  fprintf (stderr,
-				   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-				   cursor_buf, project_id_str);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",cursor_buf, project_id_str);
 
 			  // add user to peer group (authorization) 
 			  snprintf (authorization_query,
@@ -704,8 +679,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				  || !strcmp (city, ""))
 				{
 				  geolocation_found = 0;
-				  fprintf (stderr,
-					   "The <GeoLocation> element seems to be corrupted or not complete\n");
+				  pmesg(LOG_DEBUG,__FILE__,__LINE__,"The <GeoLocation> element seems to be corrupted or not complete\n");
 				}
 			      else
 				{
@@ -730,8 +704,8 @@ parse_registration_xml_file (xmlNode * a_node)
 			      (int_node->name, REG_ELEMENT_RSSFEEDS))
 			    	{
 			      // loop on internal RSSFEEDS children
-				fprintf(stderr,"[%s] found\n",REG_ELEMENT_RSSFEEDS);
-			      for (rssfeed_node = int_node->children;
+				pmesg(LOG_DEBUG,__FILE__,__LINE__,"[%s] found\n",REG_ELEMENT_RSSFEEDS);
+			      	for (rssfeed_node = int_node->children;
 				   rssfeed_node;
 				   rssfeed_node = rssfeed_node->next)
 				{
@@ -744,8 +718,8 @@ parse_registration_xml_file (xmlNode * a_node)
 				       (rssfeed_node->name,
 					REG_ELEMENT_SINGLE_RSSFEED)))
 				    {
-					fprintf(stderr,"	[%s] found\n",REG_ELEMENT_SINGLE_RSSFEED);
-				      char *rss_feed_url;
+					pmesg(LOG_DEBUG,__FILE__,__LINE__,"	[%s] found\n",REG_ELEMENT_SINGLE_RSSFEED);
+				      	char *rss_feed_url;
 
 				      rss_feed_url =
 					xmlGetProp (rssfeed_node,
@@ -754,21 +728,19 @@ parse_registration_xml_file (xmlNode * a_node)
 				      if (rss_feed_url == NULL
 					  || !strcmp (rss_feed_url, ""))
 					{
-					  fprintf (stderr,
-						   "Missing/invalid %s attribute [skip current %s  element]\n",
-						   REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL,
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Missing/invalid %s attribute [skip current %s  element]\n",REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL,
 						   REG_ELEMENT_SINGLE_RSSFEED);
 					} 
 					else  
 					{  // start "if is a VALID SINGLE_RSSFEED element
 					  long int rssfeed_id;
 				      	  char hasrssfeed_key[128] = { '\0' };
-					  fprintf(stderr,"		Valid [%s] element\n",REG_ELEMENT_SINGLE_RSSFEED);
-					  fprintf(stderr,"		Url [%s] \n",rss_feed_url);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"		Valid [%s] element\n",REG_ELEMENT_SINGLE_RSSFEED);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"		Url [%s] \n",rss_feed_url);
 
 		                          if (hashtbl_result = hashtbl_get (hashtbl_rssfeed, rss_feed_url))
                         			{
-                          			fprintf (stderr, "Lookup RSSFeedTable hit! [%s] [%s]\n",rss_feed_url, hashtbl_result);
+                          			pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup RSSFeedTable hit! [%s] [%s]\n",rss_feed_url, hashtbl_result);
 						rssfeed_id = atol (hashtbl_result);
                           			success_lookup[0]++;
                         			}
@@ -804,9 +776,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      hashtbl_insert (hashtbl_rssfeed,
 						      rss_feed_url,
 						      rssfeed_id_str);
-				      fprintf (stderr,
-					       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-					       rss_feed_url, rssfeed_id_str);
+				      pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",rss_feed_url, rssfeed_id_str);
 					} // end "else if not in the rssfeed hashtable 
 
 				      sprintf (hasrssfeed_key, "%ld:%ld",
@@ -815,9 +785,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  hashtbl_get (hashtbl_hasrssfeed,
 						       hasrssfeed_key))
 					{
-					  fprintf (stderr,
-						   "Lookup HasRSSFeed hit! [%s] [%s]\n",
-						   hasrssfeed_key, hashtbl_result);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HasRSSFeed hit! [%s] [%s]\n",hasrssfeed_key, hashtbl_result);
 					  success_lookup[0]++;
 					}
 				      else
@@ -843,9 +811,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  hashtbl_insert (hashtbl_hasrssfeed,
 							  hasrssfeed_key,
 							  rssfeed_id_str);
-					  fprintf (stderr,
-						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-						   hasrssfeed_key, rssfeed_id_str);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",hasrssfeed_key, rssfeed_id_str);
 					} // end if the key is not in the hasfeed
 
 					}  // end "if is a VALID SINGLE_RSSFEED element 
@@ -878,13 +844,8 @@ parse_registration_xml_file (xmlNode * a_node)
 
 			      if (endpoint == NULL || !strcmp (endpoint, ""))
 				{
-				  fprintf (stderr,
-					   "Attribute [%s] missing/invalid \n",
-					   REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
-				  fprintf (stderr,
-					   "No %s registered in the database \n",
-					   APPLICATION_SERVER_NAME);
-
+				  pmesg(LOG_WARNING,__FILE__,__LINE__,"Attribute [%s] missing/invalid \n",REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT);
+				  pmesg(LOG_WARNING,__FILE__,__LINE__,"No %s registered in the database \n",APPLICATION_SERVER_NAME);
 				}
 			      else
 				{	// "if endpoint is valid"                             
@@ -892,15 +853,12 @@ parse_registration_xml_file (xmlNode * a_node)
 				  char service_id_str[128] = { '\0' };
 				  char service_key[128] = { '\0' };
 				  sprintf (buffer_endpoint, "%s", endpoint);
-				  //fprintf (stderr, "%s\n", buffer_endpoint);
 
 				  slashcursor = &buffer_endpoint[0];
 				  while (slashcursor =
 					 strchr (slashcursor, ':'))
 				    {
 				      iteration++;
-				      //fprintf (stderr, "Iteration %d\n",
-					//       iteration);
 				      if ((*(++slashcursor)) == '/')
 					continue;
 				      startcursor = slashcursor;
@@ -913,10 +871,6 @@ parse_registration_xml_file (xmlNode * a_node)
 					  break;
 					}
 				    }
-				  /*fprintf (stderr,
-					   "%s port: %ld\n",
-					   APPLICATION_SERVER_NAME,
-					   app_server_port);*/
 
 				  sprintf (service_key, "%ld:%ld", host_id,
 					   app_server_port);
@@ -925,9 +879,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      hashtbl_get (hashtbl_services,
 						   service_key))
 				    {
-				      fprintf (stderr,
-					       "Lookup HostServices hit! [%s] [%s]\n",
-					       service_key, hashtbl_result);
+				      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostServices hit! [%s] [%s]\n",service_key, hashtbl_result);
 				      service_id = atol (hashtbl_result);
 				      success_lookup[0]++;
 				    }
@@ -962,14 +914,8 @@ parse_registration_xml_file (xmlNode * a_node)
 				      hashtbl_insert (hashtbl_services,
 						      service_key,
 						      service_id_str);
-				      fprintf (stderr,
-					       "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-					       service_key, service_id_str);
+				      pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",service_key, service_id_str);
 				    }
-				  /*fprintf (stderr,
-					   "Service %s | id : %ld\n",
-					   APPLICATION_SERVER_NAME,
-					   service_id);*/
 
 				  // 3) add service to peer_groups
 				  for (i = 0; i < number_of_projects; i++)
@@ -981,9 +927,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  hashtbl_get (hashtbl_uses,
 						       uses_key))
 					{
-					  fprintf (stderr,
-						   "Lookup Uses hit! [%s] [%s]\n",
-						   uses_key, hashtbl_result);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup Uses hit! [%s] [%s]\n",uses_key, hashtbl_result);
 					  success_lookup[0]++;
 					}
 				      else
@@ -1008,9 +952,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  hashtbl_insert (hashtbl_uses,
 							  uses_key,
 							  project_ids_str);
-					  fprintf (stderr,
-						   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-						   uses_key, project_ids_str);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",uses_key, project_ids_str);
 					}
 				    }	// end for add service to peer groups
 				}	// end of "if endpoint is valid
@@ -1060,8 +1002,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					  || service_port == NULL
 					  || !strcmp (service_port, ""))
 					{
-					  fprintf (stderr,
-						   "Missing/invalid %s-%s attributes [skip current %s  element]\n",
+					  pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s-%s attributes [skip current %s  element]\n",
 						   REG_ELEMENT_CONFIGURATION_ATTR_TYPE,
 						   REG_ELEMENT_CONFIGURATION_ATTR_PORT,
 						   REG_ELEMENT_CONFIGURATION);
@@ -1074,17 +1015,11 @@ parse_registration_xml_file (xmlNode * a_node)
 					  sprintf (service_key, "%ld:%ld",
 						   host_id,
 						   atol (service_port));
-					  //fprintf (stderr,
-					//	   "Service_key: %s\n",
-					//	   service_key);
 					  if (hashtbl_result =
 					      hashtbl_get (hashtbl_services,
 							   service_key))
 					    {
-					      fprintf (stderr,
-						       "Lookup Services hit! [%s] [%s]\n",
-						       service_key,
-						       hashtbl_result);
+					      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup Services hit! [%s] [%s]\n",service_key,hashtbl_result);
 					      service_id =
 						atol (hashtbl_result);
 					      success_lookup[0]++;
@@ -1128,70 +1063,35 @@ parse_registration_xml_file (xmlNode * a_node)
 					      hashtbl_insert
 						(hashtbl_services,
 						 service_key, service_id_str);
-					      fprintf (stderr,
-						       "[LookupFailed] ** Adding new entry in the hashtable [%s] [%s]\n",
-						       service_key,
-						       service_id_str);
+					      pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] ** Adding new entry in the hashtable [%s] [%s]\n",service_key,service_id_str);
 					    }
-					  //fprintf (stderr,
-					//	   "Service %s | id : %ld\n",
-					//	   service_type, service_id);
 
 					  // add services to projects
-
-					  /*fprintf (stderr,
-						   "ADD SERVICES TO PROJECT: %d\n",
-						   number_of_projects);*/
 
 					  for (i = 0; i < number_of_projects;
 					       i++)
 					    {
 					      char uses_key[128] = { '\0' };
-					      sprintf (uses_key, "%ld:%ld",
-						       project_ids[i],
-						       service_id);
-					      if (hashtbl_result =
-						  hashtbl_get (hashtbl_uses,
-							       uses_key))
+					      sprintf (uses_key, "%ld:%ld",project_ids[i],service_id);
+					      if (hashtbl_result = hashtbl_get (hashtbl_uses,uses_key))
 						{
-						  fprintf (stderr,
-							   "Lookup Uses hit! [%s] [%s]\n",
-							   uses_key,
-							   hashtbl_result);
+						  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup Uses hit! [%s] [%s]\n",uses_key,hashtbl_result);
 						  success_lookup[0]++;
 						}
 					      else
 						{
 						  success_lookup[1]++;
-						  char project_ids_str[128] =
-						    { '\0' };
-						  char
-						    insert_service_2_project_query
-						    [2048] = { '\0' };
-						  snprintf
-						    (insert_service_2_project_query,
-						     sizeof
-						     (insert_service_2_project_query),
-						     QUERY_INSERT_SERVICE_TO_PROJECT,
-						     project_ids[i],
+						  char project_ids_str[128] = { '\0' };
+						  char insert_service_2_project_query[2048] = { '\0' };
+						  snprintf(insert_service_2_project_query,sizeof(insert_service_2_project_query),QUERY_INSERT_SERVICE_TO_PROJECT,project_ids[i],
 						     service_id);
-						  submit_query (conn,
-								insert_service_2_project_query);
+						  submit_query (conn,insert_service_2_project_query);
 
-						  fprintf (stderr,
-							   "ADD SERVICES TO PROJECT: %s\n",
-							   insert_service_2_project_query);
+						  pmesg(LOG_DEBUG,__FILE__,__LINE__,"ADD SERVICES TO PROJECT: %s\n",insert_service_2_project_query);
 						  // add new entry into the hashtable
-						  sprintf (project_ids_str,
-							   "%ld",
-							   project_ids[i]);
-						  hashtbl_insert
-						    (hashtbl_uses, uses_key,
-						     project_ids_str);
-						  fprintf (stderr,
-							   "[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",
-							   uses_key,
-							   project_ids_str);
+						  sprintf (project_ids_str,"%ld",project_ids[i]);
+						  hashtbl_insert(hashtbl_uses, uses_key,project_ids_str);
+						  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",uses_key,project_ids_str);
 						}
 					    }	// end of for "add services to projects"
 					}	// end of "if valid serviceType and port"
@@ -1214,40 +1114,26 @@ parse_registration_xml_file (xmlNode * a_node)
 		      int code;
 		      struct geo_output_struct geo_output;
 
-		      fprintf (stderr,
-			       "GeoLocation pieces of info need to be taken from GeoIP library (estimation)\n");
+		      pmesg(LOG_DEBUG,__FILE__,__LINE__,"GeoLocation pieces of info need to be taken from GeoIP library (estimation)\n");
 
 		      if (!esgf_geolookup (node_ip, &geo_output))
 			{
 			  char update_query[2048] = { '\0' };
-			  fprintf (stderr, "[OUTPUT_COUNTRY_CODE=%s]\n",
-				   geo_output.country_code);
-			  fprintf (stderr, "[OUTPUT_REGION=%s]\n",
-				   geo_output.region);
-			  fprintf (stderr, "[OUTPUT_CITY=%s]\n",
-				   geo_output.city);
-			  fprintf (stderr, "[OUTPUT_POSTAL_CODE=%s]\n",
-				   geo_output.postal_code);
-			  fprintf (stderr, "[OUTPUT_LATITUDE=%f]\n",
-				   geo_output.latitude);
-			  fprintf (stderr, "[OUTPUT_LONGITUDE=%f]\n",
-				   geo_output.longitude);
-			  fprintf (stderr, "[OUTPUT_METROCODE=%d]\n",
-				   geo_output.metro_code);
-			  fprintf (stderr, "[OUTPUT_AREACODE=%d]\n",
-				   geo_output.area_code);
-			  snprintf (update_query, sizeof (update_query),
-				    QUERY_UPDATE_GEOLOCATION_INFO,
-				    geo_output.city, geo_output.latitude,
-				    geo_output.longitude, host_id);
-			  fprintf (stderr,
-				   "I got the geolocation info from the DB (estimation)\n%s\n",
-				   update_query);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_COUNTRY_CODE=%s]\n",geo_output.country_code);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_REGION=%s]\n",geo_output.region);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_CITY=%s]\n",geo_output.city);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_POSTAL_CODE=%s]\n",geo_output.postal_code);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_LATITUDE=%f]\n",geo_output.latitude);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_LONGITUDE=%f]\n",geo_output.longitude);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_METROCODE=%d]\n",geo_output.metro_code);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[OUTPUT_AREACODE=%d]\n",geo_output.area_code);
+			  snprintf (update_query, sizeof (update_query),QUERY_UPDATE_GEOLOCATION_INFO,geo_output.city, geo_output.latitude,geo_output.longitude, host_id);
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"I got the geolocation info from the DB (estimation)\n");
+			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n",update_query);
 			  submit_query (conn, update_query);
-
 			}
 		      else
-			fprintf (stderr, "Esgf-lookup error\n");
+			pmesg(LOG_ERROR,__FILE__,__LINE__,"Esgf-lookup error\n");
 
 		    }		// end of "if !geolocation_found" 
 		}		// end of "if a NODE element"
@@ -1272,31 +1158,28 @@ parse_registration_xml_file (xmlNode * a_node)
       hashtbl_destroy (hashtbl_uses);
       hashtbl_destroy (hashtbl_rssfeed);
       hashtbl_destroy (hashtbl_hasrssfeed);
-      fprintf (stderr, "Releasing memory for hashtables [%d] \n",
-	       create_populate_done);
+      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Releasing memory for hashtables [%d] \n",create_populate_done);
     }
 
-  fprintf (stderr, "Closing transaction and releasing the database tables lock...");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Closing transaction and releasing the database tables lock...\n");
   if (manage_database_open_close_transaction(conn,QUERY_CLOSE_TRANSACTION)) {
-	  fprintf(stderr,"closing transaction FAILED\n");
-  	  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
-  	  fprintf (stderr, "*********** End parsing routine  ************\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"closing transaction FAILED\n");
+  	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
+  	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"*********** End parsing routine  ************\n");
       	  PQfinish (conn);
 	  return -1;
 	 }
-  fprintf (stderr, "closing transaction OK. Database tables locks released!\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"closing transaction OK. Database tables locks released!\n");
 
   // closing database connection
   PQfinish (conn);
 	
   // end parser call
-  fprintf (stderr, "Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
-  fprintf (stderr, "*********** End parsing routine  ************\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hashtables: Hits [%lld] Failure [%lld]\n", success_lookup[0], success_lookup[1]);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"*********** End parsing routine  ************\n");
 
   return 0;
 }
-
-
 
 
 int
@@ -1311,8 +1194,7 @@ automatic_registration_xml_feed (char *registration_xml_file)
 
   if (doc == NULL)
     {
-      fprintf (stderr, "error: could not parse file %s\n",
-	       registration_xml_file);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Could not parse file %s\n",registration_xml_file);
       return -1;		// error parsing the file       
     }
 
@@ -1334,22 +1216,3 @@ automatic_registration_xml_feed (char *registration_xml_file)
     return -2;			// parser failed to connect to the database
   return 0;			// ok
 }
-
-/*int
-main (int argc, char **argv)
-{
-
-  if (argc != 2)
-    return (1);
-*/
-  /*
-   * this initialize the library and check potential ABI mismatches
-   * between the version it was compiled for and the actual shared
-   * library used.
-   */
-/*  LIBXML_TEST_VERSION 
-  
-  fprintf (stderr, "return code %d\n", automatic_registration_xml_feed (argv[1]));
-
-  return 0;
-}*/

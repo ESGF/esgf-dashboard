@@ -45,6 +45,8 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stdout, USAGE, argv[0],argv[0],argv[0],argv[0]);
 	
+int msglevel=1;
+
 int
 main (int argc, char *argv[])
 {

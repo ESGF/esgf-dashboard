@@ -10,6 +10,7 @@
 #include "../include/ping.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
+#include "../include/debug.h"
 
 struct host * loadHosts(unsigned *numHosts) {
 	PGconn *conn;
@@ -17,7 +18,7 @@ struct host * loadHosts(unsigned *numHosts) {
 	int numTuples;
 
 	/* Connect to database */
-	fprintf(stderr,"*** Reloading host configuration ***\n");
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"*** Reloading host configuration ***\n");
 
 	char conninfo[1024] = {'\0'};
 
@@ -26,7 +27,7 @@ struct host * loadHosts(unsigned *numHosts) {
 
 	if (PQstatus(conn) != CONNECTION_OK)
         {
-                fprintf(stderr,"Connection to database failed: %s\n", PQerrorMessage(conn));
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
 		PQfinish(conn);
 		*numHosts = 0;
 		struct host* hosts = NULL; 
@@ -34,12 +35,13 @@ struct host * loadHosts(unsigned *numHosts) {
         }
 
 	// start transaction
-	fprintf(stderr,"Trying open transaction\nQuery: [%s]\n",QUERY3);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
 	res = PQexec(conn, QUERY3);
 
 	if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        fprintf(stderr, "Open transaction failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
 	        PQclear(res);
 		PQfinish(conn);
 		*numHosts = 0;
@@ -47,14 +49,14 @@ struct host * loadHosts(unsigned *numHosts) {
 		return hosts;
     	}
 	PQclear(res);
-	fprintf(stderr,"Transaction opened\n");
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
 
 	// submit SELECT query
 	res = PQexec(conn, QUERY1);
 
 	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        fprintf(stderr, "SELECT host/services did not work properly\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT host/services did not work properly\n");
 	        PQclear(res);
 		PQfinish(conn);
 		*numHosts = 0;
@@ -63,7 +65,7 @@ struct host * loadHosts(unsigned *numHosts) {
     	}
 
 	numTuples = PQntuples(res);
-	fprintf(stderr,"Number of Host/Services loaded from the DB = %d \n",numTuples);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of Host/Services loaded from the DB = %d \n",numTuples);
 
 	struct host* hosts = (struct host *) malloc(sizeof(struct host) * numTuples);
 	unsigned t;
@@ -76,11 +78,12 @@ struct host * loadHosts(unsigned *numHosts) {
 
 	// stop transaction
 	res = PQexec(conn, QUERY4);
-	fprintf(stderr,"Trying to close the transaction\nQuery: [%s]\n",QUERY4);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
 
 	if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        fprintf(stderr, "Close transaction failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
 	        PQclear(res);
 		PQfinish(conn);
 		*numHosts = 0;
@@ -89,7 +92,7 @@ struct host * loadHosts(unsigned *numHosts) {
 		return hosts;
     	}
 	PQclear(res);
-	fprintf(stderr,"Transaction closed\n");
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
 	
     	PQfinish(conn);
 	*numHosts = numTuples;
@@ -110,7 +113,7 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 
         if (PQstatus(conn) != CONNECTION_OK)
         {
-                fprintf(stderr,"Connection to database failed: %s", PQerrorMessage(conn));
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
 		PQfinish(conn);
 	  	return -1;	
         }
@@ -121,12 +124,12 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
-		fprintf(stderr,"METRICS Query -> index %d query %s\n",index, insert_query);
+		pmesg(LOG_DEBUG,__FILE__,__LINE__,"METRICS Query -> index %d query %s\n",index, insert_query);
 
 		res = PQexec(conn, insert_query);
 
   		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
-       		 	fprintf(stderr, "Insert METRICS query failed\n");
+       		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Insert METRICS query failed\n");
 
     		PQclear(res);
 	}
