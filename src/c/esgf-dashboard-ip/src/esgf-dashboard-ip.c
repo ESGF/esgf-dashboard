@@ -221,7 +221,7 @@ main (int argc, char **argv)
   int allprop;
  
   // setting log level to the lowest one (DEBUG) 
-  msglevel=3; //default = DEBUG
+  msglevel=2; //default = WARNING 
 
   /*
    * this initialize the library and check potential ABI mismatches
