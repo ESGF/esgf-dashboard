@@ -12,6 +12,77 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
+int remove_old_metrics() 
+{
+  PGconn *conn;
+  PGresult *res;
+
+  char query_history[2048] = { '\0' };
+  char conninfo[1024] = {'\0'};
+
+  /* Connect to database */
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics - START\n");
+
+
+  snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+  conn = PQconnectdb ((const char *) conninfo);
+
+  if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+	// start transaction
+
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",QUERY6);
+  res = PQexec(conn, QUERY6);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+  PQclear(res);
+
+	// Old metrics - DELETE Query 
+
+  snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
+  res = PQexec(conn, query_history);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"DELETE old metrics failed\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -4;
+    	}
+  PQclear(res);
+
+       // close transaction
+  res = PQexec(conn, QUERY4);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",QUERY4);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -3;
+    	}
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics - END\n");
+
+  PQclear(res);
+  PQfinish(conn);
+
+  return 0;
+}
+
+
 struct host * loadHosts(unsigned *numHosts) {
 	PGconn *conn;
 	PGresult *res;

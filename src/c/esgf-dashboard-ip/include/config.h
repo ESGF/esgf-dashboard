@@ -18,6 +18,8 @@ unsigned short THREAD_OPEN_MAX; // max threads #
 int PING_SPAN;
 int PING_SPAN_NO_HOSTS;
 int HOSTS_LOADING_SPAN;
+int HISTORY_MONTH;
+int HISTORY_DAY;
 
 struct geo_output_struct
 {

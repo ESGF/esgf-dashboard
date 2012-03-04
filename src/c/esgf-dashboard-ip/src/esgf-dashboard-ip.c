@@ -153,7 +153,7 @@ handle_error (int error)
 /* This is our thread function.  It is like main(), but for a thread*/
 
 //void *
-int threadFunc (void *arg)
+int automatic_registration_xml_feed (void *arg)
 {
   char *esgf_registration_xml_path;
 
@@ -185,7 +185,7 @@ int threadFunc (void *arg)
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Locked (%s)\n",target);
        
-  automatic_registration_xml_feed (target);
+  _automatic_registration_xml_feed (target);
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to release lock...\n");
   fl.l_type = F_UNLCK;  // set to unlock same region 
@@ -215,10 +215,11 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 10;
+  int iterator = 5;
   int opt_t = 0;
   int mandatory;
   int allprop;
+  int ret_code;
  
   // setting log level to the lowest one (DEBUG) 
   msglevel=2; //default = WARNING 
@@ -321,9 +322,13 @@ main (int argc, char **argv)
   while (iterator--)   //  TEST_ 
   //while (1)		// PRODUCTION_ 
     {
+      // Now removing old metrics 
+      if (ret_code=remove_old_metrics())
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Removing old metrics - FAILED! [Code %d]\n",ret_code);
+
       // Now calling the automatic registration_xml_feed into the parser
-      //automatic_registration_xml_feed (esgf_registration_xml_path);
-      threadFunc (esgf_registration_xml_path);
+      automatic_registration_xml_feed (esgf_registration_xml_path);
+
       if (counter == 0)
 	{
 	  if (hosts)
@@ -460,8 +465,10 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
+  HISTORY_MONTH=1;
+  HISTORY_DAY=0;
 				// TO DO: to add the node.manager.app.home as a mandatory property
-  *notfound = 11;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 13;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while (notfound)
@@ -533,7 +540,17 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      PING_SPAN = atoi (value_buffer);
 	      (*notfound)--;
 	    }
-	  if (!(strcmp (buffer, "esgf.ip.debug_level")))
+	  if (!(strcmp (buffer, "esgf.ip.history.month")))
+	    {
+	      HISTORY_MONTH = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.history.day")))
+	    {
+	      HISTORY_DAY = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.debug.level")))
 	    {
 	      msglevel = atoi (value_buffer);
 	      (*notfound)--;

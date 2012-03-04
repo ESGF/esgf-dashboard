@@ -107,6 +107,10 @@
 // QUERY QUERY_ADD_RSSFEED_TO_HOST binds a rssfeed to a host in the database
 #define QUERY_ADD_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
 
+// QUERY TO MANAGE THE METRICS HISTORY 
+#define QUERY_DELETE_OLD_METRICS  "DELETE from esgf_dashboard.service_status where timestamp < (now() - interval '%d months' - interval '%d day');"
+
+
 // HashTables dimensions
 #define HAST_TABLE_PROJECT_DIM		16
 #define HAST_TABLE_SERVICE_DIM		64		
@@ -249,6 +253,17 @@ populate_hash_table (PGconn * conn, char *query, HASHTBL ** pointer)
   return 0;
 }
 
+/* int history_metrics_management(PGconn *conn, char* QUERY, int hist_month, int hist_day)
+{
+  char query_history[2048] = { '\0' };
+
+  snprintf (query_history,sizeof (query_history),QUERY,hist_month, hist_day);
+  fprintf(stderr,"Query di rimozione delle metriche \n%s",query_history);
+  if (submit_query (conn, query_history))
+          return -1;
+   
+  return 0;
+}*/
 
 int manage_database_open_close_transaction(PGconn *conn, char* QUERY)
 {
@@ -321,6 +336,15 @@ parse_registration_xml_file (xmlNode * a_node)
 	 }
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction OK - Database Tables Lock: Ok\n");
 
+  /*pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing metrics older than %d month and %d days\n",HISTORY_MONTH, HISTORY_DAY);
+  if (history_metrics_management(conn,QUERY_DELETE_OLD_METRICS,HISTORY_MONTH, HISTORY_DAY)) {
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Removing older metrics FAILED! Please check!\n");
+      	  PQfinish (conn);
+	  //return -1;
+	 } 
+  	else
+  		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Old metrics removed!\n");
+   */
 
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
@@ -1183,7 +1207,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 
 int
-automatic_registration_xml_feed (char *registration_xml_file)
+_automatic_registration_xml_feed (char *registration_xml_file)
 {
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
