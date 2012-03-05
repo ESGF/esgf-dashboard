@@ -69,15 +69,23 @@ public class MostActiveProjectsAction extends GridBaseAction implements UserAwar
 			query = query + ") t INNER JOIN  esgf_dashboard.project_dash p ON p.id=t.idProject GROUP BY p.id, p.name, p.startDate, p.endDate ORDER BY ";
 			query = query + (FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "average");
 			
-			if (super.getDir()) 
+			/*if (super.getDir()) 
 				query = query + " ASC LIMIT ";
 			else 
 				query = query + " DESC LIMIT ";
 			
+			query = query + super.limit;*/
+						
+			if (super.getDir()) 
+				query = query + " ASC OFFSET " + super.start + " LIMIT ";
+			else 
+				query = query + " DESC OFFSET " + super.start + " LIMIT ";
+						
 			query = query + super.limit;
 			
+			
 			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
-			//System.out.println("!!! MostActiveProjects Query = "+query);
+			System.out.println("!!! MostActiveProjects Query = "+query);
 			cStmt = conn.prepareStatement(query);
 			
 			//cStmt.setTimestamp(1, new Timestamp(c.getTimeInMillis()));

@@ -74,14 +74,14 @@ public class MostActiveHostsAction extends GridBaseAction {
 			query = query + (FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "average");
 						
 			if (super.getDir()) 
-				query = query + " ASC LIMIT ";
+				query = query + " ASC OFFSET " + super.start + " LIMIT ";
 			else 
-				query = query + " DESC LIMIT ";
+				query = query + " DESC OFFSET " + super.start + " LIMIT ";
 						
 			query = query + super.limit;
 			
 			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
-			//System.out.println("!!! MostActiveHost Query = "+query);
+			System.out.println("!!! MostActiveHost Query = "+query);
 			cStmt = conn.prepareStatement(query);
 			
 			ResultSet rs = cStmt.executeQuery();
