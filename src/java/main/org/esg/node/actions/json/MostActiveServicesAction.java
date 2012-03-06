@@ -89,7 +89,7 @@ public class MostActiveServicesAction extends GridBaseAction {
 			query = query + super.limit;
 			
 			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
-			System.out.println("!!! MostActiveService Query = "+query);
+			//System.out.println("!!! MostActiveService Query = "+query);
 			cStmt = conn.prepareStatement(query);
 			
 			ResultSet rs = cStmt.executeQuery();

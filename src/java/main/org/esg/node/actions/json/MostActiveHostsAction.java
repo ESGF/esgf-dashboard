@@ -81,7 +81,7 @@ public class MostActiveHostsAction extends GridBaseAction {
 			query = query + super.limit;
 			
 			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
-			System.out.println("!!! MostActiveHost Query = "+query);
+			//System.out.println("!!! MostActiveHost Query = "+query);
 			cStmt = conn.prepareStatement(query);
 			
 			ResultSet rs = cStmt.executeQuery();

@@ -85,7 +85,7 @@ public class MostActiveProjectsAction extends GridBaseAction implements UserAwar
 			
 			
 			//System.out.println("Start: "+ super.start + " ||| size: "+ super.limit);
-			System.out.println("!!! MostActiveProjects Query = "+query);
+			//System.out.println("!!! MostActiveProjects Query = "+query);
 			cStmt = conn.prepareStatement(query);
 			
 			//cStmt.setTimestamp(1, new Timestamp(c.getTimeInMillis()));

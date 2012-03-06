@@ -83,3 +83,12 @@ ALTER TABLE ONLY hasfeed
 
 ALTER TABLE ONLY hasfeed 
     ADD CONSTRAINT hasfeed_idrssfeed_fkey FOREIGN KEY (idrssfeed) REFERENCES rssfeed(idrssfeed);
+
+
+-- Update of the host table to include number of registered users and node type 
+
+alter table esgf_dashboard.host add nodetype integer default 4;
+alter table esgf_dashboard.host add regusers integer default 0;
+alter table esgf_dashboard.host add suppemail character varying(255);
+alter table esgf_dashboard.host add defaultpeer integer;
+alter table esgf_dashboard.host add downloaddata bigint default 0;

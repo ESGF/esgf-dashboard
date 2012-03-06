@@ -336,16 +336,6 @@ parse_registration_xml_file (xmlNode * a_node)
 	 }
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction OK - Database Tables Lock: Ok\n");
 
-  /*pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing metrics older than %d month and %d days\n",HISTORY_MONTH, HISTORY_DAY);
-  if (history_metrics_management(conn,QUERY_DELETE_OLD_METRICS,HISTORY_MONTH, HISTORY_DAY)) {
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Removing older metrics FAILED! Please check!\n");
-      	  PQfinish (conn);
-	  //return -1;
-	 } 
-  	else
-  		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Old metrics removed!\n");
-   */
-
   // "Registration" iteration 
   for (cur_node = a_node; cur_node; cur_node = cur_node->next)	// loop on REGISTRATION elements
     {
