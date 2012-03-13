@@ -1,6 +1,6 @@
 /* Author: University of Salento and CMCC */
 
-function buildProjectTab(projectName, mapPanelTitle, descriptionPanelTitle, projectAvailability, projectFailure, serviceDistribution, descriptionPanelHelp, mapPanelHelp, gridPanelHelp) {
+function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPanelTitle, hostTypePanelTitle, mapsTitle, descriptionPanelTitle, projectAvailability, projectFailure, serviceDistribution, userDistribution, descriptionPanelHelp, mapPanelHelp, gridPanelHelp) {
 	var tabs = Ext.getCmp('tab-panel');	
 	tabs.add({
 		id: "tabProject",
@@ -46,6 +46,11 @@ function buildProjectTab(projectName, mapPanelTitle, descriptionPanelTitle, proj
         		    	    	title: serviceDistribution,
         		    	    	frame: true,
         		    	    	contentEl: 'containerServicesDistributionPieChart'
+        		    	    }),
+							new Ext.Panel({
+        		    	    	title: userDistribution,
+        		    	    	frame: true,
+        		    	    	contentEl: 'containerUsersDistributionPieChart'
         		    	    })
         		    	]
         		    })
@@ -58,7 +63,7 @@ function buildProjectTab(projectName, mapPanelTitle, descriptionPanelTitle, proj
 	        		}        			
         		}]
             }),
-            new Ext.Panel({
+            /*new Ext.Panel({
             	id: "projectMapPanel",
             	margins: '3 0 3 3',
                 cmargins: '3 3 3 3',
@@ -66,7 +71,7 @@ function buildProjectTab(projectName, mapPanelTitle, descriptionPanelTitle, proj
         		title: mapPanelTitle,
         		collapsible: true,
         		titleCollapse: true,
-        		contentEl: 'containerProjectMap',
+        		contentEl: 'containerAvailabilityMap',
         		tools: [{        			
 					id: "help",
 					qtip: "Help",
@@ -74,7 +79,90 @@ function buildProjectTab(projectName, mapPanelTitle, descriptionPanelTitle, proj
         				openHelpWindow(toolEl, mapPanelHelp);
 	        		}        			
         		}]
-            }),
+            }),*/
+            /*new Ext.TabPanel({
+		    	collapsible: true,
+		    	//margins: '3 0 3 3',
+		    	frame: true,
+		    	enableTabScroll: true,
+		    	activeTab: 0,
+		    	tools: [{
+					id: "help",
+					qtip: "Help",
+					handler: function(event, toolEl, panel, tc) {
+       				openHelpWindow(toolEl, mapPanelHelp);
+	        		}
+       		}],
+		    	items: [
+					new Ext.Panel({
+					    id: 'availabilityMapPanel',
+						title: availabilityPanelTitle,
+						frame: true,
+						listeners: {activate: loadProjectMap},
+						contentEl: 'containerAvailabilityMap'
+					}),
+		    	    new Ext.Panel({
+		    	    	id: 'registeredUsersPanel',
+		    	    	title: registeredUsersPanelTitle,
+		    	    	frame: true,
+		    	    	listeners: {activate: loadRegisteredUsersMap},
+						contentEl: 'containerUsersMap'
+		    	    }),
+					new Ext.Panel({
+						id: 'hostTypePanel',
+						title: hostTypePanelTitle,
+						frame: true,
+						listeners: {activate: loadNodeTypeMap},
+						contentEl: 'containerNodeTypeMap'
+					})
+		    	]
+		    }),*/
+            new Ext.Panel({
+               	id: "projectMapPanel",
+               	margins: '3 0 3 3',
+                   cmargins: '3 3 3 3',
+           		frame: true,
+           		title: mapsTitle,
+           		collapsible: true,
+           		titleCollapse: true,
+           		tools: [{
+    					id: "help",
+    					qtip: "Help",
+    					handler: function(event, toolEl, panel, tc) {
+           				openHelpWindow(toolEl, mapPanelHelp);
+    	        		}
+           		}],
+           		items: [
+    					new Ext.TabPanel({
+    						frame: true,
+    						enableTabScroll: true,
+    						activeTab: 0,
+    						items: [
+    							new Ext.Panel({
+    							    id: 'availabilityMapPanel',
+    								title: availabilityPanelTitle,
+    								frame: true,
+    								listeners: {activate: loadProjectMap},
+    								contentEl: 'containerAvailabilityMap'
+    							})/*,
+    						    new Ext.Panel({
+    						    	id: 'registeredUsersPanel',
+    						    	title: registeredUsersPanelTitle,
+    						    	frame: true,
+    						    	listeners: {activate: loadRegisteredUsersMap},
+    								contentEl: 'containerUsersMap'
+    						    }),
+    							new Ext.Panel({
+    								id: 'hostTypePanel',
+    								title: hostTypePanelTitle,
+    								frame: true,
+    								listeners: {activate: loadNodeTypeMap},
+    								contentEl: 'containerNodeTypeMap'
+    							})*/
+    						]
+    					}),
+           		]
+               }),
             new Ext.Panel({
             	id: "gridPanel",
             	margins: '3 0 3 3',

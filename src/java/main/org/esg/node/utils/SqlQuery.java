@@ -63,6 +63,8 @@ public enum SqlQuery {
 							  "FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.join1 j ON j.idProject=u.idProject " + 
 							  "WHERE u.endDate IS NULL AND j.idUser=?;"),
 
+	ALL_PROJECTS_NUM_USERS("SELECT SUM(regusers) as numUsers FROM esgf_dashboard.host;"),
+							  
 	/** ok **/							  
 	USER_CAN_VIEW_PROJECT("SELECT idProject FROM  esgf_dashboard.join1 WHERE idUser=? AND idProject=?;"),
 	
@@ -79,8 +81,10 @@ public enum SqlQuery {
 	 * @return name, description, startDate, endDate, hostsNumber, servicesNumber
 	 */
 	// ok. Query validated. 		 
-	PROJECT_BY_ID("SELECT p.name, p.description, p.startDate, p.endDate, (SELECT COUNT(DISTINCT s.idHost) FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance WHERE u.idProject=p.id) as hostsNumber, " + 
-				  	   "(SELECT COUNT(*) FROM  esgf_dashboard.uses u WHERE u.idProject=p.id) as servicesNumber " +
+	PROJECT_BY_ID("SELECT p.name, p.description, p.startDate, p.endDate, " + 
+				  "(SELECT COUNT(DISTINCT s.idHost) FROM  esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance WHERE u.idProject=p.id) as hostsNumber, " + 
+				  "(SELECT COUNT(*) FROM  esgf_dashboard.uses u WHERE u.idProject=p.id) as servicesNumber, " +
+				  "(SELECT sum(regusers) from esgf_dashboard.host h where h.id in (SELECT distinct(idHost) FROM esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance WHERE u.idProject=? AND u.endDate IS NULL and ((nodetype & '10000') > 0))) as totusers " +
 				  "FROM  esgf_dashboard.project_dash p " +
 				  "WHERE p.id=?;"),
 	
@@ -90,10 +94,10 @@ public enum SqlQuery {
 	 */
 	// ok. Query validated. Changed adding "h.name, h.ip, h.latitude, h.longitude, h.city" in the group by clause
 				  
-	PROJECT_HOSTS_POSITION("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city " +
+	PROJECT_HOSTS_POSITION("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
 						   "WHERE idProject IN (?) AND u.endDate IS NULL " +
-						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city " +
+						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "ORDER BY h.longitude, h.latitude;"),
 
     /**
@@ -173,8 +177,17 @@ public enum SqlQuery {
 								 	"WHERE idProject=? AND u.endDate IS NULL " + 
 								 	"GROUP BY idHost) t " +
 								 "INNER JOIN  esgf_dashboard.host h ON h.id=t.idHost " +
-								 "ORDER BY name ASC"),
-	
+								 "ORDER BY t.conteggio ASC"),
+								 
+/**
+    * @param PROJECT.idProject
+    * @return HOST.name, services_count
+   */
+   // ok. query validated.									  
+	USERS_ON_HOSTS_BY_PROJECT("SELECT h.name, h.ip, h.regusers FROM esgf_dashboard.host h where h.id in " +
+									"(SELECT distinct(idHost) FROM esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " + 
+									"WHERE u.idProject=? AND u.endDate IS NULL and ((nodetype & '10000') > 0))" +
+							  "ORDER BY h.regusers; "),			 
     /**
      * @param idServiceInstance
      * @return MIN timestamp, MAX timestamp

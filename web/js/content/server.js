@@ -210,6 +210,17 @@ function createHostMap(lat, lng, name, activity) {
 	});		
 }
 
+/** START **/
+/*function createEarthHostMap(lat, lng, name, activity) {
+	initGE(lat, lng, name, activity);
+}*/
+
+function createEarthHostMap(lat, lng, name, activity) {
+	ret=initGE(lat, lng, name, activity);
+	return ret;
+}
+/** END **/
+
 // return true if there are not valid controls
 function checkForm(x) {
 	var controlli = [ 'dataInizio', 'oraInizio', 'dataFine', 'oraFine' ];

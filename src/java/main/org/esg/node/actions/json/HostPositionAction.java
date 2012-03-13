@@ -45,7 +45,7 @@ public class HostPositionAction extends ActionSupport {
 			conn = Constants.DATASOURCE.getConnection();
 			PreparedStatement stmt = conn.prepareStatement(SqlQuery.PROJECT_HOSTS_POSITION.getSql());
 			stmt.setInt(1, idProjects.get(0));
-			//System.out.println("PROJECT_HOST_POSITION(0) ="+ stmt.toString());
+			System.out.println("PROJECT_HOST_POSITION(0) ="+ stmt.toString());
 			
 			ResultSet rs = stmt.executeQuery();
 			hosts = new LinkedList<HostPosition>();
@@ -55,6 +55,7 @@ public class HostPositionAction extends ActionSupport {
 				if(rs.getBigDecimal("latitude") == null || rs.getBigDecimal("longitude") == null) continue;
 				HostPosition host = new HostPosition();
 				host.setId(rs.getInt("id"));
+				host.setRegUsers(rs.getInt("regusers"));
 				host.setName(rs.getString("name"));
 				host.setIp(rs.getString("ip"));
 				host.setLatitude(rs.getBigDecimal("latitude"));
@@ -65,7 +66,7 @@ public class HostPositionAction extends ActionSupport {
 				host.setIdProjects(idProjects);
 				host.setNumInstances(countServicesOnHost.getCount(idProjects.get(0), host.getId()));
 				hosts.add(host);
-				//System.out.println("HostPositionAction execute Un nuovo host è stato aggiunto");
+				//System.out.println("HostPositionAction execute Un nuovo host ÔøΩ stato aggiunto");
 			}
 			rs.close();
 			stmt.close();
@@ -90,7 +91,7 @@ public class HostPositionAction extends ActionSupport {
 			for(int index = 1; index < idProjects.size(); index ++)
 				arg += ", ?"; 
 			String query = SqlQuery.PROJECT_HOSTS_POSITION.getSql().replace("?", arg);
-			//System.out.println("PROJECT_HOSTS_POSITION query stmt1 = "+ query);
+			System.out.println("PROJECT_HOSTS_POSITION query stmt1 = "+ query);
 			
 			PreparedStatement stmt1 = conn.prepareStatement(query);
 			
@@ -119,6 +120,7 @@ public class HostPositionAction extends ActionSupport {
 				host.setId(rs1.getInt("id"));
 				host.setName(rs1.getString("name"));
 				host.setIp(rs1.getString("ip"));
+				host.setRegUsers(rs1.getInt("regusers"));
 				host.setLatitude(rs1.getBigDecimal("latitude"));
 				host.setLongitude(rs1.getBigDecimal("longitude"));
 				host.setCity(rs1.getString("city"));

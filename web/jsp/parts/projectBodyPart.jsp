@@ -8,9 +8,20 @@
 	String iframe = request.getParameter("iframe");
 %>
 
-<div id="containerProjectMap" class="x-hide-display">
+<div id="containerAvailabilityMap" class="x-hide-display">
 	<div id="map_canvas" style="height: 500;"></div>
 </div>
+
+<div id="containerUsersMap" class="x-hide-display">
+	<div id="map_canvas_users" style="height: 500;"></div>
+</div>
+
+<div id="containerNodeTypeMap" class="x-hide-display">
+	<div id="map_canvas_nodetype" style="height: 500;"></div>
+</div>
+
+
+
 <div id="projectContent" class="x-hide-display">
 	<table align="left" cellspacing="5" width="100%" height="214">
 		<tbody>
@@ -48,6 +59,20 @@
 				<td><p><s:property value="project.servicesNumber" /></p></td>
 			</tr>
 			<tr>
+				<td><p style="font-weight: bold;"><s:text name="project.usersNumber" /></p></td>
+				<td><p><s:property value="project.regUserNumber" /></p></td>
+				<td style="text-align: left"><p style="font-weight: bold;">Time Interval</p></td>
+				<td>
+					<select onchange="reloadAvgProjectActivityCharts(this.value);">
+						<option value="5">5 minutes</option>
+						<option value="60">1 hour</option>
+						<option value="1440">1 day</option>
+						<option value="10080">1 week</option>
+						<option value="43200">1 month</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
 				<td style="text-align: left">
 					<p style="font-weight: bold;">
 						<s:text name="project.permLink" />	
@@ -59,16 +84,6 @@
 							code
 						</a>
 					</p>
-				</td>
-				<td style="text-align: left"><p style="font-weight: bold;">Time Interval</p></td>
-				<td>
-					<select onchange="reloadAvgProjectActivityCharts(this.value);">
-						<option value="5">5 minutes</option>
-						<option value="60">1 hour</option>
-						<option value="1440">1 day</option>
-						<option value="10080">1 week</option>
-						<option value="43200">1 month</option>
-					</select>
 				</td>
 			</tr>
 			<tr>
@@ -95,6 +110,11 @@
 	<div id="containerServicesDistributionPieChart">
 		<div id="servicesDistributionPieChart"></div>						
 	</div>
+
+	<div id="containerUsersDistributionPieChart">
+		<div id="usersDistributionPieChart"></div>						
+	</div>
+	
 	<div id="containerAvgProjectActivityPieChart">
 		<div id="avgProjectActivityPieChart"></div>
 	</div>
@@ -102,6 +122,7 @@
 	<div id="containerAvgProjectActivityBarChartOff">
 		<div id="avgProjectActivityBarChartOff"></div>
 	</div>
+		
 </div>
 <div id="infoWindow" style="display: none;"></div>
 

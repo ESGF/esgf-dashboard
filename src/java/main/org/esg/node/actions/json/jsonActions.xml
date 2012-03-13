@@ -102,6 +102,14 @@
 			</result>
 		</action>
 		
+		<action name="UsersOnHostsByProjectPieChart" class="org.esg.node.actions.json.UsersOnHostsByProjectPieChartAction">
+			<result type="json">
+				<param name="root">pieChart</param> <!-- Set the root object -->
+				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
+				<param name="ignoreHierarchy">false</param> 
+			</result>
+		</action>
+		
 		<action name="AvgProjectActivityPieChart" class="org.esg.node.actions.json.AvgProjectActivityPieChartAction">
 			<result type="json">
 				<param name="root">pieChart</param> <!-- Set the root object -->

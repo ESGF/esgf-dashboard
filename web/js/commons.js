@@ -4,14 +4,38 @@ function generateWelcomeMsg(name, surname) {
 	document.getElementById("loggedInUserSpan").appendChild(document.createTextNode(name + " " + surname));
 }
 
+
 function chooseIcon(avgActivity) {
+	if(avgActivity < 10)
+		return pathURL + "img/0.svg";
+	else if(avgActivity < 20)
+		return pathURL + "img/1.png";
+	else if(avgActivity < 30)
+		return pathURL + "img/2.png";
+	else if(avgActivity < 40)
+		return pathURL + "img/3.png";
+	else if(avgActivity < 50)
+		return pathURL + "img/4.png";
+	else if(avgActivity < 60)
+		return pathURL + "img/5.png";
+	else if(avgActivity < 70)
+		return pathURL + "img/6.png";
+	else if(avgActivity < 80)
+		return pathURL + "img/7.png";
+	else if(avgActivity < 90)
+		return pathURL + "img/8.png";
+	else
+		return pathURL + "img/9.png";
+}
+
+/*function chooseIcon(avgActivity) {
 	if(avgActivity < 40)
 		return pathURL + "img/redMarker.png";
 	else if(avgActivity < 80)
 		return pathURL + "img/yellowMarker.png";
 	else
 		return pathURL + "img/greenMarker.png";
-}
+}*/
 
 function urlencode (str) {
     str = (str+'').toString();

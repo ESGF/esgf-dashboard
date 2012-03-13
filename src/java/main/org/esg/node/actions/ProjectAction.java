@@ -37,7 +37,9 @@ public class ProjectAction extends ActionSupport implements UserAware {
 			rs.close();
 			stmt.close();
 			stmt = conn.prepareStatement(SqlQuery.PROJECT_BY_ID.getSql());
+			System.out.println("QUERY = "+ SqlQuery.PROJECT_BY_ID.getSql());
 			stmt.setInt(1, idProject);
+			stmt.setInt(2, idProject);
 			rs = stmt.executeQuery();
 			if(rs.next()) {
 				project = new Project();
@@ -62,6 +64,7 @@ public class ProjectAction extends ActionSupport implements UserAware {
 				project.setEndTime(time);
 				project.setHostsNumber(rs.getInt("hostsNumber"));
 				project.setServicesNumber(rs.getInt("servicesNumber"));
+				project.setRegUserNumber(rs.getInt("totusers"));
 			}
 			rs.close();
 			stmt.close();

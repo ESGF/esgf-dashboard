@@ -487,8 +487,27 @@
 							if(swf && swf.load)
 								swf.load(get_data_avgHostActivityPie());
 						}
-						if(embedMap)
-							createHostMap(<s:property value="server.latitude" default="null" />, <s:property value="server.longitude" default="null" />, serverName, dati.activity);
+						if(embedMap) {
+							/** START 
+							if (google.earth.isInstalled())
+								createEarthHostMap(<s:property value="server.latitude"
+default="null" />, <s:property value="server.longitude"
+default="null" />, serverName, dati.activity);
+							else
+								createHostMap(<s:property value="server.latitude" default="null"
+/>, <s:property value="server.longitude" default="null" />,
+serverName, dati.activity);
+						 END **/
+							if (google.earth.isInstalled()) {
+								var ret = createEarthHostMap(<s:property value="server.latitude" default="null" />, <s:property value="server.longitude" default="null" />, serverName, dati.activity);
+								if (!ret)
+									createHostMap(<s:property value="server.latitude" default="null"/>, <s:property value="server.longitude" default="null" />, serverName, dati.activity);
+							}
+							else
+								createHostMap(<s:property value="server.latitude" default="null"/>, <s:property value="server.longitude" default="null" />,serverName, dati.activity);
+						}
+/*						if(embedMap)
+							createHostMap(<s:property value="server.latitude" default="null" />, <s:property value="server.longitude" default="null" />, serverName, dati.activity);*/
 		            },
 					failure: onFailure,
 		            scope: this,

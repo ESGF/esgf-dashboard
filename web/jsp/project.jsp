@@ -17,8 +17,10 @@
 			var idProject = '<s:property value="idProject" />';
 			var nullValue = '{"bg_colour":"#DFE8F6", "border":1, "elements":[{"type":"pie","values":[]}],"title":{"style":"{font-size: 12px; color:#000000; font-family: Arial; text-align: center;}","text":"No Data to Show"}}';			
 			Ext.onReady(function () {
+				//alert('versione nuova1');
 				loadAllProject();
-				loadProjectMap();
+				//alert('versione nuova2');
+				// loadProjectMap();
 			});
 
 			function redirectToHost(idHost) {

@@ -2,18 +2,23 @@
     pageEncoding="ISO-8859-1"%>
 <%@ taglib prefix="s" uri="/struts-tags" %>
 
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="../js/earth/earthInit.js"></script>
 <script type="text/javascript" src="../js/content/project.js"></script>
 <script type="text/javascript" src="../js/content/commonsProject.js"></script>
+
 <script type="text/javascript">
 //<![CDATA[
     function loadAllProject() {
-    	buildProjectTab('<s:text name="project.tab.main.title"><s:param><s:property value="project.name" /></s:param></s:text>', '<s:text name="project.panel.map.title" />', 
-				'<s:text name="project.panel.description.title" />', 
-				'<s:text name="project.panel.projectAvailability" />', '<s:text name="project.panel.projectFailure" />', '<s:text name="project.panel.serviceDistribution" />', 
+    	buildProjectTab('<s:text name="project.tab.main.title"><s:param><s:property value="project.name" /></s:param></s:text>', '<s:text name="project.panel.map.availability.title" />', 
+    			'<s:text name="project.panel.map.registeredusers.title" />','<s:text name="project.panel.map.nodetype.title" />', '<s:text name="project.panel.map.title" />','<s:text name="project.panel.description.title" />', 
+				'<s:text name="project.panel.projectAvailability" />', '<s:text name="project.panel.projectFailure" />', '<s:text name="project.panel.serviceDistribution" />',
+				'<s:text name="project.panel.userDistribution" />',
 				'<s:text name="help.project.descriptionPanel" />', '<s:text name="help.project.mapPanel" />', '<s:text name="help.project.gridPanel" />');
     	loadAvgProjectActivityPieChart(true, <s:text name="default.timespan" />);
     	loadAvgProjectActivityBarChartOff(true, <s:text name="default.timespan" />);
     	loadServicesDistribution();
+    	loadUsersDistribution();
     }       
     
 	function loadProjectMap() {
@@ -29,6 +34,38 @@
 				endDate: (new Date).format("U")
 			}
         });	
+	}
+	
+	function loadRegisteredUsersMap() {
+		var url = '<s:url action="HostPositionBySingleProject" namespace="/json"
+encode="false" />';
+
+		Ext.Ajax.request({
+           url: url,
+           success: onSuccessUsers,
+           failure: onFailure,
+           scope: this,
+           params: {
+				idProjects: [ idProject ],
+				endDate: (new Date).format("U")
+			}
+       });
+	}
+
+	function loadNodeTypeMap() {
+		var url = '<s:url action="HostPositionBySingleProject" namespace="/json"
+encode="false" />';
+
+		Ext.Ajax.request({
+           url: url,
+           success: onSuccessNodeType,
+           failure: onFailure,
+           scope: this,
+           params: {
+				idProjects: [ idProject ],
+				endDate: (new Date).format("U")
+			}
+       });
 	}
 
 	var openedWindow = null;
@@ -218,6 +255,7 @@
 			'<tr><td><s:text name="project.infoWindow.table.row.host" /></td><td><a href="#" onclick="redirectToHost({0}); return false;">{1}</a></td></tr>' +
 			'<tr><td><s:text name="project.infoWindow.table.row.ip" /></td><td>{2}</td></tr>' +
 			'<tr><td><s:text name="project.infoWindow.table.row.city" /></td><td>{3}</td></tr>' + 
+			'<tr><td><s:text name="project.infoWindow.table.row.regusers" /></td><td>{8}</td></tr>' +			
 			'<tr><td><s:text name="project.infoWindow.table.row.activity" /></td><td>{4} <s:text name="project.infoWindow.table.row.activity.timeFrame" /></td></tr>' + 
 			'<tr><td><s:text name="project.infoWindow.table.row.services" /></td><td>{5}&nbsp;&nbsp;&nbsp;' + 
 				'<a href="#" onclick="loadProjectActivityChart(' + host.id + ', \'{6}\', ' + host.numInstances + ');return false;"><s:text name="project.infoWindow.table.row.services.details" /></a></td></tr>' + 
@@ -225,7 +263,7 @@
 			'</tbody></table>', host.id, 
 			host.name==null? unknown: host.name, host.ip, host.city==null? unknown: host.city, 
 			host.activity==null? unknown: (host.activity + "%"), host.numInstances, host.name==null? host.ip: host.name, 
-			list);				
+			list,host.regUsers);				
 	}
 	var permLinkWindow = null;
 	function showPermLink() {
@@ -282,6 +320,12 @@
 	function get_data_servicesDistributionPie() {
 		if(dataServicesDistributionPie == 'null') return nullValue; 
 		return dataServicesDistributionPie;		
+	}
+	
+	var dataUsersDistributionPie = 'null';
+	function get_data_usersDistributionPie() {
+		if(dataUsersDistributionPie == 'null') return nullValue; 
+		return dataUsersDistributionPie;		
 	}
 		
 	function loadAvgProjectActivityPieChart(embed, timeSpan) {
@@ -367,6 +411,30 @@
 		});	
 	}
 
+	var usersDistributionWindow = null;
+	function loadUsersDistribution() {
+		var urlPie = '<s:url action="UsersOnHostsByProjectPieChart" namespace="/json" encode="false" />';
+		Ext.Ajax.request({
+            url: urlPie,
+            success: function (response, opts) {            
+				dataUsersDistributionPie = response.responseText;
+				swfobject.embedSWF("../flash/ofc.swf", "usersDistributionPieChart", "100%", "170", "9.0.0", "../flash/expressInstall.swf",  
+					{ "get-data": "get_data_usersDistributionPie", "loading": '<s:text name="chart.loadingMessage" />' }, { 
+						allowScriptAccess: "always",
+			            bgcolor: "#ffffff",
+			            wmode: "transparent" // opaque
+			        }, false
+				);								
+            },
+			failure: onFailure,
+            scope: this,
+            params: {
+            	idProject: idProject            	
+            }
+		});	
+	}
+	
+	
 	function reloadAvgProjectActivityCharts(timeSpan) {
 		loadAvgProjectActivityPieChart(false, timeSpan);
 		loadAvgProjectActivityBarChartOff(false, timeSpan);		 

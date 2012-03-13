@@ -14,6 +14,7 @@ public class HostPosition extends HostBase implements Serializable {
 	private Number latitude = null;
 	private Number longitude = null;
 	private Number activity = null;
+	private Integer regUsers = null;
 	private List<Integer> idProjects = null;
 	
 	public String getCity() {
@@ -51,5 +52,18 @@ public class HostPosition extends HostBase implements Serializable {
 	}
 	public List<Integer> getIdProjects() {
 		return idProjects;
+	}
+
+	/**
+	 * @return the regUsers
+	 */
+	public Integer getRegUsers() {
+		return regUsers;
+	}
+	/**
+	 * @param regUsers the regUsers to set
+	 */
+	public void setRegUsers(Integer regUsers) {
+		this.regUsers = regUsers;
 	}
 }

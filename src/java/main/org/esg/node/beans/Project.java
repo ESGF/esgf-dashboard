@@ -15,6 +15,7 @@ public class Project extends ProjectBase implements Serializable {
 	private String endTime = null;
 	private Integer hostsNumber = null;
 	private Integer servicesNumber = null;
+	private Integer regUserNumber = null;
 	
 	public String getDescription() {
 		return description;
@@ -57,5 +58,17 @@ public class Project extends ProjectBase implements Serializable {
 	}
 	public Integer getServicesNumber() {
 		return servicesNumber;
+	}
+	/**
+	 * @return the regUserNumber
+	 */
+	public Integer getRegUserNumber() {
+		return regUserNumber;
+	}
+	/**
+	 * @param regUserNumber the regUserNumber to set
+	 */
+	public void setRegUserNumber(Integer regUserNumber) {
+		this.regUserNumber = regUserNumber;
 	}
 }
