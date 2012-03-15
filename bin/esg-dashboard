@@ -402,7 +402,7 @@ setup_dashboard_provider() {
     fi
 
     pushd ${esgf_dashboard_ip_dist_dir}
-    ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "[FAIL]")
+    ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "(Hmmm... not respecting \"make clean\" - eh, no worries)")
     echo "./configure --prefix=${esgf_dashboard_ip_install_dir}"
     if ./configure --prefix=${esgf_dashboard_ip_install_dir} --with-postgres-path=${postgress_install_dir} --with-geoip-prefix-path=${geoip_install_dir} \
 	&& make \
