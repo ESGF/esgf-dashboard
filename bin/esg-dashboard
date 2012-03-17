@@ -195,6 +195,16 @@ setup_dashboard_webapp() {
         fi
 
         echo
+
+        dobackup="Y"
+        read -p "Do you want to make a back up of the existing database schema [${node_db_name}:dashboard]?? [Y/n] " dobackup
+        [ -z "${dobackup}" ] && dobackup=${default}
+        if [ "${dobackup}" = "Y" ] || [ "${dobackup}" = "y" ]; then
+            echo "Creating a backup archive of the dashboard database [${node_db_name}:dashboard]"
+            backup_db -db ${node_db_name} -s dashboard
+        fi
+        unset dobackup
+        echo
     fi
 
     mkdir -p ${workdir}
@@ -605,7 +615,7 @@ clean_dashboard_database_subsystem_installation() {
             [ $? != 0 ] && echo " WARNING: Could not verify ${scripts_dir}/esg-dashboard, aborting this uninstall" && return 3
             echo "[VERIFIED]"
 
-            backup_db esgcet dashboard
+            backup_db -db ${node_db_name} -s dashboard
             echo "removing esgf_dashboard.* schema and tables and DATA"
             ${cdat_home}/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@localhost:${postgress_port}/esgcet -d 0
             [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
