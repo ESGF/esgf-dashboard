@@ -605,7 +605,7 @@ clean_dashboard_database_subsystem_installation() {
             [ $? != 0 ] && echo " WARNING: Could not verify ${scripts_dir}/esg-dashboard, aborting this uninstall" && return 3
             echo "[VERIFIED]"
 
-            backup_db esgcet dashboard
+            backup_db -db esgcet -s dashboard
             echo "removing esgf_dashboard.* schema and tables and DATA"
             ${cdat_home}/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@localhost:${postgress_port}/esgcet -d 0
             [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
