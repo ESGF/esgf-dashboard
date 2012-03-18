@@ -100,6 +100,14 @@ public enum SqlQuery {
 						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "ORDER BY h.longitude, h.latitude;"),
 
+						   
+	PROJECT_HOSTS_POSITION_REG_USERS("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
+						   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
+						   "WHERE idProject IN (?) AND u.endDate IS NULL and ((h.nodetype & '10000')>0)" +
+						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
+						   "ORDER BY h.regusers DESC;"),	
+						   //"ORDER BY h.longitude, h.latitude;"),						   
+						   
     /**
      * @param HOST.id
      * @param list of PROJECT.id
@@ -186,7 +194,7 @@ public enum SqlQuery {
    // ok. query validated.									  
 	USERS_ON_HOSTS_BY_PROJECT("SELECT h.name, h.ip, h.regusers FROM esgf_dashboard.host h where h.id in " +
 									"(SELECT distinct(idHost) FROM esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " + 
-									"WHERE u.idProject=? AND u.endDate IS NULL and ((nodetype & '10000') > 0))" +
+									"WHERE u.idProject=? AND u.endDate IS NULL and ((h.nodetype & '10000') > 0))" +
 							  "ORDER BY h.regusers; "),			 
     /**
      * @param idServiceInstance

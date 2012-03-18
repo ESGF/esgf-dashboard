@@ -202,7 +202,7 @@ function createHostMap(lat, lng, name, activity) {
 	    position: latlng,
 	    map: serverMap,
 		title: name,
-	    icon: chooseIcon(activity)
+	    icon: chooseIcon(activity,"png")
 	});
 	
 	google.maps.event.addListener(marker, 'click', function() {

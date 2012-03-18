@@ -1,5 +1,7 @@
 /* Author: University of Salento and CMCC */
 
+var gridloaded=0;
+
 function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPanelTitle, hostTypePanelTitle, mapsTitle, descriptionPanelTitle, projectAvailability, projectFailure, serviceDistribution, userDistribution, descriptionPanelHelp, mapPanelHelp, gridPanelHelp) {
 	var tabs = Ext.getCmp('tab-panel');	
 	tabs.add({
@@ -144,14 +146,14 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
     								frame: true,
     								listeners: {activate: loadProjectMap},
     								contentEl: 'containerAvailabilityMap'
-    							})/*,
+    							}),
     						    new Ext.Panel({
     						    	id: 'registeredUsersPanel',
     						    	title: registeredUsersPanelTitle,
     						    	frame: true,
     						    	listeners: {activate: loadRegisteredUsersMap},
     								contentEl: 'containerUsersMap'
-    						    }),
+    						    })/*,
     							new Ext.Panel({
     								id: 'hostTypePanel',
     								title: hostTypePanelTitle,

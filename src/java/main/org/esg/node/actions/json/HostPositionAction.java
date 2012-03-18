@@ -61,6 +61,7 @@ public class HostPositionAction extends ActionSupport {
 				host.setLatitude(rs.getBigDecimal("latitude"));
 				host.setLongitude(rs.getBigDecimal("longitude"));
 				host.setCity(rs.getString("city"));
+				host.setRegUsers(rs.getInt("regusers"));
 				Number activity = avgHostActivity.getHostActivity(conn,idProjects.get(0), host.getId(), timeSpan, endDateTime);
 				host.setActivity(activity == null? null: Math.round(activity.doubleValue()*100.)/100.);
 				host.setIdProjects(idProjects);
@@ -81,6 +82,8 @@ public class HostPositionAction extends ActionSupport {
 		return SUCCESS;
 	}
 
+	
+	
 	public String execute1() throws Exception {
 		Connection conn = null;		
 		try {
@@ -155,6 +158,59 @@ public class HostPositionAction extends ActionSupport {
 		}		
 		return SUCCESS;		
 	}
+	
+	
+	/* Start */
+	
+	public String execute2() throws Exception {
+		Connection conn = null;
+		try {
+			
+			conn = Constants.DATASOURCE.getConnection();
+			PreparedStatement stmt = conn.prepareStatement(SqlQuery.PROJECT_HOSTS_POSITION_REG_USERS.getSql());
+			stmt.setInt(1, idProjects.get(0));
+			System.out.println("PROJECT_HOST_POSITION(0) ="+ stmt.toString());
+			
+			ResultSet rs = stmt.executeQuery();
+			hosts = new LinkedList<HostPosition>();
+			AvgHostActivity avgHostActivity = new AvgHostActivity(conn);
+			CountServicesOnHost countServicesOnHost = new CountServicesOnHost(conn, true);			
+			while(rs.next()) { 
+				if(rs.getBigDecimal("latitude") == null || rs.getBigDecimal("longitude") == null) continue;
+				HostPosition host = new HostPosition();
+				host.setId(rs.getInt("id"));
+				host.setRegUsers(rs.getInt("regusers"));
+				host.setName(rs.getString("name"));
+				host.setIp(rs.getString("ip"));
+				host.setLatitude(rs.getBigDecimal("latitude"));
+				host.setLongitude(rs.getBigDecimal("longitude"));
+				host.setCity(rs.getString("city"));
+				host.setRegUsers(rs.getInt("regusers"));
+				Number activity = avgHostActivity.getHostActivity(conn,idProjects.get(0), host.getId(), timeSpan, endDateTime);
+				host.setActivity(activity == null? null: Math.round(activity.doubleValue()*100.)/100.);
+				host.setIdProjects(idProjects);
+				host.setNumInstances(countServicesOnHost.getCount(idProjects.get(0), host.getId()));
+				hosts.add(host);
+				//System.out.println("HostPositionAction execute Un nuovo host � stato aggiunto");
+			}
+			rs.close();
+			stmt.close();
+			avgHostActivity.close();
+			countServicesOnHost.close();
+		} catch(SQLException e) {
+			//System.out.println("Error Message HostPositionAction execute " + e.getMessage());
+			return ERROR;
+		} finally {
+			if(conn != null) conn.close();
+		}
+		return SUCCESS;
+	}
+
+	
+	/* end */
+	
+	
+	
 	
 	public List<HostPosition> getHosts() {
 		return hosts;

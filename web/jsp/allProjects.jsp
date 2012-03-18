@@ -253,6 +253,8 @@
 				}
 			}
 
+			// open window on marker click
+			
 			function markerOnClickListener(host) {
 				if(openedWindow != null)
 					openedWindow.close();

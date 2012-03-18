@@ -147,5 +147,31 @@
 			map.fitBounds(bounds);
 		});
 	}
+	
+	function ScaleControl(controlDiv, map, bounds) {
+		controlDiv.style.padding = '5px';
+		
+		var controlUI = document.createElement('DIV');
+		controlUI.style.backgroundColor = 'white';
+		controlUI.style.borderStyle = 'solid';
+		controlUI.style.borderWidth = '2px';
+		controlUI.style.cursor = 'pointer';
+		controlUI.style.textAlign = 'center';
+		controlUI.title = '<s:text name="infoWindow.scaleControl.controlUI.title" />';
+		controlDiv.appendChild(controlUI);
+		
+		// Set CSS for the control interior
+		var controlText = document.createElement('DIV');
+		controlText.style.fontFamily = 'Arial,sans-serif';
+		controlText.style.fontSize = '12px';
+		controlText.style.paddingLeft = '4px';
+		controlText.style.paddingRight = '4px';
+		controlText.innerHTML = '<s:text name="infoWindow.scaleControl.controlText" />';
+		controlUI.appendChild(controlText);
+		
+		google.maps.event.addDomListener(controlUI, 'click', function() {
+			map.fitBounds(bounds);
+		});
+	}
 //]]>
 </script>

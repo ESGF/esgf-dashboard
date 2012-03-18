@@ -37,8 +37,7 @@
 	}
 	
 	function loadRegisteredUsersMap() {
-		var url = '<s:url action="HostPositionBySingleProject" namespace="/json"
-encode="false" />';
+		var url = '<s:url action="HostPositionBySingleProjectRegUsers" namespace="/json" encode="false" />';
 
 		Ext.Ajax.request({
            url: url,
@@ -53,8 +52,7 @@ encode="false" />';
 	}
 
 	function loadNodeTypeMap() {
-		var url = '<s:url action="HostPositionBySingleProject" namespace="/json"
-encode="false" />';
+		var url = '<s:url action="HostPositionBySingleProject" namespace="/json" encode="false" />';
 
 		Ext.Ajax.request({
            url: url,

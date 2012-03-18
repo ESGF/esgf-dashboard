@@ -5,28 +5,30 @@ function generateWelcomeMsg(name, surname) {
 }
 
 
-function chooseIcon(avgActivity) {
+function chooseIcon(avgActivity,imgtype,file_ext) {
 	if(avgActivity < 10)
-		return pathURL + "img/0.svg";
+		return pathURL + "img/map_icons/"+ imgtype + "/0." + file_ext;
 	else if(avgActivity < 20)
-		return pathURL + "img/1.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/1." + file_ext;
 	else if(avgActivity < 30)
-		return pathURL + "img/2.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/2." + file_ext;
 	else if(avgActivity < 40)
-		return pathURL + "img/3.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/3." + file_ext;
 	else if(avgActivity < 50)
-		return pathURL + "img/4.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/4." + file_ext;
 	else if(avgActivity < 60)
-		return pathURL + "img/5.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/5." + file_ext;
 	else if(avgActivity < 70)
-		return pathURL + "img/6.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/6." + file_ext;
 	else if(avgActivity < 80)
-		return pathURL + "img/7.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/7." + file_ext;
 	else if(avgActivity < 90)
-		return pathURL + "img/8.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/8." + file_ext;
 	else
-		return pathURL + "img/9.png";
+		return pathURL + "img/map_icons/"+ imgtype + "/9." + file_ext;
 }
+
+
 
 /*function chooseIcon(avgActivity) {
 	if(avgActivity < 40)
