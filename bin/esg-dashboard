@@ -524,14 +524,8 @@ setup_dashboard_database() {
     echo "*******************************"
     echo
     
+    # The Node Manager installer should have already created the database
     start_postgress
-
-    #Create the database...
-    echo "Creating esg node database: [${node_db_name}]"
-    echo "${postgress_install_dir}/bin/createdb ${node_db_name}"
-    PGPASSWORD=${PGPASSWORD:-${pg_sys_acct_passwd}} ${postgress_install_dir}/bin/createdb ${node_db_name} >& /dev/null
-    (( $? > 1 )) && echo " ERROR: Could not create esg node database: ${node_db_name}" && return 0
-    echo 
 
     mkdir -p ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db
     pushd ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db >& /dev/null
