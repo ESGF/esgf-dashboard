@@ -527,6 +527,17 @@ setup_dashboard_database() {
     # The Node Manager installer should have already created the database
     start_postgress
 
+    # Determine if the node database already exists
+    if [ -z "$(postgres_list_dbs ${node_db_name})" ] ; then
+        #Create the database...
+        echo "Creating esgf node database: [${node_db_name}]"
+        echo "createdb ${node_db_name}"
+        PGPASSWORD=${PGPASSWORD:-${pg_sys_acct_passwd}} createdb ${node_db_name} >& /dev/null
+        (( $? > 1 )) && echo " ERROR: Could not create esgf node database: ${node_db_name}" && return 0
+    else
+        echo "Database '${node_db_name}' already exists, not recreating for the esgf dashboard"
+    fi
+
     mkdir -p ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db
     pushd ${workdir}/${node_dist_dir:-esgf-dashboard-${esgf_dashboard_version}}/db >& /dev/null
     [ $? != 0 ] && echo " ERROR: Could not find node distribution dir ${workdir}/${node_dist_dir}" && checked_done 1
