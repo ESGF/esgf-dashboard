@@ -20,7 +20,9 @@
 				//alert('versione nuova1');
 				loadAllProject();
 				//alert('versione nuova2');
-				// loadProjectMap();
+				//loadProjectMap();
+				//loadRegisteredUsersMap();
+				//loadNodeTypeMap();
 			});
 
 			function redirectToHost(idHost) {

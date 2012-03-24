@@ -9,7 +9,7 @@
 %>
 
 <div id="containerAvailabilityMap" class="x-hide-display">
-	<div id="map_canvas" style="height: 500;"></div>
+	<div id="map_canvas_availability" style="height: 500;"></div>
 </div>
 
 <div id="containerUsersMap" class="x-hide-display">

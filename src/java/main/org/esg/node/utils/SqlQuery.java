@@ -100,13 +100,19 @@ public enum SqlQuery {
 						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "ORDER BY h.longitude, h.latitude;"),
 
-						   
+	// RegisteredUsers Map					   
 	PROJECT_HOSTS_POSITION_REG_USERS("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
 						   "WHERE idProject IN (?) AND u.endDate IS NULL and ((h.nodetype & '10000')>0)" +
 						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
-						   "ORDER BY h.regusers DESC;"),	
-						   //"ORDER BY h.longitude, h.latitude;"),						   
+						   "ORDER BY h.regusers DESC;"),
+		
+	// NodeType Map					   
+	PROJECT_HOSTS_POSITION_NODE_TYPE("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.nodetype " +
+								   "FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
+								   "WHERE idProject IN (?) AND u.endDate IS NULL " +
+								   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.nodetype " +
+								   "ORDER BY h.longitude, h.latitude;"),						   						   
 						   
     /**
      * @param HOST.id

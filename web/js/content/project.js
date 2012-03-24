@@ -9,6 +9,9 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
         title: '<span class="titleProjectTab">' + projectName + '</span>',
         frame: true,
 		autoScroll: true,
+//		listeners: {activate: setActiveTabAvailability},
+//		listeners: {activate: reloadProjectMap},	// to be removed	
+//		listeners: {activate: setMapAilability},				
 	    items: [
             new Ext.Panel({
         		frame: true,
@@ -122,7 +125,7 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
             new Ext.Panel({
                	id: "projectMapPanel",
                	margins: '3 0 3 3',
-                   cmargins: '3 3 3 3',
+                cmargins: '3 3 3 3',
            		frame: true,
            		title: mapsTitle,
            		collapsible: true,
@@ -136,6 +139,7 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
            		}],
            		items: [
     					new Ext.TabPanel({
+    						id: 'mapTabPanels',
     						frame: true,
     						enableTabScroll: true,
     						activeTab: 0,
@@ -144,23 +148,23 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
     							    id: 'availabilityMapPanel',
     								title: availabilityPanelTitle,
     								frame: true,
-    								listeners: {activate: loadProjectMap},
+    								listeners: {render: loadProjectAvailabilityMap},
     								contentEl: 'containerAvailabilityMap'
     							}),
     						    new Ext.Panel({
     						    	id: 'registeredUsersPanel',
     						    	title: registeredUsersPanelTitle,
     						    	frame: true,
-    						    	listeners: {activate: loadRegisteredUsersMap},
+    						    	listeners: {render: loadRegisteredUsersMap},
     								contentEl: 'containerUsersMap'
-    						    })/*,
+    						    }),
     							new Ext.Panel({
     								id: 'hostTypePanel',
     								title: hostTypePanelTitle,
     								frame: true,
-    								listeners: {activate: loadNodeTypeMap},
+    								listeners: {render: loadNodeTypeMap},	
     								contentEl: 'containerNodeTypeMap'
-    							})*/
+    							})
     						]
     					}),
            		]
@@ -186,6 +190,14 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
 	if(treePanel)
 		treePanel.loader.on('load', selectProject);
 }
+
+/*function setActiveTabAvailability()
+{
+	alert('Devo settare la tab giusta!!!');
+	open_map1=0;
+	Ext.getCmp("mapTabPanels").setActiveTab(0);
+	loadProjectAvailabilityMap();
+}*/
 
 function selectProject() {
 	var nodo = Ext.getCmp('tree-panel').root.findChild('myObject', idProject, false);

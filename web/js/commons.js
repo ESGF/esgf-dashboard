@@ -28,6 +28,26 @@ function chooseIcon(avgActivity,imgtype,file_ext) {
 		return pathURL + "img/map_icons/"+ imgtype + "/9." + file_ext;
 }
 
+function chooseIconNodeType(nodetype,imgtype,file_ext) {
+	return pathURL + "img/map_icons/"+ imgtype + "/" + nodetype + "." + file_ext;
+}
+
+function nodeType_str(nodetype) {
+	var nodetype_str = "( Node type = ";
+	//alert(nodetype);	
+	if ((nodetype & 32) > 0)
+		nodetype_str= nodetype_str + "Compute ";
+	if ((nodetype & 16) > 0)
+		nodetype_str= nodetype_str + "Idp ";
+	if ((nodetype & 8) > 0)
+			nodetype_str= nodetype_str + "Index ";
+	if ((nodetype & 4) > 0)
+		nodetype_str= nodetype_str + "Data ";
+	nodetype_str = nodetype_str + ")";
+	//alert(nodetype_str);
+	return nodetype_str;
+}
+
 
 
 /*function chooseIcon(avgActivity) {

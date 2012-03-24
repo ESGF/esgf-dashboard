@@ -21,7 +21,17 @@
     	loadUsersDistribution();
     }       
     
+//    var load_map_availability=0;
+//   var load_map_reg_users=0;
+//    var load_map_node_type=0;
+    
+    
 	function loadProjectMap() {
+		
+/*		if (load_map_availability==1)
+			return;		
+		load_map_availability=1;*/
+		
 		var url = '<s:url action="HostPositionBySingleProject" namespace="/json" encode="false" />';
 		
 		Ext.Ajax.request({
@@ -35,8 +45,42 @@
 			}
         });	
 	}
+
+	// callback for the Availability Map
+	function loadProjectAvailabilityMap() {
+		
+		/*		if (load_map_availability==1)
+					return;		
+				load_map_availability=1;*/
+				
+				var url = '<s:url action="HostPositionBySingleProject" namespace="/json" encode="false" />';
+				
+				Ext.Ajax.request({
+		            url: url,
+		            success: onSuccessAvailability,
+		            failure: onFailure,
+		            scope: this,
+		            params: {
+						idProjects: [ idProject ],
+						endDate: (new Date).format("U")
+					}
+		        });	
+			}
+
 	
+    //function reloadProjectMap() {
+    //	open_map1=0;
+    	//alert("Sono nella reloadProjectMap " + open_map1);
+    //	loadProjectAvailabilityMap();	
+    //}
+    
+    // callback for the Registered Users Map
 	function loadRegisteredUsersMap() {
+		
+/*		if (load_map_reg_users==1)
+			return;
+		load_map_reg_users=1;*/
+		
 		var url = '<s:url action="HostPositionBySingleProjectRegUsers" namespace="/json" encode="false" />';
 
 		Ext.Ajax.request({
@@ -51,8 +95,14 @@
        });
 	}
 
+	// callback for the Type Node Map
 	function loadNodeTypeMap() {
-		var url = '<s:url action="HostPositionBySingleProject" namespace="/json" encode="false" />';
+		
+/*		if (load_map_node_type==1)
+			return;		
+		load_map_node_type=1;*/
+		
+		var url = '<s:url action="HostPositionBySingleProjectNodeType" namespace="/json" encode="false" />';
 
 		Ext.Ajax.request({
            url: url,

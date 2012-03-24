@@ -45,6 +45,14 @@
 				<param name="ignoreHierarchy">false</param>
 			</result>
 		</action>
+
+		<action name="HostPositionBySingleProjectNodeType" class="org.esg.node.actions.json.HostPositionAction" method="execute3">
+			<result type="json">
+				<param name="root">hosts</param> <!-- Set the root object -->
+				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
 		
 		<action name="HostPositionBySingleProject" class="org.esg.node.actions.json.HostPositionAction">
 			<result type="json">

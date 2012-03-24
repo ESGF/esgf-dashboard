@@ -79,11 +79,28 @@ function buildServiceTab(tabTitle, loadingMsg, descriptionPanelTitle, mapPanelTi
 	var tabProject = Ext.getCmp("tabProject");
 	tabs.on('tabchange', function tabChangeListener(tabPanel, tab) {
 		if(tabProject) { 
+			if (tab==tabProject) {
+				//alert(Ext.getCmp('tab-panel').getActiveTab.getId);
+				//if	(Ext.getCmp('tab-panel').getActiveTab.getId=='tabProject') {
+				open_map1=0;
+				loadProjectAvailabilityMap();
+				Ext.getCmp("projectMapPanel").doLayout(false, true);
+			}
 			if(tab==tabProject && Ext.getCmp("gridPanel")) {
 				tabProject = null;
 				Ext.getCmp("gridPanel").doLayout(false, true);
-				setTimeout('loadProjectMap(); Ext.getCmp("projectMapPanel").doLayout(false, true);', 500);
+				//setTimeout('loadProjectMap(); Ext.getCmp("projectMapPanel").doLayout(false, true);', 500);
+				setTimeout('loadProjectAvailabilityMap(); Ext.getCmp("projectMapPanel").doLayout(false, true);', 500);
 			}
+			//alert("tabProject.activeTab " + tabProject.activeTab);
+			//if (tab==tabProject) {
+			//	open_map1=0;
+			//	loadProjectAvailabilityMap();
+			//	Ext.getCmp("projectMapPanel").doLayout(false, true);
+			//}
+			//Ext.getCmp("mapTabPanels").doLayout(false, true);
+			//Ext.getCmp("availabilityMapPanel").doLayout(false, true);
+			
 		}
 		if(tab.get(1).getActiveTab && tab.get(1).getActiveTab() == null) {
 			tab.get(1).setActiveTab(0);		
