@@ -802,7 +802,7 @@ Builds the project via ant (obviously).
     </exec>
   </target>
 
-  <target name="publish" depends="deliver" description="(publishes built artifacts to artifact repository)">
+  <target name="publish" depends="init-ivy" description="(publishes built artifacts to artifact repository)">
     <ivy:publish resolver="esgf_repo_devel" 
                  organisation="org.esgf"
                  module="${module}"
