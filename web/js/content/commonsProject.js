@@ -99,7 +99,7 @@ function onSuccessAvailability(response, opts) {
 	var latlngSW = new google.maps.LatLng(/*latMin, lngMin);*/latMax-margin_map, lngMin-margin_map);// considering a margin for scaledSize images
 	var latlngNE = new google.maps.LatLng(/*latMax, lngMax);*/latMin+margin_map, lngMax+margin_map); // considering a margin for scaledSize images	
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
-	map1 = createMap(bounds, 'map_canvas_availability',0);	
+	map1 = createMap(bounds, 'map_canvas_availability',3);	
 	for(var i = 0; i < hosts.length; i ++)
 			markers.push(addMarker(map1,hosts[i]));
 	
@@ -139,7 +139,7 @@ function onSuccessUsers(response, opts) {
 	var latlngSW = new google.maps.LatLng(/*latMin, lngMin);*/latMax-margin_map, lngMin-margin_map);// considering a margin for scaledSize images
 	var latlngNE = new google.maps.LatLng(/*latMax, lngMax);*/latMin+margin_map, lngMax+margin_map); // considering a margin for scaledSize images
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
-	map2 = createMap(bounds, 'map_canvas_users',0);
+	map2 = createMap(bounds, 'map_canvas_users',2);
 	for(var i = 0; i < hosts.length; i ++)
 		if (hosts[i].regUsers>0) // only idp with at least 1 registered user
 			addMarkerRegUser(map2, hosts[i],scale_type,i+1);
@@ -175,7 +175,7 @@ function onSuccessNodeType(response, opts) {
 	var latlngSW = new google.maps.LatLng(/*latMin, lngMin);*/latMax-margin_map, lngMin-margin_map);// considering a margin for scaledSize images
 	var latlngNE = new google.maps.LatLng(/*latMax, lngMax);*/latMin+margin_map, lngMax+margin_map); // considering a margin for scaledSize images
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
-	map3 = createMap(bounds, 'map_canvas_nodetype',0);
+	map3 = createMap(bounds, 'map_canvas_nodetype',1);
 	for(var i = 0; i < hosts.length; i ++)
 			addMarkerNodeType(map3, hosts[i]);
 }
@@ -194,13 +194,42 @@ function createMap(bounds, idDiv,typemap) {
 	homeControlDiv.index = 1;
 	map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
 	
-	if (typemap==1) // regusers map
+	if (typemap==1) // nodetypes map
 	{ 
 		var scaleControlDiv = document.createElement('DIV');
-		var scaleControl = new ScaleControl(homeControlDiv, map, bounds);
-		scaleControlDiv.index = 1;
-		map.controls[google.maps.ControlPosition.TOP_RIGHT].push(scaleControlDiv);		
+		scaleControlDiv.setAttribute('align','right');
+		var immagine = document.createElement("IMG");
+		immagine.setAttribute("src",chooseIconNodeType("legenda2","nodetype/stack","svg"));
+		immagine.setAttribute("width","75%");
+		immagine.setAttribute("height","75%");
+		scaleControlDiv.appendChild(immagine);
+		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(scaleControlDiv);		
 	}	
+	if (typemap==2) // regusers map
+	{ 
+		var scaleControlDiv = document.createElement('DIV');
+		scaleControlDiv.setAttribute('align','right');
+		var immagine = document.createElement("IMG");
+		immagine.setAttribute("src",chooseIconNodeType("legenda_users","regusers/pentagon/bluegradient","svg"));
+		immagine.setAttribute("width","55%");
+		immagine.setAttribute("height","55%");
+		scaleControlDiv.appendChild(immagine);
+		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(scaleControlDiv);		
+	}	
+
+	if (typemap==3) // regusers map
+	{ 
+		var scaleControlDiv = document.createElement('DIV');
+		scaleControlDiv.setAttribute('align','right');
+		var immagine = document.createElement("IMG");
+		immagine.setAttribute("src",chooseIconNodeType("legenda_availability","availability","svg"));
+		immagine.setAttribute("width","65%");
+		immagine.setAttribute("height","65%");
+		scaleControlDiv.appendChild(immagine);
+		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(scaleControlDiv);		
+	}	
+
+
 	return map;
 }
 
