@@ -115,6 +115,7 @@ init() {
     
     #Database information....
     node_db_name=${node_db_name:-"esgcet"}
+    node_db_dashboard_schema_name="esgf_dashboard"
     postgress_driver=${postgress_driver:-org.postgresql.Driver}
     postgress_protocol=${postgress_protocol:-jdbc:postgresql:}
     postgress_host=${PGHOST:-localhost}
@@ -175,7 +176,6 @@ setup_dashboard_webapp() {
     local upgrade=${1:-0}
 
     local default="N"
-    ((force_install)) && default="Y"
     local dosetup
     if [ -d ${dashboard_app_home} ]; then 
         echo "Detected an existing dashboard services installation..."
@@ -197,13 +197,25 @@ setup_dashboard_webapp() {
         echo
 
         dobackup="Y"
-        read -p "Do you want to make a back up of the existing database schema [${node_db_name}:dashboard]?? [Y/n] " dobackup
-        [ -z "${dobackup}" ] && dobackup=${default}
-        if [ "${dobackup}" = "Y" ] || [ "${dobackup}" = "y" ]; then
-            echo "Creating a backup archive of the dashboard database [${node_db_name}:dashboard]"
-            backup_db -db ${node_db_name} -s dashboard
+        default="N"
+        if [ -n "$(postgres_list_db_schemas ${node_db_dashboard_schema_name})" ]; then
+            read -p "Do you want to make a back up of the existing database schema [${node_db_name}:${node_db_dashboard_schema_name}]? $([ "$default" = "N" ] && echo "[y/N]" || echo "[Y/n]") " dobackup
+            [ -z "${dobackup}" ] && dobackup=${default}
+            if [ "${dobackup}" = "Y" ] || [ "${dobackup}" = "y" ]; then
+                echo "Creating a backup archive of the dashboard database [${node_db_name}:${node_db_dashboard_schema_name}]"
+                backup_db -db ${node_db_name} -s dashboard
+            fi
+        else
+            # NOTE: Important Dependency....
+            # The SQL LIKE statement contains "ESGF Dashboard"
+            # This defined in esgf-security/src/python/esgf/esgf-dashboard/schema_migration/migrate.cfg
+            if (( $(PGPASSWORD=${pg_sys_acct_passwd:=${security_admin_password}} psql -U ${postgress_user} ${node_db_name} -c "select count(*) from esgf_migrate_version where repository_id LIKE '%ESGF Dashboard%'" | tail -n +3 | head -n 1) > 0 )); then
+                    echo "cleaning out schema migration bookeeping for esgf_dashboard..."
+                    $(PGPASSWORD=${pg_sys_acct_passwd:=${security_admin_password}} psql -U ${postgress_user} ${node_db_name} -c "delete from esgf_migrate_version where repository_id LIKE '%ESGF Dashboard%'" >& /dev/null)
+            fi
         fi
         unset dobackup
+        unset default
         echo
     fi
 
