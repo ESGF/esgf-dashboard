@@ -23,6 +23,7 @@ var map3;
 var map_project;
 
 var markers=null; 
+var markers_nodetype=null;
 
 // callback for allproject availability
 function onSuccess(response, opts) {
@@ -56,7 +57,39 @@ function onSuccess(response, opts) {
 	map_project = createMap(bounds, 'map_canvas',0);	
 	for(var i = 0; i < hosts.length; i ++)
 		markers.push(addMarker(map_project,hosts[i]));
+	
+	google.maps.event.addListener(map_project, 'zoom_changed', function() {
+		//alert('zoom changed: '+ map1.zoom);
+		//alert('Size value: ' + get_icon_size(map1.zoom));
+		for(var i = 0; i < hosts.length; i ++){
+			//alert('Width: ' + markers[i].getIcon().size.width);
+			markers[i].getIcon().size.width=get_icon_size(map_project.zoom);
+			markers[i].getIcon().size.height=get_icon_size(map_project.zoom);	
+			markers[i].setMap(map_project);
+		}
+			
+	});
 	//}
+}
+
+function get_icon_size(zoom)
+{
+	if (zoom>=8)
+		return 32;
+	if (zoom==7)
+		return 29;
+	if (zoom==6)
+		return 26;
+	if (zoom==5)
+		return 23;
+	if (zoom==4)
+		return 20;
+	if (zoom==3)
+		return 15;
+	if (zoom==2)
+		return 10;
+	if (zoom<2)
+		return 5;		
 }
 
 function onSuccessAvailability(response, opts) {
@@ -100,9 +133,22 @@ function onSuccessAvailability(response, opts) {
 	var latlngNE = new google.maps.LatLng(/*latMax, lngMax);*/latMin+margin_map, lngMax+margin_map); // considering a margin for scaledSize images	
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
 	map1 = createMap(bounds, 'map_canvas_availability',3);	
+	
 	for(var i = 0; i < hosts.length; i ++)
 			markers.push(addMarker(map1,hosts[i]));
 	
+	google.maps.event.addListener(map1, 'zoom_changed', function() {
+		//alert('zoom changed: '+ map1.zoom);
+		//alert('Size value: ' + get_icon_size(map1.zoom));
+		for(var i = 0; i < hosts.length; i ++){
+			//alert('Width: ' + markers[i].getIcon().size.width);
+			markers[i].getIcon().size.width=get_icon_size(map1.zoom);
+			markers[i].getIcon().size.height=get_icon_size(map1.zoom);	
+			markers[i].setMap(map1);
+		}
+			
+	});
+
 	//}
 }
 
@@ -155,6 +201,8 @@ function onSuccessNodeType(response, opts) {
 		return;
 	open_map3=1;
 	
+	markers_nodetype = new Array();
+	
 	//var vertices = new Array();
 	var latMax = -90, lngMax = -180, latMin = 90, lngMin = 180;
 
@@ -177,7 +225,22 @@ function onSuccessNodeType(response, opts) {
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
 	map3 = createMap(bounds, 'map_canvas_nodetype',1);
 	for(var i = 0; i < hosts.length; i ++)
-			addMarkerNodeType(map3, hosts[i]);
+		markers_nodetype.push(addMarkerNodeType(map3, hosts[i]));
+	
+	google.maps.event.addListener(map3, 'zoom_changed', function() {
+		//alert('zoom changed: '+ map3.zoom);
+		//alert('Size value: ' + get_icon_size(map3.zoom));
+		//alert('Number of Hosts: ' + hosts.length);
+		for(var i = 0; i < hosts.length; i ++){
+			markers_nodetype[i].getIcon().size.width=(get_icon_size(map3.zoom)*0.75)*1.5;
+			markers_nodetype[i].getIcon().size.height=(get_icon_size(map3.zoom))*1.5;
+			markers_nodetype[i].getIcon().anchor.x=  (markers_nodetype[i].getIcon().size.width)/2;
+			markers_nodetype[i].getIcon().anchor.y=	(markers_nodetype[i].getIcon().size.height);
+			markers_nodetype[i].setMap(map3);
+			//alert('Repositioning marker Width: ' + markers_nodetype[i].getIcon().size.width);
+		}
+			
+	});
 }
 
 //var map;
@@ -261,7 +324,7 @@ function addMarker(map0, host) {
 		      // anchor
 		      new google.maps.Point(10, 10),
 		      // scaledSize
-		      new google.maps.Size(20,20)
+		      new google.maps.Size(15,15)
 	);
 	
 	var marker = new google.maps.Marker({
@@ -283,6 +346,7 @@ function addMarker(map0, host) {
 		openedInfoWindow.setPosition(latLng);
 		openedInfoWindow.open(map0);
 	});
+
 	return marker;
 }
 
@@ -307,7 +371,8 @@ function addMarkerNodeType(map0, host) {
 		      null,
 			  //new google.maps.Point(0,0),
 		      // anchor
-		      new google.maps.Point(20, 20),
+		      //new google.maps.Point(20, 20),
+		      new google.maps.Point(15, 40),		      
 		      // scaledSize
 		      new google.maps.Size(30,40)
 	);
@@ -331,6 +396,8 @@ function addMarkerNodeType(map0, host) {
 		openedInfoWindow.setPosition(latLng);
 		openedInfoWindow.open(map0);
 	});
+	
+	return marker;
 }
 
 
