@@ -76,6 +76,7 @@ function onSuccess(response, opts) {
 
 function get_icon_size(zoom)
 {
+	// set a function once the values are fine!
 	if (zoom>=8)
 		return 32;
 	if (zoom==7)
@@ -87,11 +88,11 @@ function get_icon_size(zoom)
 	if (zoom==4)
 		return 20;
 	if (zoom==3)
-		return 15;
+		return 17;
 	if (zoom==2)
-		return 10;
+		return 14;
 	if (zoom<2)
-		return 5;		
+		return 10;		
 }
 
 function onSuccessAvailability(response, opts) {
