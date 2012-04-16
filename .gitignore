@@ -46,6 +46,16 @@ generated/
 /src/c/GeoIP-1.4.8/data/GeoLiteCity.dat
 /src/c/esgf-dashboard-ip/configure.sh
 /src/c/esgf-dashboard-ip/src/val-iplookup.sh
+/src/c/esgf-dashboard-ip/Makefile
+/src/c/esgf-dashboard-ip/bin/ip.service
+/src/c/esgf-dashboard-ip/config.h
+/src/c/esgf-dashboard-ip/config.log
+/src/c/esgf-dashboard-ip/config.status
+/src/c/esgf-dashboard-ip/src/.deps/
+/src/c/esgf-dashboard-ip/src/Makefile
+/src/c/esgf-dashboard-ip/src/esgf-dashboard-ip
+/src/c/esgf-dashboard-ip/src/esgf-iplookup
+/src/c/esgf-dashboard-ip/stamp-h1
 
 ################################
 #Generated from templated files
