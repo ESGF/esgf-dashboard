@@ -65,6 +65,8 @@ function onSuccess(response, opts) {
 			//alert('Width: ' + markers[i].getIcon().size.width);
 			markers[i].getIcon().size.width=get_icon_size(map_project.zoom);
 			markers[i].getIcon().size.height=get_icon_size(map_project.zoom);	
+			markers[i].getIcon().anchor.x=  (markers[i].getIcon().size.width)/2;
+			markers[i].getIcon().anchor.y= (markers[i].getIcon().size.height)/2;			
 			markers[i].setMap(map_project);
 		}
 			
@@ -133,17 +135,19 @@ function onSuccessAvailability(response, opts) {
 	var latlngNE = new google.maps.LatLng(/*latMax, lngMax);*/latMin+margin_map, lngMax+margin_map); // considering a margin for scaledSize images	
 	var bounds = new google.maps.LatLngBounds(latlngSW, latlngNE);
 	map1 = createMap(bounds, 'map_canvas_availability',3);	
-	
+	//alert ("Map1 :" + map1 + " zoom: "+ map1.zoom);
 	for(var i = 0; i < hosts.length; i ++)
 			markers.push(addMarker(map1,hosts[i]));
 	
 	google.maps.event.addListener(map1, 'zoom_changed', function() {
-		//alert('zoom changed: '+ map1.zoom);
-		//alert('Size value: ' + get_icon_size(map1.zoom));
+//		alert('zoom changed: '+ map1.zoom);
+//		alert('Size value: ' + get_icon_size(map1.zoom));
 		for(var i = 0; i < hosts.length; i ++){
 			//alert('Width: ' + markers[i].getIcon().size.width);
 			markers[i].getIcon().size.width=get_icon_size(map1.zoom);
-			markers[i].getIcon().size.height=get_icon_size(map1.zoom);	
+			markers[i].getIcon().size.height=get_icon_size(map1.zoom);
+			markers[i].getIcon().anchor.x=  (markers[i].getIcon().size.width)/2;
+			markers[i].getIcon().anchor.y= (markers[i].getIcon().size.height)/2;
 			markers[i].setMap(map1);
 		}
 			
@@ -303,9 +307,11 @@ var openedInfoWindow = null; // keep track of currently opened info window
 
 function addMarker(map0, host) {
 
+	
 	var latLng = new google.maps.LatLng(host.latitude, host.longitude);
 	//alert ("Coordinate:(" + host.latitude + "," + host.longitude+ ")");
 	
+	//alert("Width: "+ get_icon_size(map0.zoom)+ " static "+ get_icon_size(8));
 	image = new google.maps.MarkerImage(chooseIcon(host.activity? host.activity: null,"availability","svg"),
 			  //null,
 		      // origin
@@ -322,9 +328,9 @@ function addMarker(map0, host) {
 		      null,
 			  //new google.maps.Point(0,0),
 		      // anchor
-		      new google.maps.Point(10, 10),
+		      new google.maps.Point(map0.zoom ? get_icon_size(map0.zoom)/2 : 10, map0.zoom ? get_icon_size(map0.zoom)/2 : 10),
 		      // scaledSize
-		      new google.maps.Size(15,15)
+		      new google.maps.Size(map0.zoom ? get_icon_size(map0.zoom) : 20,map0.zoom ? get_icon_size(map0.zoom) : 20)
 	);
 	
 	var marker = new google.maps.Marker({
@@ -372,9 +378,9 @@ function addMarkerNodeType(map0, host) {
 			  //new google.maps.Point(0,0),
 		      // anchor
 		      //new google.maps.Point(20, 20),
-		      new google.maps.Point(15, 40),		      
-		      // scaledSize
-		      new google.maps.Size(30,40)
+		      new google.maps.Point((get_icon_size(map0.zoom)*0.75)*1.5/2, (get_icon_size(map0.zoom))*1.5),		      
+		      // scaledSize 30 40
+		      new google.maps.Size((get_icon_size(map0.zoom)*0.75)*1.5,(get_icon_size(map0.zoom))*1.5)
 	);
 	
 	var marker = new google.maps.Marker({
