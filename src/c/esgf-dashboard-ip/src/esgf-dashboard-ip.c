@@ -46,7 +46,7 @@ static char *USAGE =
 void readConfig (void);
 int myfree (char *mystring);
 void print_all_properties (void);
-void print_logs_before_starting (char *esgf_registration_xml_path);
+//void print_logs_before_starting (char *esgf_registration_xml_path);
 //void get_event (int fd, const char *target);
 //void handle_error (int error);
 
@@ -65,13 +65,12 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
 }
 
-void
+/*void
 print_logs_before_starting (char *esgf_registration_xml_path)
 {
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"All of the properties have been found\n");
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Information provider startup...\n");
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Feeding [%s]\n", esgf_registration_xml_path);
-}
+}*/
 
 
 /* Allow for 1024 simultanious events */
@@ -164,13 +163,14 @@ int automatic_registration_xml_feed (void *arg)
   esgf_registration_xml_path = (char *) arg;
   sprintf (target, "%s", esgf_registration_xml_path);
 
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"ThreadFunction says... calling: %s\n",target);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Locking procedure for: %s\n",target);
 
          // l_type   l_whence  l_start  l_len  l_pid  
   struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
   fl.l_pid = getpid();
   fl.l_type = F_RDLCK;
 
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to open file\n");
   if ((fd = open(esgf_registration_xml_path, O_RDWR)) == -1) {
 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Open error... skip parsing\n");
 	return -1;
@@ -202,10 +202,32 @@ int automatic_registration_xml_feed (void *arg)
   return 0;
 }
 
+void * precompute_data_metrics(void *arg)
+{
+  	int ret_code;
+	int i; // TEST_
+
+	i=5; // TEST_
+	while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
+	{
+	    if (ret_code=transaction_based_query(QUERY7, QUERY8, QUERY4))
+		{
+		 pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute data metrics FAILED! Are you running the publisher DB? [Code %d]\n",ret_code);
+  		 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating a static data cube!\n");
+	    	 //if (ret_code=transaction_based_query(QUERY7, QUERY8, QUERY4))
+		 //	pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute static data metrics FAILED! [Code %d]\n",ret_code);
+		}
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
+	    sleep(DATA_METRICS_SPAN); // TEST_
+	    i--;  // TEST_
+	}
+	return NULL;
+}
+
 int
 main (int argc, char **argv)
 {
-  //pthread_t pth;		// this is our thread identifier
+  pthread_t pth;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -215,11 +237,12 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 5;
+  int iterator = 3;
   int opt_t = 0;
   int mandatory;
   int allprop;
   int ret_code;
+  char query_remove_old_service_metrics[2048] = { '\0' };
  
   // setting log level to the lowest one (DEBUG) 
   msglevel=2; //default = WARNING 
@@ -309,32 +332,30 @@ main (int argc, char **argv)
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
-  print_logs_before_starting (esgf_registration_xml_path);
+  //print_logs_before_starting (esgf_registration_xml_path);
 
-  // start thread 
-  //fprintf (stderr, "Creating the registration.xml thread\n");
-  //pthread_create (&pth, NULL, threadFunc, esgf_registration_xml_path);
-  //sleep(10);
+  snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
-  counter = 0;
+  // start thread 
+  pthread_create (&pth, NULL, &precompute_data_metrics,NULL);
+
+  //counter = 0;
   while (iterator--)   //  TEST_ 
   //while (1)		// PRODUCTION_ 
     {
-      // Now removing old metrics 
-      if (ret_code=remove_old_metrics())
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Removing old metrics - FAILED! [Code %d]\n",ret_code);
+      // Removing old metrics 
+      if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
 
-      // Now calling the automatic registration_xml_feed into the parser
+      // Calling the automatic registration_xml_feed into the parser
       automatic_registration_xml_feed (esgf_registration_xml_path);
 
-      if (counter == 0)
-	{
-	  if (hosts)
-	    free (hosts);
-	  hosts = loadHosts (&numHosts);
-	}
+      if (hosts)
+	 free (hosts);
+      hosts = loadHosts (&numHosts);
+
       if (numHosts != 0 && hosts != NULL)
 	{
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Host/services found. Let's check them...\n");
@@ -352,16 +373,16 @@ main (int argc, char **argv)
 	}
     }				// forever loop end
 
-// end thread
-//  fprintf (stderr,
-//	   "Parser thread joins the main program before existing... waiting for it\n");
-//  if (pthread_join (pth, NULL))
-//      fprintf(stderr,"pthread_join error");
+  // end thread
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data cube for data download metrics thread joins the main program before existing... waiting for it\n");
+  if (pthread_join (pth, NULL))
+      fprintf(stderr,"pthread_join error");
 
-    // freeing space
+  // freeing space
   fprintf(stderr,"***************************************************\n");
   fprintf(stderr,"[END] esgf-dashboard-ip with a FINITE loop\n");
   fprintf(stderr,"[END] Releasing memory\n");
+
   if (hosts)
     free (hosts);
 
@@ -465,13 +486,14 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
-  HISTORY_MONTH=1;
+  HISTORY_MONTH=6;
   HISTORY_DAY=0;
+  DATA_METRICS_SPAN=1;  
 				// TO DO: to add the node.manager.app.home as a mandatory property
-  *notfound = 13;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 14;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
 
-  while (notfound)
+  while ((*notfound))
     {
       char buffer[256] = { '\0' };
       char value_buffer[256] = { '\0' };
@@ -548,6 +570,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "esgf.ip.history.day")))
 	    {
 	      HISTORY_DAY = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.downdatarefresh.hour")))
+	    {
+	      DATA_METRICS_SPAN = atoi (value_buffer);
 	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.debug.level")))

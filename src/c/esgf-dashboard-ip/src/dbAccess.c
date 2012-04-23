@@ -12,16 +12,17 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
-int remove_old_metrics() 
+//int remove_old_metrics() 
+int transaction_based_query(char *submitted_query, char* open_transaction, char* stop_transaction) 
 {
   PGconn *conn;
   PGresult *res;
 
-  char query_history[2048] = { '\0' };
+  //char query_history[2048] = { '\0' };
   char conninfo[1024] = {'\0'};
 
   /* Connect to database */
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics - START\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - START\n");
 
 
   snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
@@ -36,8 +37,10 @@ int remove_old_metrics()
 
 	// start transaction
 
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",QUERY6);
-  res = PQexec(conn, QUERY6);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",QUERY6);
+  //res = PQexec(conn, QUERY6);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",open_transaction);
+  res = PQexec(conn, open_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
@@ -48,11 +51,14 @@ int remove_old_metrics()
     	}
   PQclear(res);
 
-	// Old metrics - DELETE Query 
+  // Query submission 
+  // e.g old metrics DELETE Query or pre-computing analytics table 
 
-  snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
-  res = PQexec(conn, query_history);
+  //snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Submitted query : [%s]\n",submitted_query);
+  //res = PQexec(conn, query_history);
+  res = PQexec(conn, submitted_query);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
@@ -64,8 +70,10 @@ int remove_old_metrics()
   PQclear(res);
 
        // close transaction
-  res = PQexec(conn, QUERY4);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",QUERY4);
+  //res = PQexec(conn, QUERY4);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",QUERY4);
+  res = PQexec(conn, stop_transaction);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",stop_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
@@ -74,7 +82,7 @@ int remove_old_metrics()
 		PQfinish(conn);
 		return -3;
     	}
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics - END\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - END\n");
 
   PQclear(res);
   PQfinish(conn);
@@ -195,12 +203,12 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"METRICS Query -> index %d query %s\n",index, insert_query);
+		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Service Metrics [%d] -> %s\n",index, insert_query);
 
 		res = PQexec(conn, insert_query);
 
   		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
-       		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Insert METRICS query failed\n");
+       		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Insert SERVICE METRICS query failed\n");
 
     		PQclear(res);
 	}

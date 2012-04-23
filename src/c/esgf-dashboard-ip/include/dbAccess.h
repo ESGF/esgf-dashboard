@@ -14,14 +14,26 @@
 
 // --------------- Query ----------------------------------
 #define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;" 
+
 #define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance) " 
+
+//#define QUERY3 	"start transaction esgf_dashboard.service_instance AND esgf_dashboard.host"
 #define QUERY3 	"start transaction; lock esgf_dashboard.service_instance; lock esgf_dashboard.host;"
-#define QUERY6 	"start transaction; lock esgf_dashboard.service_status;"
-//#define QUERY3 	"start transaction;"
+
+//#define QUERY4 	"stop transaction;"
 #define QUERY4 	"end transaction;"
-// QUERY TO MANAGE THE METRICS HISTORY 
+
+// QUERY TO MANAGE THE OLD SERVICE METRICS 
 #define QUERY5  "DELETE from esgf_dashboard.service_status where timestamp < (now() - interval '%d months' - interval '%d day');"
 
+//#define QUERY6 	"start transaction on esgf_dashboard.service_status"
+#define QUERY6 	"start transaction; lock esgf_dashboard.service_status;"
+
+// #define QUERY7 	"THE PRE-COMPUTED DATA CUBE FOR DATA DOWNLOAD METRICS"
+#define QUERY7  "drop table if exists esgf_dashboard.analytics2; create table esgf_dashboard.analytics2 as (select d.project, d.model, d.experiment, s.name, count(*) as downloadcount, sum(size/1024/1024) as downloadsize from (select fv.file_id, fv.size, fv.url from (select file_id, max(version) as mv from file_version group by file_id order by mv desc) as mver, file_version as fv where fv.file_id=mver.file_id and fv.version=mver.mv) as lver, esgf_node_manager.access_logging as dl, file as f, dataset as d, standard_name as s, variable as v  where dl.url=lver.url and lver.file_id=f.id and s.name=v.standard_name and v.dataset_id=d.id and f.dataset_id=d.id group by project, model, experiment, s.name);"
+
+//#define QUERY8 	"start transaction esgf_dashboard.analytics2"
+#define QUERY8 	"start transaction; lock esgf_dashboard.analytics2;"
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);

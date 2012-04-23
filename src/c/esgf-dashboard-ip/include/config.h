@@ -20,6 +20,7 @@ int PING_SPAN_NO_HOSTS;
 int HOSTS_LOADING_SPAN;
 int HISTORY_MONTH;
 int HISTORY_DAY;
+long int DATA_METRICS_SPAN; // hours
 
 struct geo_output_struct
 {
