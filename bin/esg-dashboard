@@ -141,6 +141,9 @@ init() {
     debug_print "(PATH = $PATH)"
     debug_print "(LD_LIBRARY_PATH = $LD_LIBRARY_PATH)"
 
+    write_as_property dashboard_service_app_home ${dashboard_app_home}
+    write_as_property dashboard_ip_app_home ${esgf_dashboard_ip_install_dir}
+
 }
 
 
