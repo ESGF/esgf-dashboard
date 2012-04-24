@@ -214,8 +214,8 @@ void * precompute_data_metrics(void *arg)
 		{
 		 pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute data metrics FAILED! Are you running the publisher DB? [Code %d]\n",ret_code);
   		 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating a static data cube!\n");
-	    	 //if (ret_code=transaction_based_query(QUERY7, QUERY8, QUERY4))
-		 //	pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute static data metrics FAILED! [Code %d]\n",ret_code);
+	    	 if (ret_code=transaction_based_query(QUERY9, QUERY8, QUERY4))
+		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Computation of a static data FAILED! [Code %d]\n",ret_code);
 		}
 	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
 	    sleep(DATA_METRICS_SPAN); // TEST_

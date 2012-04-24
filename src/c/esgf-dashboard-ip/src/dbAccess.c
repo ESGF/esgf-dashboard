@@ -56,13 +56,13 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
 
   //snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Submitted query : [%s]\n",submitted_query);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query to be submitted : [%s]\n",submitted_query);
   //res = PQexec(conn, query_history);
   res = PQexec(conn, submitted_query);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"DELETE old metrics failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query submission failed\n");
 	        PQclear(res);
 		PQfinish(conn);
 		return -4;
