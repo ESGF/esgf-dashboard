@@ -116,6 +116,8 @@
 // QUERY TO MANAGE THE METRICS HISTORY 
 #define QUERY_DELETE_OLD_METRICS  "DELETE from esgf_dashboard.service_status where timestamp < (now() - interval '%d months' - interval '%d day');"
 
+// QUERY TO MANAGE THE METRICS HISTORY 
+#define QUERY_UPDATE_HOST_INFO  "UPDATE esgf_dashboard.host set downloaddata=%ld, downloaddatacount=%ld, regusers=%ld where id=%ld;"
 
 // HashTables dimensions
 #define HAST_TABLE_PROJECT_DIM		16
@@ -987,16 +989,69 @@ parse_registration_xml_file (xmlNode * a_node)
 			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_METRICS))
 			    {
-			      pmesg(LOG_DEBUG,__FILE__,__LINE__,"???????????????????????? METRICS FOUND ?????????????????\n");
+			      pmesg(LOG_DEBUG,__FILE__,__LINE__,"METRICS ELEMENT FOUND\n");
+			      long int downdatacount=0;;
+        		      long int downdatasize=0;
+        		      long int registeredusers=0;
+			      char update_host_query[2048] = { '\0' };
+			      char *downdatacount_str;
+			      char *downdatasize_str;
+			      char *registeredusers_str;
+			      	
 			      // loop on internal METRICS elements (DOWNLOADCOUNT,DOWNLOADSIZE,REGUSERS)
 			      for (metrics_node = int_node->children;
 				   metrics_node;
 				   metrics_node = metrics_node->next)
 				{
+
 				  if (!strcmp (metrics_node->name, "text"))
 				    continue;
-			      	  pmesg(LOG_DEBUG,__FILE__,__LINE__,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> METRICS CHILD FOUND !!!!!!!!!\n");
+
+				// Data download metrics
+				  if (metrics_node->type == XML_ELEMENT_NODE && (!strcmp(metrics_node->name,REG_ELEMENT_DOWNLOADEDDATA)))
+				    {
+				      downdatacount_str = xmlGetProp (metrics_node, REG_ELEMENT_DOWNLOADEDDATA_ATTR_COUNT);
+				      downdatasize_str = xmlGetProp (metrics_node, REG_ELEMENT_DOWNLOADEDDATA_ATTR_SIZE);
+
+			 	      if (downdatacount_str == NULL || !strcmp (downdatacount_str, "") || downdatasize_str == NULL || !strcmp (downdatasize_str, ""))
+					{
+					  pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s-%s attributes [skip current %s  element]\n",
+						   REG_ELEMENT_DOWNLOADEDDATA_ATTR_COUNT,
+						   REG_ELEMENT_DOWNLOADEDDATA_ATTR_SIZE,
+						   REG_ELEMENT_DOWNLOADEDDATA);
+					} else {
+					    downdatacount=atol(downdatacount_str);
+					    downdatasize=atol(downdatasize_str);	
+					    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Found DOWNLOADED DATA metrics [%ld] [%ld] \n",downdatacount,downdatasize);
+					} 
+				      xmlFree (downdatacount_str);
+				      xmlFree (downdatasize_str);
+				    } // end "if (metrics_node->type == XML_ELEMENT_NODE && (!strcmp(metrics_node->name,REG_ELEMENT_DOWNLOADEDDATA)))" 
+
+				// Registered Users metrics
+				  if (metrics_node->type == XML_ELEMENT_NODE && (!strcmp(metrics_node->name,REG_ELEMENT_REGISTEREDUSERS)))
+				    {
+					// extract info for registered users 
+				      registeredusers_str = xmlGetProp (metrics_node, REG_ELEMENT_REGISTEREDUSERS_ATTR_COUNT);
+
+			 	      if (registeredusers_str == NULL || !strcmp (registeredusers_str, ""))
+					{
+					  pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s attributes [skip current %s element]\n",
+						   REG_ELEMENT_REGISTEREDUSERS_ATTR_COUNT,
+						   REG_ELEMENT_REGISTEREDUSERS);
+					} else {
+					    registeredusers = atol(registeredusers_str);
+					    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Found REGISTERED USERS metrics [%ld] \n",registeredusers);
+					} 
+				      xmlFree (registeredusers_str);
+
+				    } // end "if (metrics_node->type == XML_ELEMENT_NODE && (!strcmp(metrics_node->name,REG_ELEMENT_REGISTEREDUSERS)))"
+
 			    	}	// end of "loop on internal METRICS elements (DOWNLOADCOUNT,DOWNLOADSIZE,REGUSERS)"
+				// to be done: STORE METRICS in the DATABASE
+			 	snprintf (update_host_query,sizeof(update_host_query), QUERY_UPDATE_HOST_INFO,downdatacount, downdatasize, registeredusers,host_id);
+		         	submit_query (conn, update_host_query);
+			  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Storing data and users metrics [%ld] [%ld] [%ld]\n",downdatacount, downdatasize, registeredusers);
 			    }	// end of "if internal node is a METRICS ELEMENT"
 
 		/***********************************************************************/

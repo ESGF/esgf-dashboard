@@ -92,3 +92,4 @@ alter table esgf_dashboard.host add regusers integer default 0;
 alter table esgf_dashboard.host add suppemail character varying(255);
 alter table esgf_dashboard.host add defaultpeer integer;
 alter table esgf_dashboard.host add downloaddata bigint default 0;
+alter table esgf_dashboard.host add downloaddatacount bigint default 0;

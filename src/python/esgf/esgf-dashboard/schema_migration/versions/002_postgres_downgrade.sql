@@ -19,4 +19,5 @@ alter table esgf_dashboard.host drop nodetype;
 alter table esgf_dashboard.host drop defaultpeer;
 alter table esgf_dashboard.host drop suppemail;
 alter table esgf_dashboard.host drop downloaddata;
+alter table esgf_dashboard.host drop downloaddatacount;
 
