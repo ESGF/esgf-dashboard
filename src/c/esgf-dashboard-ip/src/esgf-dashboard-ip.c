@@ -63,6 +63,7 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"DASHBOARD_SERVICE_PATH = [%s]\n", DASHBOARD_SERVICE_PATH);
 }
 
 /*void
@@ -205,18 +206,59 @@ int automatic_registration_xml_feed (void *arg)
 void * precompute_data_metrics(void *arg)
 {
   	int ret_code;
+	long int downdatacount;
+	long int downdatasize;
+	long int registeredusers;
+	char metrics_filename[1024] = { '\0' };
+	char metrics_content[2048] = { '\0' };
+	FILE *fp;
+
 	int i; // TEST_
 
 	i=5; // TEST_
 	while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
-	    if (ret_code=transaction_based_query(QUERY7, QUERY8, QUERY4))
+
+	    downdatacount = 0;
+	    downdatasize  = 0;
+            registeredusers = 0;
+
+	    // Pre-computation of the 4D data mart for the data download (size,count) metrics	
+
+	    if (ret_code = transaction_based_query(QUERY7, QUERY8, QUERY4))
 		{
 		 pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute data metrics FAILED! Are you running the publisher DB? [Code %d]\n",ret_code);
   		 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating a static data cube!\n");
 	    	 if (ret_code=transaction_based_query(QUERY9, QUERY8, QUERY4))
-		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Computation of a static data FAILED! [Code %d]\n",ret_code);
+		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Computation of a static data cube FAILED! [Code %d]\n",ret_code);
 		}
+
+	    // Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
+
+	    if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
+		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
+
+	    if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
+		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
+
+	    if (ret_code = get_aggregated_metrics(GET_REGISTERED_USERS_COUNT, &registeredusers))
+		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the total number of registered users metrics [Code %d]\n",ret_code);
+
+	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"***>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RETRIEVED METRICS %ld , %ld , %ld !\n", downdatacount, downdatasize, registeredusers);
+
+	    // Storing data into data_users.metrics
+	    snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
+	    snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%ld,DOWNLOADSIZE=%ld,USERS=%ld",downdatacount,downdatasize,registeredusers);
+ 
+	    fp=fopen(metrics_filename, "w+");
+	    if (fp!=NULL) {
+	    	fprintf(fp, "%s",metrics_content);
+	    	fclose(fp);	
+	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Data users Metrics successfully stored!\n");
+	    } else {
+ 	    	pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file. Please check the dashboard.service.home property\n");
+	    }
+
 	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
 	    sleep(DATA_METRICS_SPAN); // TEST_
 	    i--;  // TEST_
@@ -311,7 +353,7 @@ main (int argc, char **argv)
 	}
       // check on non-mandatory properties
       if (allprop)
-	pmesg(LOG_WARNING,__FILE__,__LINE__,"Please note that %d non-mandatory properties are missing in the esgf.properties file. Default have been loaded\n",allprop);
+	pmesg(LOG_WARNING,__FILE__,__LINE__,"Please note that %d non-mandatory properties are missing in the esgf.properties file. Default values have been loaded\n",allprop);
     }
 
   print_all_properties (); // TEST_ 
@@ -326,6 +368,7 @@ main (int argc, char **argv)
       myfree (POSTGRES_DB_NAME);
       myfree (POSTGRES_USER);
       myfree (REGISTRATION_XML_PATH);
+      myfree (DASHBOARD_SERVICE_PATH);
       return 0;
     }
 
@@ -392,6 +435,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_USER);
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
+  myfree (DASHBOARD_SERVICE_PATH);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
 
@@ -490,7 +534,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   HISTORY_DAY=0;
   DATA_METRICS_SPAN=1;  
 				// TO DO: to add the node.manager.app.home as a mandatory property
-  *notfound = 14;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 15;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
@@ -543,6 +587,13 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "node.manager.app.home")))
 	    {
 	      strcpy (REGISTRATION_XML_PATH =
+		      (char *) malloc (strlen (value_buffer) + 1),
+		      value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "dashboard.service.home")))
+	    {
+	      strcpy (DASHBOARD_SERVICE_PATH =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;

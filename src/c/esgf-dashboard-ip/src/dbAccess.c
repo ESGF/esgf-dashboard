@@ -12,7 +12,6 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
-//int remove_old_metrics() 
 int transaction_based_query(char *submitted_query, char* open_transaction, char* stop_transaction) 
 {
   PGconn *conn;
@@ -215,3 +214,61 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
         PQfinish(conn);
 	return 0;
 }
+
+
+int get_aggregated_metrics(char *submitted_query, long int *metrics) 
+{
+  PGconn *conn;
+  PGresult *res;
+  long int numTuples;
+
+  char conninfo[1024] = {'\0'};
+
+  /* Connect to database */
+  *metrics=0;
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get Aggregated Metrics - START\n");
+
+  snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+  conn = PQconnectdb ((const char *) conninfo);
+
+   if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+   // Query submission 
+
+   res = PQexec(conn, submitted_query);
+
+   if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP Select ERROR [query=%s]\n",submitted_query);
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+
+   numTuples = PQntuples(res);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Aggregated Metrics [Tuples=%ld] \n",numTuples);
+   if (numTuples!=1) 
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP Too many Tuples ERROR [%ld]\n",numTuples);
+	        PQclear(res);
+		PQfinish(conn);
+		return -3;
+    	}
+
+   // setting return metrics	
+   *metrics = atol(PQgetvalue(res, 0, 0));
+
+   pmesg(LOG_DEBUG,__FILE__,__LINE__," Get Aggregated Metrics - END [value=%ld] \n", *metrics);
+   PQclear(res);
+
+   PQfinish(conn);
+
+  return 0;
+}
+
+

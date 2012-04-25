@@ -24,7 +24,10 @@
 #define REG_ELEMENT_SINGLE_RSSFEED	"RSSFeed"
 #define REG_ELEMENT_NODEMANAGER		"NodeManager"
 #define REG_ELEMENT_GRIDFTPSERVICE	"GridFTPService"
+#define REG_ELEMENT_METRICS		"Metrics"
 #define REG_ELEMENT_CONFIGURATION	"Configuration"
+#define REG_ELEMENT_DOWNLOADEDDATA	"DownloadedData"
+#define REG_ELEMENT_REGISTEREDUSERS	"RegisteredUsers"
 
 // "Node" ATTRIBUTES
 #define REG_ATTR_REGISTRATION_TIMESTAMP		 	"timeStamp"
@@ -50,6 +53,9 @@
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
 #define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
 #define REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL		"url"
+#define REG_ELEMENT_DOWNLOADEDDATA_ATTR_COUNT		"count"
+#define REG_ELEMENT_DOWNLOADEDDATA_ATTR_SIZE		"size"
+#define REG_ELEMENT_REGISTEREDUSERS_ATTR_COUNT		"count"
 
 // Start transaction and lock tables 
 #define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.project_dash ; lock esgf_dashboard.host ; lock esgf_dashboard.uses ; lock esgf_dashboard.join1 ; lock esgf_dashboard.service_instance ;"
@@ -283,6 +289,7 @@ parse_registration_xml_file (xmlNode * a_node)
   xmlNode *node_node = NULL;
   xmlNode *int_node = NULL;
   xmlNode *gridftp_node = NULL;
+  xmlNode *metrics_node = NULL;
   xmlNode *rssfeed_node = NULL;
   int iter = 0;
   int iter2 = 0;
@@ -973,6 +980,24 @@ parse_registration_xml_file (xmlNode * a_node)
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
 			    }	// end of "if internal node is NodeManager ELEMENT"
+
+		/***********************************************************************/
+
+			  // Start "if internal node is a METRICS ELEMENT"       
+			  if (!strcmp
+			      (int_node->name, REG_ELEMENT_METRICS))
+			    {
+			      pmesg(LOG_DEBUG,__FILE__,__LINE__,"???????????????????????? METRICS FOUND ?????????????????\n");
+			      // loop on internal METRICS elements (DOWNLOADCOUNT,DOWNLOADSIZE,REGUSERS)
+			      for (metrics_node = int_node->children;
+				   metrics_node;
+				   metrics_node = metrics_node->next)
+				{
+				  if (!strcmp (metrics_node->name, "text"))
+				    continue;
+			      	  pmesg(LOG_DEBUG,__FILE__,__LINE__,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> METRICS CHILD FOUND !!!!!!!!!\n");
+			    	}	// end of "loop on internal METRICS elements (DOWNLOADCOUNT,DOWNLOADSIZE,REGUSERS)"
+			    }	// end of "if internal node is a METRICS ELEMENT"
 
 		/***********************************************************************/
 

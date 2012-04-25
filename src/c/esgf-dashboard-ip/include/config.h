@@ -13,6 +13,7 @@ char *POSTGRES_USER;
 char *POSTGRES_PASSWD;
 char *POSTGRES_DB_NAME;
 char *REGISTRATION_XML_PATH;
+char *DASHBOARD_SERVICE_PATH;
 int CONNECTION_TIMEOUT; // microseconds
 unsigned short THREAD_OPEN_MAX; // max threads #
 int PING_SPAN;

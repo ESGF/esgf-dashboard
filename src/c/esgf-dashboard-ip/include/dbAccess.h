@@ -37,6 +37,15 @@
 
 #define QUERY9 	"drop table if exists esgf_dashboard.analytics2; create table esgf_dashboard.analytics2 (project varchar(255), model varchar(255), experiment varchar(255), name varchar(255), downloadsize bigint default 0, downloadcount numeric default 0);"
 
+// GLOBAL METRICS for DATA and USERS
+
+#define GET_DOWNLOADED_DATA_SIZE "select sum (downloadsize) from esgf_dashboard.analytics2;"
+
+#define GET_DOWNLOADED_DATA_COUNT "select sum(downloadcount) from esgf_dashboard.analytics2;"
+
+#define GET_REGISTERED_USERS_COUNT ""
+
+
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);
