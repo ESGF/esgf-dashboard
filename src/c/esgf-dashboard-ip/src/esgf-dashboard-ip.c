@@ -203,6 +203,8 @@ int automatic_registration_xml_feed (void *arg)
   return 0;
 }
 
+
+// Todo: this function could be improved taking from the esgf.properties the node type
 void * precompute_data_metrics(void *arg)
 {
   	int ret_code;
@@ -234,30 +236,33 @@ void * precompute_data_metrics(void *arg)
 		}
 
 	    // Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
+	    if (DASHBOARD_SERVICE_PATH) {	 
+	    	if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
+			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
 
-	    if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
-		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
+	    	if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
+			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
 
-	    if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
-		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
+	    	if (ret_code = get_aggregated_metrics(GET_REGISTERED_USERS_COUNT, &registeredusers))
+			pmesg(LOG_WARNING,__FILE__,__LINE__,"There was an issue retrieving the total (local) number of registered users metrics [Code %d] [This warning is an ERROR if you are running an idp node]\n",ret_code);
 
-	    if (ret_code = get_aggregated_metrics(GET_REGISTERED_USERS_COUNT, &registeredusers))
-		pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the total number of registered users metrics [Code %d]\n",ret_code);
+	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%ld] , [%ld] , [%ld] !\n", downdatacount, downdatasize, registeredusers);
 
-	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"***>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RETRIEVED METRICS %ld , %ld , %ld !\n", downdatacount, downdatasize, registeredusers);
-
-	    // Storing data into data_users.metrics
-	    snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
-	    snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%ld,DOWNLOADSIZE=%ld,USERS=%ld",downdatacount,downdatasize,registeredusers);
+	    	// Storing data into data_users.metrics
+	    	snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
+	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%ld,DOWNLOADSIZE=%ld,USERS=%ld",downdatacount,downdatasize,registeredusers);
  
-	    fp=fopen(metrics_filename, "w+");
-	    if (fp!=NULL) {
-	    	fprintf(fp, "%s",metrics_content);
-	    	fclose(fp);	
-	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Data users Metrics successfully stored!\n");
-	    } else {
- 	    	pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file. Please check the dashboard.service.home property\n");
-	    }
+	    	fp=fopen(metrics_filename, "w+");
+	    	if (fp!=NULL) {
+	    		fprintf(fp, "%s",metrics_content);
+	    		fclose(fp);	
+	    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Data users Metrics successfully stored!\n");
+	    	} else {
+ 	    		pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file.The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to store the data and users metrics. Please check!\n");
+	    	}
+	    } else { // the DASHBOARD_SERVICE_PATH is NULL <=> 'dashboard.ip.app.home' not set in the esgf.properties file
+		pmesg(LOG_ERROR,__FILE__,__LINE__,"The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to provide data and users metrics. Please check!\n");	
+ 		} 
 
 	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
 	    sleep(DATA_METRICS_SPAN); // TEST_
@@ -295,6 +300,9 @@ main (int argc, char **argv)
    * library used.
    */
   //LIBXML_TEST_VERSION
+
+
+  DASHBOARD_SERVICE_PATH=NULL;
 
 // reading the command line arguments
   while ((c =
@@ -591,7 +599,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 		      value_buffer);
 	      (*notfound)--;
 	    }
-	  if (!(strcmp (buffer, "dashboard.service.home")))
+	  if (!(strcmp (buffer, "dashboard.ip.app.home")))
 	    {
 	      strcpy (DASHBOARD_SERVICE_PATH =
 		      (char *) malloc (strlen (value_buffer) + 1),

@@ -86,6 +86,9 @@
 // QUERY QUERY_INSERT_HOST adds a new host (P2P node) in the database
 #define QUERY_INSERT_NEW_HOST  "INSERT into esgf_dashboard.host(name,ip) values('%s','%s');"
 
+// QUERY QUERY_UPDATE_HOST_TYPE update the node type of a host in the database
+#define QUERY_UPDATE_HOST_TYPE  "UPDATE esgf_dashboard.host set nodetype=%d where id=%d;"
+
 // QUERY QUERY_GET_PROJECT_ID retrieves the id value of a specific project (peer group) 
 #define QUERY_GET_PROJECT_ID "SELECT id from esgf_dashboard.project_dash where name='%s';"
 
@@ -472,6 +475,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	      char *npg_project;
 	      char *node_ip;
 	      char *node_hostname;
+	      char *node_type;
 	      int number_of_projects;
 	      long int project_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of projects in the hashtable
 	      long int service_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of services in the hashtable
@@ -486,6 +490,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		{
 		  char insert_new_host_query[2048] = { '\0' };
 		  char select_id_host_query[2048] = { '\0' };
+		  char update_host_type_query[2048] = { '\0' };
 		  char node_ip_test[64] = { '\0' };
 
 		  // get NODE attributes values
@@ -551,11 +556,13 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 	
 
-		  support_email =
-		    xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
-
+		  support_email = xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 		  if (support_email == NULL || !strcmp (support_email, ""))
-		    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
+		    pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
+
+		  node_type = xmlGetProp (node_node, REG_ATTR_NODE_NODETYPE);
+		  if (node_type == NULL || !strcmp (node_type, "")) 
+		    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_NODETYPE);
 
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Organization attribute: %s\n",organization);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"PeerGroups attribute: %s\n", npg_project);
@@ -590,7 +597,16 @@ parse_registration_xml_file (xmlNode * a_node)
 		      hashtbl_insert (hashtbl_hosts, node_ip, host_id_str);
 		      pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",node_ip, host_id_str);
 		    }
-
+		
+		  
+		  // todo: updating data node type
+		  if (node_type)
+		    {
+		  	snprintf (update_host_type_query,sizeof (update_host_type_query),QUERY_UPDATE_HOST_TYPE,atoi(node_type),host_id);
+		  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query nodetype [%s]\n",update_host_type_query);
+		  	submit_query (conn, update_host_type_query);
+		    }
+		  
 		  //fprintf (stderr, "Host %s | id : %ld\n", node_ip, host_id);
 
 		  // isolate PeerGroups adding them to the DB
@@ -1237,6 +1253,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (npg_project);
 	      xmlFree (node_ip);
 	      xmlFree (support_email);
+	      xmlFree (node_type);
 	      xmlFree (node_hostname);
 	    }			// end of loop on NODE element
 
