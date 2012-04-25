@@ -530,7 +530,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 60;
   HOSTS_LOADING_SPAN = 120;
-  HISTORY_MONTH=6;
+  HISTORY_MONTH=3;
   HISTORY_DAY=0;
   DATA_METRICS_SPAN=1;  
 				// TO DO: to add the node.manager.app.home as a mandatory property
