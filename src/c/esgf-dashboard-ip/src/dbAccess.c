@@ -244,7 +244,7 @@ int get_aggregated_metrics(char *submitted_query, long int *metrics)
 
    if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP Select ERROR [query=%s]\n",submitted_query);
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP - Query ERROR \n");
 	        PQclear(res);
 		PQfinish(conn);
 		return -2;

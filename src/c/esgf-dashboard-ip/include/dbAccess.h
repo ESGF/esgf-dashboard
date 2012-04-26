@@ -43,7 +43,7 @@
 
 #define GET_DOWNLOADED_DATA_COUNT "select sum(downloadcount) from esgf_dashboard.analytics2;"
 
-#define GET_REGISTERED_USERS_COUNT ""
+#define GET_REGISTERED_USERS_COUNT "select count(distinct(username)) from esgf_security.user where openid like 'https://%s%';"
 
 
 // --------------------------------------------------------

@@ -541,8 +541,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"IP check on [%s] OK\n",node_ip);		
 
 
-		  node_hostname =
-		    xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
+		  node_hostname = xmlGetProp (node_node, REG_ATTR_NODE_NODEHOSTNAME);
 
 		  if (node_hostname == NULL || !strcmp (node_hostname, "") )
 		    {
@@ -556,19 +555,27 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 	
 
+		  node_type = xmlGetProp (node_node, REG_ATTR_NODE_NODETYPE);
+		  if (node_type == NULL || !strcmp (node_type, "")) 
+		    {
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_NODETYPE);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      xmlFree (node_hostname);
+		      xmlFree (node_type);
+		      continue;	
+ 		    }
+
 		  support_email = xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 		  if (support_email == NULL || !strcmp (support_email, ""))
 		    pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
-
-		  node_type = xmlGetProp (node_node, REG_ATTR_NODE_NODETYPE);
-		  if (node_type == NULL || !strcmp (node_type, "")) 
-		    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_NODETYPE);
 
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Organization attribute: %s\n",organization);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"PeerGroups attribute: %s\n", npg_project);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hostname attribute: %s\n", node_hostname);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"IP attribute: %s\n", node_ip);
-
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Node type attribute: %s\n", node_type);
 
 		  if (hashtbl_result = hashtbl_get (hashtbl_hosts, node_ip))
 		    {

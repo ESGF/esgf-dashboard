@@ -64,6 +64,8 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"DASHBOARD_SERVICE_PATH = [%s]\n", DASHBOARD_SERVICE_PATH);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"NODE_TYPE = [%d]\n",NODE_TYPE);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTNAME = [%s]\n",ESGF_HOSTNAME);
 }
 
 /*void
@@ -213,6 +215,7 @@ void * precompute_data_metrics(void *arg)
 	long int registeredusers;
 	char metrics_filename[1024] = { '\0' };
 	char metrics_content[2048] = { '\0' };
+	char query_registered_users[2048] = { '\0' };
 	FILE *fp;
 
 	int i; // TEST_
@@ -243,8 +246,13 @@ void * precompute_data_metrics(void *arg)
 	    	if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
 			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
 
-	    	if (ret_code = get_aggregated_metrics(GET_REGISTERED_USERS_COUNT, &registeredusers))
-			pmesg(LOG_WARNING,__FILE__,__LINE__,"There was an issue retrieving the total (local) number of registered users metrics [Code %d] [This warning is an ERROR if you are running an idp node]\n",ret_code);
+	    	snprintf (query_registered_users,sizeof (query_registered_users),GET_REGISTERED_USERS_COUNT, ESGF_HOSTNAME);
+	
+			
+		// todo: if DATANODETYPE = idp (16 dec ,10000 bin ,0x10 exac)
+		if ((NODE_TYPE & 10000) > 0)
+	    		if (ret_code = get_aggregated_metrics(query_registered_users, &registeredusers))
+				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d][Query=%s]\n",ret_code,query_registered_users);
 
 	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%ld] , [%ld] , [%ld] !\n", downdatacount, downdatasize, registeredusers);
 
@@ -357,6 +365,9 @@ main (int argc, char **argv)
 	  myfree (POSTGRES_HOST);
 	  myfree (POSTGRES_DB_NAME);
 	  myfree (POSTGRES_USER);
+      	  myfree (DASHBOARD_SERVICE_PATH);
+      	  myfree (REGISTRATION_XML_PATH);
+      	  myfree (ESGF_HOSTNAME);
 	  return 0;
 	}
       // check on non-mandatory properties
@@ -364,22 +375,38 @@ main (int argc, char **argv)
 	pmesg(LOG_WARNING,__FILE__,__LINE__,"Please note that %d non-mandatory properties are missing in the esgf.properties file. Default values have been loaded\n",allprop);
     }
 
-  print_all_properties (); // TEST_ 
-
 // reading the postgres password
 
   if ((ESGF_passwd (esgf_properties)))
     {
-      pmesg(LOG_ERROR,__FILE__,__LINE__,"Some error occurred while opening the .esgf_pass file Please check!\n");
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Some error occurred while opening the .esgf_pass file. Please check!\n");
       myfree (esgf_properties);
       myfree (POSTGRES_HOST);
       myfree (POSTGRES_DB_NAME);
       myfree (POSTGRES_USER);
       myfree (REGISTRATION_XML_PATH);
       myfree (DASHBOARD_SERVICE_PATH);
+      myfree (ESGF_HOSTNAME);
       return 0;
     }
 
+// reading the nodetype code 
+
+  if ((ESGF_node_type (esgf_properties)))
+    {
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Some error occurred while opening the config_type file. Please check!\n");
+      myfree (esgf_properties);
+      myfree (POSTGRES_HOST);
+      myfree (POSTGRES_DB_NAME);
+      myfree (POSTGRES_USER);
+      myfree (REGISTRATION_XML_PATH);
+      myfree (DASHBOARD_SERVICE_PATH);
+      myfree (ESGF_HOSTNAME);
+      myfree (POSTGRES_PASSWD);
+      return 0;
+    }
+
+  print_all_properties (); // TEST_ 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -443,6 +470,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_USER);
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
+  myfree (ESGF_HOSTNAME);
   myfree (DASHBOARD_SERVICE_PATH);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
@@ -542,8 +570,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   HISTORY_DAY=0;
   DATA_METRICS_SPAN=1;  
 				// TO DO: to add the node.manager.app.home as a mandatory property
-  *notfound = 15;		// number of total properties to be retrieved from the esgf.properties file
-  *mandatory_properties = 4;	// number of mandatory properties to be retrieved from the esgf.properties file
+  *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 5;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
     {
@@ -589,6 +617,12 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      strcpy (POSTGRES_USER =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
+	      (*notfound)--;
+	      (*mandatory_properties)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.host")))
+	    {
+	      strcpy (ESGF_HOSTNAME = (char *) malloc (strlen (value_buffer) + 1), value_buffer);
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
@@ -665,8 +699,6 @@ ESGF_passwd (char *esgf_passwd_path)
 {
 
   char esgf_passwd_filename[256] = { '\0' };
-  char *position;
-  int notfound;
   char buffer[256] = { '\0' };
 
   // this line is ok for local and production env
@@ -682,6 +714,33 @@ ESGF_passwd (char *esgf_passwd_path)
     return -1;			// no password found 
 
   strcpy (POSTGRES_PASSWD = (char *) malloc (strlen (buffer) + 1), buffer);
+
+  fclose (file);
+  return 0;
+}
+
+int
+ESGF_node_type (char *esgf_passwd_path)
+{
+
+  char esgf_nodetype_filename[256] = { '\0' };
+  char buffer[256] = { '\0' };
+
+  // this line is ok for local and production env
+  sprintf (esgf_nodetype_filename, "/%s/config/config_type", esgf_passwd_path);
+
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", esgf_nodetype_filename);
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		// /esg/config/config_type not found
+    return -1;
+
+  if ((fscanf (file, "%s", buffer)) == EOF)	// now reading config_type TO DO check on mem leak (closing file) 
+    return -1;			// no password found 
+
+  NODE_TYPE = atoi (buffer);
+
+  //strcpy (POSTGRES_PASSWD = (char *) malloc (strlen (buffer) + 1), buffer);
 
   fclose (file);
   return 0;
