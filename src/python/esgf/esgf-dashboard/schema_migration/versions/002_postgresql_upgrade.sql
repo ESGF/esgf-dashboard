@@ -21,6 +21,7 @@ SET default_with_oids = false;
 CREATE TABLE rssfeed (
     idrssfeed serial primary key, 
     rssfeed character varying(1024) NOT NULL,
+    title character varying(1024) NOT NULL,
     local integer DEFAULT 0,
     daterssfeed timestamp without time zone DEFAULT now() NOT NULL
 );

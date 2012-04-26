@@ -53,6 +53,7 @@
 #define REG_ELEMENT_CONFIGURATION_ATTR_PORT		"port"
 #define REG_ELEMENT_NODEMANAGER_ATTR_ENDPOINT		"endpoint"
 #define REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL		"url"
+#define REG_ELEMENT_SINGLE_RSSFEED_ATTR_TITLE		"title"
 #define REG_ELEMENT_DOWNLOADEDDATA_ATTR_COUNT		"count"
 #define REG_ELEMENT_DOWNLOADEDDATA_ATTR_SIZE		"size"
 #define REG_ELEMENT_REGISTEREDUSERS_ATTR_COUNT		"count"
@@ -108,7 +109,7 @@
 #define QUERY_INSERT_SERVICE_INFO  "INSERT into esgf_dashboard.service_instance(port,name,institution,mail_admin,idhost) values(%ld,'%s','%s','%s',%ld);"
 
 // QUERY QUERY_INSERT_RSSFEED_INFO, add an rssfeed instance in the database
-#define QUERY_INSERT_RSSFEED_INFO  "INSERT into esgf_dashboard.rssfeed(rssfeed) values('%s');"
+#define QUERY_INSERT_RSSFEED_INFO  "INSERT into esgf_dashboard.rssfeed(rssfeed,title) values('%s','%s');"
 
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
@@ -766,16 +767,14 @@ parse_registration_xml_file (xmlNode * a_node)
 				    {
 					pmesg(LOG_DEBUG,__FILE__,__LINE__,"	[%s] found\n",REG_ELEMENT_SINGLE_RSSFEED);
 				      	char *rss_feed_url;
+				      	char *rss_feed_title;
 
-				      rss_feed_url =
-					xmlGetProp (rssfeed_node,
-						    REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL);
+				      rss_feed_url = xmlGetProp (rssfeed_node, REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL);
+				      rss_feed_title = xmlGetProp (rssfeed_node, REG_ELEMENT_SINGLE_RSSFEED_ATTR_TITLE);
 
-				      if (rss_feed_url == NULL
-					  || !strcmp (rss_feed_url, ""))
+				      if (rss_feed_url == NULL || !strcmp (rss_feed_url, "") || rss_feed_title == NULL || !strcmp (rss_feed_title, ""))
 					{
-					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Missing/invalid %s attribute [skip current %s  element]\n",REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL,
-						   REG_ELEMENT_SINGLE_RSSFEED);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Missing/invalid [%s and/or %s] attribute [skip current %s  element]\n",REG_ELEMENT_SINGLE_RSSFEED_ATTR_URL,REG_ELEMENT_SINGLE_RSSFEED_ATTR_TITLE, REG_ELEMENT_SINGLE_RSSFEED);
 					} 
 					else  
 					{  // start "if is a VALID SINGLE_RSSFEED element
@@ -783,6 +782,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      	  char hasrssfeed_key[128] = { '\0' };
 					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"		Valid [%s] element\n",REG_ELEMENT_SINGLE_RSSFEED);
 					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"		Url [%s] \n",rss_feed_url);
+					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"		Title [%s] \n",rss_feed_title);
 
 		                          if (hashtbl_result = hashtbl_get (hashtbl_rssfeed, rss_feed_url))
                         			{
@@ -802,7 +802,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				      snprintf (insert_rssfeed_query,
 						sizeof (insert_rssfeed_query),
 						QUERY_INSERT_RSSFEED_INFO,
-						rss_feed_url);
+						rss_feed_url,rss_feed_title);
 				      submit_query (conn,
 						    insert_rssfeed_query);
 				      // 2) retrieve rssfeed_id
@@ -863,6 +863,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					}  // end "if is a VALID SINGLE_RSSFEED element 
 				
 					xmlFree (rss_feed_url);
+					xmlFree (rss_feed_title);
 
 				    } // end "if SINGLE_RSSFEED element"
 				} // end loop on internal RSSFEEDS children
