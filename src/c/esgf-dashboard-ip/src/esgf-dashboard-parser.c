@@ -114,6 +114,9 @@
 // QUERY QUERY_INSERT_SERVICE_TO_PROJECT binds a service to a project (peer group) in the database
 #define QUERY_INSERT_SERVICE_TO_PROJECT  "INSERT into esgf_dashboard.uses(idproject,idserviceinstance) values(%ld,%ld);"
 
+// QUERY QUERY_REMOVE_SERVICE_FROM_PROJECT remove all of the service-project associations which are not longer valid
+#define QUERY_REMOVE_SERVICE_FROM_PROJECT  "DELETE from esgf_dashboard.uses where idserviceinstance=%ld and idproject not in %s"
+
 // QUERY QUERY_ADD_RSSFEED_TO_HOST binds a rssfeed to a host in the database
 #define QUERY_ADD_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
 
@@ -478,8 +481,8 @@ parse_registration_xml_file (xmlNode * a_node)
 	      char *node_hostname;
 	      char *node_type;
 	      int number_of_projects;
-	      long int project_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of projects in the hashtable
-	      long int service_ids[1024] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of services in the hashtable
+	      long int project_ids[4096] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of projects in the hashtable
+	      long int service_ids[4096] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of services in the hashtable
 	      long int host_id = 0;
 	      int geolocation_found;
 	      int i;
@@ -493,6 +496,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  char select_id_host_query[2048] = { '\0' };
 		  char update_host_type_query[2048] = { '\0' };
 		  char node_ip_test[64] = { '\0' };
+		  char project_ids_list[2048]= { '\0' };
 
 		  // get NODE attributes values
 
@@ -607,7 +611,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 		
 		  
-		  // todo: updating data node type
+		  // updating data node type
 		  if (node_type)
 		    {
 		  	snprintf (update_host_type_query,sizeof (update_host_type_query),QUERY_UPDATE_HOST_TYPE,atoi(node_type),host_id);
@@ -640,8 +644,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			{
 			  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup ProjectTable hit! [%s] [%s]\n",cursor_buf, hashtbl_result);
 			  success_lookup[0]++;
-			  project_ids[number_of_projects++] =
-			    atol (hashtbl_result);
+			  project_ids[number_of_projects++] = atol (hashtbl_result);
 			}
 		      else
 			{	// add host entry in DB (and hashtable too) without geolocation information
@@ -678,10 +681,18 @@ parse_registration_xml_file (xmlNode * a_node)
 		    }
 		  while (position);
 
-		  /*for (i = 0; i < number_of_projects; i++)
-		    fprintf (stderr, "Valore %d %ld\n", i, project_ids[i]);
+		  sprintf(project_ids_list,"(");
+		  for (i = 0; i < number_of_projects; i++)
+			if (i==0)
+			   sprintf (project_ids_list, "%s%ld",project_ids_list, project_ids[i]);
+			else
+			   sprintf (project_ids_list, "%s,%ld",project_ids_list, project_ids[i]);
+		  sprintf(project_ids_list,"%s)",project_ids_list);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ [%s]\n",project_ids_list);
 
-		  fprintf (stderr, "Element->name: %s\n", node_node->name);*/
+		    //fprintf (stderr, "Valore %d %ld\n", i, project_ids[i]);
+
+		  /*fprintf (stderr, "Element->name: %s\n", node_node->name);*/
 
 		  geolocation_found = 0;
 
@@ -884,6 +895,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			      int service_id;
 			      char insert_service_query[2048] = { '\0' };
 			      char select_id_service_query[2048] = { '\0' };
+			      char remove_service_from_old_projects_query[2048] = { '\0' };
 
 			      endpoint =
 				xmlGetProp (int_node,
@@ -1002,6 +1014,11 @@ parse_registration_xml_file (xmlNode * a_node)
 					  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",uses_key, project_ids_str);
 					}
 				    }	// end for add service to peer groups
+				   //4) Remove the service from the peer groups that are not in the list for the current host 
+				   
+	    			  snprintf(remove_service_from_old_projects_query, sizeof(remove_service_from_old_projects_query),QUERY_REMOVE_SERVICE_FROM_PROJECT,service_id,project_ids_list);
+	    			  submit_query (conn, remove_service_from_old_projects_query);
+				  pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@ Query [%s]\n",remove_service_from_old_projects_query);
 				}	// end of "if endpoint is valid
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
@@ -1104,6 +1121,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					{ '\0' };
 				      char select_id_service_query[2048] =
 					{ '\0' };
+			      	      char remove_service_from_old_projects_query[2048] = { '\0' };
 				      char *service_type;
 				      char *service_port;
 				      int service_id;
@@ -1212,6 +1230,12 @@ parse_registration_xml_file (xmlNode * a_node)
 						  pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",uses_key,project_ids_str);
 						}
 					    }	// end of for "add services to projects"
+
+					   // remove service from list of peer-groups no longer in the current host list of peer-groups 
+	    			  	   snprintf(remove_service_from_old_projects_query, sizeof(remove_service_from_old_projects_query),QUERY_REMOVE_SERVICE_FROM_PROJECT,service_id,project_ids_list);
+	    			  	   submit_query (conn, remove_service_from_old_projects_query);
+				  	   pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@ Query [%s]\n",remove_service_from_old_projects_query);
+
 					}	// end of "if valid serviceType and port"
 
 				      // free XML CONFIGURATION attributes      
