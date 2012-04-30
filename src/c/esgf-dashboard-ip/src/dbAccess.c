@@ -12,6 +12,45 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
+int retrieve_localhost_metrics()
+{
+   retrieve_localhost_cpu_metrics();
+   return 0;
+}
+
+int retrieve_localhost_cpu_metrics()
+{
+ // retrieving CPU load average metrics
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_cpu_metric_insert[2048] = { '\0' };
+  char loadavg1[256] = { '\0' };
+  char loadavg5[256] = { '\0' };
+  char loadavg15[256] = { '\0' };
+  int ret_code;
+
+  sprintf (esgf_nodetype_filename, "/proc/loadavg");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		
+    return -1;
+
+  if ((fscanf (file, "%s", loadavg1)) == EOF)	
+    return -1;			
+  if ((fscanf (file, "%s", loadavg5)) == EOF)	
+    return -1;			
+  if ((fscanf (file, "%s", loadavg15)) == EOF)	
+    return -1;			
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Cpu load average metrics [%s] [%s] [%s]\n", loadavg1, loadavg5,loadavg15);
+
+  snprintf (query_cpu_metric_insert,sizeof (query_cpu_metric_insert),STORE_CPU_METRICS,atof(loadavg1),atof(loadavg5),atof(loadavg15));
+	
+  if (ret_code = transaction_based_query(query_cpu_metric_insert,START_TRANSACTION_CPU_METRICS,END_TRANSACTION_CPU_METRICS))
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Cpu load average metrics retrieving FAILED! [Code %d]\n",ret_code);
+
+  fclose (file);
+  return 0;
+}
+
 int transaction_based_query(char *submitted_query, char* open_transaction, char* stop_transaction) 
 {
   PGconn *conn;

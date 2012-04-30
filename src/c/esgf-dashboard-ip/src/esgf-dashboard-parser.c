@@ -688,9 +688,7 @@ parse_registration_xml_file (xmlNode * a_node)
 			else
 			   sprintf (project_ids_list, "%s,%ld",project_ids_list, project_ids[i]);
 		  sprintf(project_ids_list,"%s)",project_ids_list);
-		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ [%s]\n",project_ids_list);
-
-		    //fprintf (stderr, "Valore %d %ld\n", i, project_ids[i]);
+		  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Project_ids_list [%s]\n",project_ids_list);
 
 		  /*fprintf (stderr, "Element->name: %s\n", node_node->name);*/
 
@@ -1018,7 +1016,7 @@ parse_registration_xml_file (xmlNode * a_node)
 				   
 	    			  snprintf(remove_service_from_old_projects_query, sizeof(remove_service_from_old_projects_query),QUERY_REMOVE_SERVICE_FROM_PROJECT,service_id,project_ids_list);
 	    			  submit_query (conn, remove_service_from_old_projects_query);
-				  pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@ Query [%s]\n",remove_service_from_old_projects_query);
+				  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query [%s]\n",remove_service_from_old_projects_query);
 				}	// end of "if endpoint is valid
 			      // free XML endpoint attribute      
 			      xmlFree (endpoint);
@@ -1234,7 +1232,7 @@ parse_registration_xml_file (xmlNode * a_node)
 					   // remove service from list of peer-groups no longer in the current host list of peer-groups 
 	    			  	   snprintf(remove_service_from_old_projects_query, sizeof(remove_service_from_old_projects_query),QUERY_REMOVE_SERVICE_FROM_PROJECT,service_id,project_ids_list);
 	    			  	   submit_query (conn, remove_service_from_old_projects_query);
-				  	   pmesg(LOG_DEBUG,__FILE__,__LINE__,"@@@@@@@@@@@@@@ Query [%s]\n",remove_service_from_old_projects_query);
+				  	   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query [%s]\n",remove_service_from_old_projects_query);
 
 					}	// end of "if valid serviceType and port"
 

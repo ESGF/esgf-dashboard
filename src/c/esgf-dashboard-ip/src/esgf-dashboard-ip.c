@@ -298,6 +298,7 @@ main (int argc, char **argv)
   int allprop;
   int ret_code;
   char query_remove_old_service_metrics[2048] = { '\0' };
+  char query_remove_old_local_cpu_metrics[2048] = { '\0' };
  
   // setting log level to the lowest one (DEBUG) 
   msglevel=2; //default = WARNING 
@@ -413,6 +414,7 @@ main (int argc, char **argv)
   //print_logs_before_starting (esgf_registration_xml_path);
 
   snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
+  snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
@@ -423,9 +425,11 @@ main (int argc, char **argv)
   while (iterator--)   //  TEST_ 
   //while (1)		// PRODUCTION_ 
     {
-      // Removing old metrics 
+      // Removing old metrics every 1 day 
       if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
+      if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
 
       // Calling the automatic registration_xml_feed into the parser
       automatic_registration_xml_feed (esgf_registration_xml_path);
@@ -434,6 +438,10 @@ main (int argc, char **argv)
 	 free (hosts);
       hosts = loadHosts (&numHosts);
 
+      // Retrieving local metrics	  
+      retrieve_localhost_metrics();	
+
+      // Retrieving global metrics	  
       if (numHosts != 0 && hosts != NULL)
 	{
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Host/services found. Let's check them...\n");
@@ -449,12 +457,15 @@ main (int argc, char **argv)
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
 	  sleep (PING_SPAN_NO_HOSTS);
 	}
+     
     }				// forever loop end
 
   // end thread
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data cube for data download metrics thread joins the main program before existing... waiting for it\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data cube for data download metrics thread joins the main program before existing...");
   if (pthread_join (pth, NULL))
-      fprintf(stderr,"pthread_join error");
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"done!\n");
 
   // freeing space
   fprintf(stderr,"***************************************************\n");
@@ -564,11 +575,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   CONNECTION_TIMEOUT = 1000000;
   THREAD_OPEN_MAX = 20;
   PING_SPAN = 295;
-  PING_SPAN_NO_HOSTS = 60;
+  PING_SPAN_NO_HOSTS = 295;
   HOSTS_LOADING_SPAN = 120;
   HISTORY_MONTH=3;
   HISTORY_DAY=0;
-  DATA_METRICS_SPAN=1;  
+  DATA_METRICS_SPAN=1; // default 1 hour 
 				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 5;	// number of mandatory properties to be retrieved from the esgf.properties file

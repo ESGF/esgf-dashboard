@@ -45,6 +45,10 @@
 
 #define GET_REGISTERED_USERS_COUNT "select count(distinct(username)) from esgf_security.user where openid like 'https://%s%';"
 
+#define START_TRANSACTION_CPU_METRICS "start transaction; lock esgf_dashboard.cpu_metrics;"
+#define STORE_CPU_METRICS "INSERT into esgf_dashboard.cpu_metrics(loadavg1,loadavg5,loadavg15,time_stamp) values(%f,%f,%f,now());"
+#define REMOVE_OLD_CPU_METRICS "DELETE from esgf_dashboard.cpu_metrics where time_stamp < (now() - interval '%d months' - interval '%d day');"
+#define END_TRANSACTION_CPU_METRICS "end transaction;"
 
 // --------------------------------------------------------
 

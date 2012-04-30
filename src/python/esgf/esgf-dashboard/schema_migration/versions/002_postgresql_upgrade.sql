@@ -29,6 +29,14 @@ CREATE TABLE rssfeed (
 
 ALTER TABLE esgf_dashboard.rssfeed OWNER TO dbsuper;
 
+CREATE TABLE cpu_metrics (
+	loadavg1        real,
+	loadavg5        real,
+	loadavg15       real,
+	time_stamp timestamp without time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE esgf_dashboard.cpu_metrics OWNER TO dbsuper;
 
 --
 -- Name: rssfeed_pkey; Type: CONSTRAINT; Schema: esgf_dashboard; Owner: dbsuper; Tablespace: 

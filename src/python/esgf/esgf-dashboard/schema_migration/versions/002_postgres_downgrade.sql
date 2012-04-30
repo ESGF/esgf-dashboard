@@ -14,6 +14,8 @@ drop table esgf_dashboard.hasfeed ;
 
 drop table esgf_dashboard.rssfeed ;
 
+drop table esgf_dashboard.cpu_metrics ;
+
 alter table esgf_dashboard.host drop regusers;
 alter table esgf_dashboard.host drop nodetype;
 alter table esgf_dashboard.host drop defaultpeer;
