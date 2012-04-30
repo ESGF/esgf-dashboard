@@ -1,12 +1,12 @@
-AC_PREREQ([2.60])
-AC_INIT(esgf-dashboard-ip,0.0.1, sandro.fiore@unisalento.it)
+#AC_PREREQ([2.60])
+AC_INIT(esgf-dashboard-ip,1.0.0, sandro.fiore@unisalento.it)
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_CC_C99
+#AC_PROG_CC_C99
 
 AM_PROG_CC_STDC
 

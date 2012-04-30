@@ -253,6 +253,8 @@
 				}
 			}
 
+			// open window on marker click
+			
 			function markerOnClickListener(host) {
 				if(openedWindow != null)
 					openedWindow.close();
@@ -348,6 +350,10 @@
 					<tr>
 						<td><p style="font-weight: bold;"><s:text name="allProjects.descriptionPanel.servicesNumber" />:</p></td>
 						<td><p><s:property value="numServices" /></p></td>
+					</tr>
+					<tr>
+						<td><p style="font-weight: bold;"><s:text name="allProjects.descriptionPanel.usersNumber" />:</p></td>
+						<td><p><s:property value="numUsers" /></p></td>
 					</tr>					
 					<tr>
 						<td><p style="font-weight: bold;"><s:text name="allProjects.descriptionPanel.description" />:</p></td>

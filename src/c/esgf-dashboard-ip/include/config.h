@@ -12,12 +12,18 @@ unsigned short POSTGRES_PORT_NUMBER;
 char *POSTGRES_USER;
 char *POSTGRES_PASSWD;
 char *POSTGRES_DB_NAME;
+char *ESGF_HOSTNAME;
 char *REGISTRATION_XML_PATH;
+char *DASHBOARD_SERVICE_PATH;
 int CONNECTION_TIMEOUT; // microseconds
 unsigned short THREAD_OPEN_MAX; // max threads #
 int PING_SPAN;
 int PING_SPAN_NO_HOSTS;
 int HOSTS_LOADING_SPAN;
+int HISTORY_MONTH;
+int HISTORY_DAY;
+long int DATA_METRICS_SPAN; // hours
+int NODE_TYPE;
 
 struct geo_output_struct
 {

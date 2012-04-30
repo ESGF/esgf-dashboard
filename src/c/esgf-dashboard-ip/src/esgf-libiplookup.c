@@ -6,6 +6,7 @@ esgf-geoiplookup.c
 #include "GeoIPCity.h"
 #include "GeoIP_internal.h"
 #include "../include/config.h"
+#include "../include/debug.h"
 
 // masks definitions
 #define OUTPUT_COUNTRY_CODE	1
@@ -56,11 +57,11 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
 
   sprintf (geoipdat, "%s/share/GeoIP/%s", GEOIP_DATA_PATH, GEOIPIDATABASE);
 
-  fprintf (stderr, "Loading GeoLiteCity from %s...",geoipdat);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Loading GeoLiteCity from %s...\n",geoipdat);
   if (gi = GeoIP_open (geoipdat, GEOIP_STANDARD))
     {
       i = GeoIP_database_edition (gi);
-      fprintf (stderr, " GeoIP database found [Ok]\n");
+      pmesg(LOG_DEBUG,__FILE__,__LINE__," GeoIP database found [Ok]\n");
       if (ret_code = geoiplookup (gi, hostname, i, geo_output))
 	{
 	GeoIP_delete (gi);
@@ -69,14 +70,13 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
     }
   else
     {
-      fprintf (stderr, " %s not available, skipping.Please check ! [Exit]\n",
-	       geoipdat);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"%s not available, skipping.Please check ! [Exit]\n",geoipdat);
       GeoIP_delete (gi);
       return (-4);
     }
 
   GeoIP_delete (gi);
-  fprintf (stderr, "Geoiplookup ok [code=%d]\n", ret_code);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Geoiplookup ok [code=%d]\n", ret_code);
   return 0;
 }
 
@@ -205,9 +205,7 @@ geoiplookup (GeoIP * gi, char *hostname, int i,
   ipnum = _GeoIP_lookupaddress (hostname);
   if (ipnum == 0)
     {
-      fprintf (stderr,
-	       "%s: can't resolve hostname ( %s ) [keep this code for debug -1]\n",
-	       GeoIPDBDescription[i], hostname);
+      pmesg(LOG_ERROR,__FILE__,__LINE__, "%s: can't resolve hostname ( %s ) [keep this code for debug -1]\n", GeoIPDBDescription[i], hostname);
       return -1;
 
     }
@@ -216,9 +214,7 @@ geoiplookup (GeoIP * gi, char *hostname, int i,
       gir = GeoIP_record_by_ipnum (gi, ipnum);
       if (NULL == gir)
 	{
-	  fprintf (stderr,
-		   "%s: IP Address not found [keep this code for debug -3]\n",
-		   GeoIPDBDescription[i]);
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"%s: IP Address not found [keep this code for debug -3]\n",GeoIPDBDescription[i]);
 	  return -3;
 	}
       else
@@ -237,9 +233,7 @@ geoiplookup (GeoIP * gi, char *hostname, int i,
     }
   else
     {
-      fprintf (stderr,
-	       "Some problem with the current release [keep this code for debug -2 ver:%d]\n",
-	       i);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Some problem with the current release [keep this code for debug -2 ver:%d]\n",i);
       return -2;
     }
   return 0;

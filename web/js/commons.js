@@ -4,14 +4,60 @@ function generateWelcomeMsg(name, surname) {
 	document.getElementById("loggedInUserSpan").appendChild(document.createTextNode(name + " " + surname));
 }
 
-function chooseIcon(avgActivity) {
+
+function chooseIcon(avgActivity,imgtype,file_ext) {
+	if(avgActivity < 10)
+		return pathURL + "img/map_icons/"+ imgtype + "/0." + file_ext;
+	else if(avgActivity < 20)
+		return pathURL + "img/map_icons/"+ imgtype + "/1." + file_ext;
+	else if(avgActivity < 30)
+		return pathURL + "img/map_icons/"+ imgtype + "/2." + file_ext;
+	else if(avgActivity < 40)
+		return pathURL + "img/map_icons/"+ imgtype + "/3." + file_ext;
+	else if(avgActivity < 50)
+		return pathURL + "img/map_icons/"+ imgtype + "/4." + file_ext;
+	else if(avgActivity < 60)
+		return pathURL + "img/map_icons/"+ imgtype + "/5." + file_ext;
+	else if(avgActivity < 70)
+		return pathURL + "img/map_icons/"+ imgtype + "/6." + file_ext;
+	else if(avgActivity < 80)
+		return pathURL + "img/map_icons/"+ imgtype + "/7." + file_ext;
+	else if(avgActivity < 90)
+		return pathURL + "img/map_icons/"+ imgtype + "/8." + file_ext;
+	else
+		return pathURL + "img/map_icons/"+ imgtype + "/9." + file_ext;
+}
+
+function chooseIconNodeType(nodetype,imgtype,file_ext) {
+	return pathURL + "img/map_icons/"+ imgtype + "/" + nodetype + "." + file_ext;
+}
+
+function nodeType_str(nodetype) {
+	var nodetype_str = "( Node type = ";
+	//alert(nodetype);	
+	if ((nodetype & 32) > 0)
+		nodetype_str= nodetype_str + "Compute ";
+	if ((nodetype & 16) > 0)
+		nodetype_str= nodetype_str + "Idp ";
+	if ((nodetype & 8) > 0)
+			nodetype_str= nodetype_str + "Index ";
+	if ((nodetype & 4) > 0)
+		nodetype_str= nodetype_str + "Data ";
+	nodetype_str = nodetype_str + ")";
+	//alert(nodetype_str);
+	return nodetype_str;
+}
+
+
+
+/*function chooseIcon(avgActivity) {
 	if(avgActivity < 40)
 		return pathURL + "img/redMarker.png";
 	else if(avgActivity < 80)
 		return pathURL + "img/yellowMarker.png";
 	else
 		return pathURL + "img/greenMarker.png";
-}
+}*/
 
 function urlencode (str) {
     str = (str+'').toString();

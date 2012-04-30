@@ -74,10 +74,17 @@ public class MostActiveServicesAction extends GridBaseAction {
 			query = query + idProject;
 			query = query + " AND u.endDate IS NULL ORDER BY " + (FIELD_MAP.containsKey(sort)? FIELD_MAP.get(sort): "percentage");
 						
-			if (super.getDir()) 
+/*			if (super.getDir()) 
 				query = query + " ASC LIMIT ";
 			else 
 				query = query + " DESC LIMIT ";
+						
+			query = query + super.limit;*/
+			
+			if (super.getDir()) 
+				query = query + " ASC OFFSET " + super.start + " LIMIT ";
+			else 
+				query = query + " DESC OFFSET " + super.start + " LIMIT ";
 						
 			query = query + super.limit;
 			

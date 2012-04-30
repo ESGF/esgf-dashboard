@@ -14,10 +14,42 @@
 
 // --------------- Query ----------------------------------
 #define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;" 
+
 #define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance) " 
+
+//#define QUERY3 	"start transaction esgf_dashboard.service_instance AND esgf_dashboard.host"
 #define QUERY3 	"start transaction; lock esgf_dashboard.service_instance; lock esgf_dashboard.host;"
-//#define QUERY3 	"start transaction;"
+
+//#define QUERY4 	"stop transaction;"
 #define QUERY4 	"end transaction;"
+
+// QUERY TO MANAGE THE OLD SERVICE METRICS 
+#define QUERY5  "DELETE from esgf_dashboard.service_status where timestamp < (now() - interval '%d months' - interval '%d day');"
+
+//#define QUERY6 	"start transaction on esgf_dashboard.service_status"
+#define QUERY6 	"start transaction; lock esgf_dashboard.service_status;"
+
+// #define QUERY7 	"THE PRE-COMPUTED DATA CUBE FOR DATA DOWNLOAD METRICS"
+#define QUERY7  "drop table if exists esgf_dashboard.analytics2; create table esgf_dashboard.analytics2 as (select d.project, d.model, d.experiment, s.name, count(*) as downloadcount, sum(size/1024/1024) as downloadsize from (select fv.file_id, fv.size, fv.url from (select file_id, max(version) as mv from file_version group by file_id order by mv desc) as mver, file_version as fv where fv.file_id=mver.file_id and fv.version=mver.mv) as lver, esgf_node_manager.access_logging as dl, file as f, dataset as d, standard_name as s, variable as v  where dl.url=lver.url and dl.success='t' and lver.file_id=f.id and s.name=v.standard_name and v.dataset_id=d.id and f.dataset_id=d.id group by project, model, experiment, s.name);"
+
+//#define QUERY8 	"start transaction esgf_dashboard.analytics2"
+#define QUERY8 	"start transaction;"
+
+#define QUERY9 	"drop table if exists esgf_dashboard.analytics2; create table esgf_dashboard.analytics2 (project varchar(255), model varchar(255), experiment varchar(255), name varchar(255), downloadsize bigint default 0, downloadcount numeric default 0);"
+
+// GLOBAL METRICS for DATA and USERS
+
+#define GET_DOWNLOADED_DATA_SIZE "select sum (downloadsize) from esgf_dashboard.analytics2;"
+
+#define GET_DOWNLOADED_DATA_COUNT "select sum(downloadcount) from esgf_dashboard.analytics2;"
+
+#define GET_REGISTERED_USERS_COUNT "select count(distinct(username)) from esgf_security.user where openid like 'https://%s%';"
+
+#define START_TRANSACTION_CPU_METRICS "start transaction; lock esgf_dashboard.cpu_metrics;"
+#define STORE_CPU_METRICS "INSERT into esgf_dashboard.cpu_metrics(loadavg1,loadavg5,loadavg15,time_stamp) values(%f,%f,%f,now());"
+#define REMOVE_OLD_CPU_METRICS "DELETE from esgf_dashboard.cpu_metrics where time_stamp < (now() - interval '%d months' - interval '%d day');"
+#define END_TRANSACTION_CPU_METRICS "end transaction;"
+
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);

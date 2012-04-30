@@ -14,6 +14,11 @@ public class HostPosition extends HostBase implements Serializable {
 	private Number latitude = null;
 	private Number longitude = null;
 	private Number activity = null;
+	private Integer regUsers = null;
+	private Integer nodeType = null;
+	//private String esgfVersion = null;
+	//private String esgfRelease = null;
+	
 	private List<Integer> idProjects = null;
 	
 	public String getCity() {
@@ -52,4 +57,53 @@ public class HostPosition extends HostBase implements Serializable {
 	public List<Integer> getIdProjects() {
 		return idProjects;
 	}
+
+	/**
+	 * @return the regUsers
+	 */
+	public Integer getRegUsers() {
+		return regUsers;
+	}
+	/**
+	 * @param regUsers the regUsers to set
+	 */
+	public void setRegUsers(Integer regUsers) {
+		this.regUsers = regUsers;
+	}
+	/**
+	 * @return the nodeType
+	 */
+	public Integer getNodeType() {
+		return nodeType;
+	}
+	/**
+	 * @param nodeType the nodeType to set
+	 */
+	public void setNodeType(Integer nodeType) {
+		this.nodeType = nodeType;
+	}
+	/**
+	 * @return the esgfVersion
+	 */
+	/*public String getEsgfVersion() {
+		return esgfVersion;
+	}*/
+	/**
+	 * @param esgfVersion the esgfVersion to set
+	 */
+	/*public void setEsgfVersion(String esgfVersion) {
+		this.esgfVersion = esgfVersion;
+	}*/
+	/**
+	 * @return the esgfRelease
+	 */
+	/*public String getEsgfRelease() {
+		return esgfRelease;
+	}*/
+	/**
+	 * @param esgfRelease the esgfRelease to set
+	 */
+	/*public void setEsgfRelease(String esgfRelease) {
+		this.esgfRelease = esgfRelease;
+	}*/
 }

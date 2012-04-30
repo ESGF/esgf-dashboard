@@ -15,6 +15,7 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 	private String startDate = null;
 	private Integer numServices = null;
 	private Integer numHosts = null;
+	private Integer numUsers = null;
 	private UserSession userSession = null;
 	
 	@Override
@@ -72,6 +73,15 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 			rs.close();
 			stmt.close();	
 			
+			// Get the total number of users
+			stmt = conn.prepareStatement(SqlQuery.ALL_PROJECTS_NUM_USERS.getSql());
+			//stmt.setInt(1, userSession.getId());
+			rs = stmt.executeQuery();			
+			if(rs.next()) 
+				numUsers = rs.getInt("numUsers");
+			rs.close();
+			stmt.close();	
+			
 		} catch(SQLException e) {
 			//System.out.println("Error Message AllProjectsAction " + e.getMessage());
 			return ERROR;
@@ -116,5 +126,19 @@ public class AllProjectsAction extends ActionSupport implements UserAware {
 	@Override
 	public void setUserSession(UserSession userSession) {
 		this.userSession  = userSession;
+	}
+
+	/**
+	 * @return the numUsers
+	 */
+	public Integer getNumUsers() {
+		return numUsers;
+	}
+
+	/**
+	 * @param numUsers the numUsers to set
+	 */
+	public void setNumUsers(Integer numUsers) {
+		this.numUsers = numUsers;
 	}		
 }

@@ -37,6 +37,22 @@
 				<param name="ignoreHierarchy">false</param> 
 			</result>
 		</action>
+
+		<action name="HostPositionBySingleProjectRegUsers" class="org.esg.node.actions.json.HostPositionAction" method="execute2">
+			<result type="json">
+				<param name="root">hosts</param> <!-- Set the root object -->
+				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
+
+		<action name="HostPositionBySingleProjectNodeType" class="org.esg.node.actions.json.HostPositionAction" method="execute3">
+			<result type="json">
+				<param name="root">hosts</param> <!-- Set the root object -->
+				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
+				<param name="ignoreHierarchy">false</param>
+			</result>
+		</action>
 		
 		<action name="HostPositionBySingleProject" class="org.esg.node.actions.json.HostPositionAction">
 			<result type="json">
@@ -95,6 +111,14 @@
 		</action>
 		
 		<action name="ServicesOnHostsByProjectPieChart" class="org.esg.node.actions.json.ServicesOnHostsByProjectPieChartAction">
+			<result type="json">
+				<param name="root">pieChart</param> <!-- Set the root object -->
+				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
+				<param name="ignoreHierarchy">false</param> 
+			</result>
+		</action>
+		
+		<action name="UsersOnHostsByProjectPieChart" class="org.esg.node.actions.json.UsersOnHostsByProjectPieChartAction">
 			<result type="json">
 				<param name="root">pieChart</param> <!-- Set the root object -->
 				<param name="excludeNullProperties">true</param> <!-- Excluding properties with null value -->
