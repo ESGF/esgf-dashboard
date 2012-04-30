@@ -218,12 +218,12 @@ void * precompute_data_metrics(void *arg)
 	char query_registered_users[2048] = { '\0' };
 	FILE *fp;
 
-	int i; // TEST_
+	//int i; // TEST_
 
-	i=5; // TEST_
-	while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
+	//i=5; // TEST_
+	//while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (1)
 	{
-
 	    downdatacount = 0;
 	    downdatasize  = 0;
             registeredusers = 0;
@@ -272,9 +272,9 @@ void * precompute_data_metrics(void *arg)
 		pmesg(LOG_ERROR,__FILE__,__LINE__,"The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to provide data and users metrics. Please check!\n");	
  		} 
 
-	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
-	    sleep(DATA_METRICS_SPAN); // TEST_
-	    i--;  // TEST_
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
+	    //sleep(DATA_METRICS_SPAN); // TEST_
+	    //i--;  // TEST_
 	}
 	return NULL;
 }
@@ -292,7 +292,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 3;
+  //int iterator = 3;  TEST_
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -407,7 +407,7 @@ main (int argc, char **argv)
       return 0;
     }
 
-  print_all_properties (); // TEST_ 
+  //print_all_properties (); // TEST_ 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -422,8 +422,8 @@ main (int argc, char **argv)
   pthread_create (&pth, NULL, &precompute_data_metrics,NULL);
 
   //counter = 0;
-  while (iterator--)   //  TEST_ 
-  //while (1)		// PRODUCTION_ 
+  //while (iterator--)   //  TEST_ 
+  while (1)		// PRODUCTION_ 
     {
       // Removing old metrics every 1 day 
       if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
