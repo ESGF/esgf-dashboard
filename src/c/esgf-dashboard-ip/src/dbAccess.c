@@ -45,7 +45,7 @@ int retrieve_localhost_cpu_metrics()
   snprintf (query_cpu_metric_insert,sizeof (query_cpu_metric_insert),STORE_CPU_METRICS,atof(loadavg1),atof(loadavg5),atof(loadavg15));
 	
   if (ret_code = transaction_based_query(query_cpu_metric_insert,START_TRANSACTION_CPU_METRICS,END_TRANSACTION_CPU_METRICS))
-      pmesg(LOG_ERROR,__FILE__,__LINE__,"Cpu load average metrics retrieving FAILED! [Code %d]\n",ret_code);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Error storing the cpu load average metrics in the DB! [Code %d]\n",ret_code);
 
   fclose (file);
   return 0;

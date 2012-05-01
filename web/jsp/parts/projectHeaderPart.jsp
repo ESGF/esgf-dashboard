@@ -13,11 +13,12 @@
     	buildProjectTab('<s:text name="project.tab.main.title"><s:param><s:property value="project.name" /></s:param></s:text>', '<s:text name="project.panel.map.availability.title" />', 
     			'<s:text name="project.panel.map.registeredusers.title" />','<s:text name="project.panel.map.nodetype.title" />', '<s:text name="project.panel.map.title" />','<s:text name="project.panel.description.title" />', 
 				'<s:text name="project.panel.projectAvailability" />', '<s:text name="project.panel.projectFailure" />', '<s:text name="project.panel.serviceDistribution" />',
-				'<s:text name="project.panel.userDistribution" />',
+				'<s:text name="project.panel.nodetypeDistribution" />','<s:text name="project.panel.userDistribution" />',
 				'<s:text name="help.project.descriptionPanel" />', '<s:text name="help.project.mapPanel" />', '<s:text name="help.project.gridPanel" />');
     	loadAvgProjectActivityPieChart(true, <s:text name="default.timespan" />);
     	loadAvgProjectActivityBarChartOff(true, <s:text name="default.timespan" />);
     	loadServicesDistribution();
+    	loadNodetypeDistribution();
     	loadUsersDistribution();
     }       
     
@@ -369,6 +370,12 @@
 		if(dataServicesDistributionPie == 'null') return nullValue; 
 		return dataServicesDistributionPie;		
 	}
+
+	var dataNodetypeDistributionPie = 'null';
+	function get_data_nodetypeDistributionPie() {
+		if(dataNodetypeDistributionPie == 'null') return nullValue; 
+		return dataNodetypeDistributionPie;		
+	}
 	
 	var dataUsersDistributionPie = 'null';
 	function get_data_usersDistributionPie() {
@@ -458,6 +465,30 @@
             }
 		});	
 	}
+	
+	var nodetypeDistributionWindow = null;
+	function loadNodetypeDistribution() {
+		var urlPie = '<s:url action="NodetypesOnHostsByProjectPieChart" namespace="/json" encode="false" />';
+		Ext.Ajax.request({
+            url: urlPie,
+            success: function (response, opts) {            
+				dataNodetypeDistributionPie = response.responseText;
+				swfobject.embedSWF("../flash/ofc.swf", "nodetypeDistributionPieChart", "100%", "170", "9.0.0", "../flash/expressInstall.swf",  
+					{ "get-data": "get_data_nodetypeDistributionPie", "loading": '<s:text name="chart.loadingMessage" />' }, { 
+						allowScriptAccess: "always",
+			            bgcolor: "#ffffff",
+			            wmode: "transparent" // opaque
+			        }, false
+				);								
+            },
+			failure: onFailure,
+            scope: this,
+            params: {
+            	idProject: idProject            	
+            }
+		});	
+	}
+	
 
 	var usersDistributionWindow = null;
 	function loadUsersDistribution() {

@@ -251,7 +251,8 @@ function onSuccessNodeType(response, opts) {
 //var map;
 function createMap(bounds, idDiv,typemap) {
    var myOptions = {
-		mapTypeId: google.maps.MapTypeId.ROADMAP,
+//		mapTypeId: google.maps.MapTypeId.ROADMAP,
+		mapTypeId: google.maps.MapTypeId.TERRAIN,
 		scrollwheel: false
 	};
 	var map = new google.maps.Map(document.getElementById(idDiv), myOptions);
@@ -285,7 +286,7 @@ function createMap(bounds, idDiv,typemap) {
 		map.controls[google.maps.ControlPosition.RIGHT_TOP].push(scaleControlDiv);		
 	}	
 
-	if (typemap==3) // regusers map
+	if ((typemap==3) || (typemap==0)) // regusers map
 	{ 
 		var scaleControlDiv = document.createElement('DIV');
 		scaleControlDiv.setAttribute('align','right');
