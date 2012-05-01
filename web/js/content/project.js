@@ -2,7 +2,7 @@
 
 var gridloaded=0;
 
-function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPanelTitle, hostTypePanelTitle, mapsTitle, descriptionPanelTitle, projectAvailability, projectFailure, serviceDistribution, userDistribution, descriptionPanelHelp, mapPanelHelp, gridPanelHelp) {
+function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPanelTitle, hostTypePanelTitle, mapsTitle, descriptionPanelTitle, projectAvailability, projectFailure, serviceDistribution, nodetypeDistribution, userDistribution, descriptionPanelHelp, mapPanelHelp, gridPanelHelp) {
 	var tabs = Ext.getCmp('tab-panel');	
 	tabs.add({
 		id: "tabProject",
@@ -51,6 +51,11 @@ function buildProjectTab(projectName, availabilityPanelTitle, registeredUsersPan
         		    	    	title: serviceDistribution,
         		    	    	frame: true,
         		    	    	contentEl: 'containerServicesDistributionPieChart'
+        		    	    }),
+        		    	    new Ext.Panel({
+        		    	    	title: nodetypeDistribution,
+        		    	    	frame: true,
+        		    	    	contentEl: 'containerNodetypeDistributionPieChart'
         		    	    }),
 							new Ext.Panel({
         		    	    	title: userDistribution,

@@ -118,6 +118,10 @@
 	<div id="containerAvgProjectActivityPieChart">
 		<div id="avgProjectActivityPieChart"></div>
 	</div>
+
+	<div id="containerNodetypeDistributionPieChart">
+		<div id="nodetypeDistributionPieChart"></div>						
+	</div>
 	
 	<div id="containerAvgProjectActivityBarChartOff">
 		<div id="avgProjectActivityBarChartOff"></div>

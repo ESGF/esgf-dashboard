@@ -201,7 +201,10 @@ public enum SqlQuery {
 	USERS_ON_HOSTS_BY_PROJECT("SELECT h.name, h.ip, h.regusers FROM esgf_dashboard.host h where h.id in " +
 									"(SELECT distinct(idHost) FROM esgf_dashboard.uses u INNER JOIN  esgf_dashboard.service_instance s ON s.id=u.idServiceInstance " + 
 									"WHERE u.idProject=? AND u.endDate IS NULL and ((h.nodetype & '10000') > 0))" +
-							  "ORDER BY h.regusers; "),			 
+							  "ORDER BY h.regusers; "),	
+							  
+							  
+	NODETYPES_ON_HOSTS_BY_PROJECT("SELECT (select count(*) as datatype from (SELECT h.id, h.nodetype FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE u.idProject=? AND u.endDate IS NULL GROUP BY h.id, h.nodetype) t where ((t.nodetype & '100') > 0)) as datatype, (select count(*) as indextype from (SELECT h.id, h.nodetype FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE u.idProject=? AND u.endDate IS NULL GROUP BY h.id, h.nodetype) t where ((t.nodetype & '1000') > 0)) as indextype,(select count(*) as idptype from (SELECT h.id, h.nodetype FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE u.idProject=? AND u.endDate IS NULL GROUP BY h.id, h.nodetype) t where ((t.nodetype & '10000') > 0)) as idptype,(select count(*) as computetype from (SELECT h.id, h.nodetype FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON u.idServiceInstance=s.id WHERE u.idProject=? AND u.endDate IS NULL GROUP BY h.id, h.nodetype) t where ((t.nodetype & '100000') > 0)) as computetype;"),							  
     /**
      * @param idServiceInstance
      * @return MIN timestamp, MAX timestamp
