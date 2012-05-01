@@ -218,11 +218,11 @@ void * precompute_data_metrics(void *arg)
 	char query_registered_users[2048] = { '\0' };
 	FILE *fp;
 
-	//int i; // TEST_
+	int i; // TEST_
 
-	//i=5; // TEST_
-	//while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
-	while (1)
+	i=1; // TEST_
+	//while (1) // PRODUCTION_
+	while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
 	    downdatacount = 0;
 	    downdatasize  = 0;
@@ -252,7 +252,7 @@ void * precompute_data_metrics(void *arg)
 		// todo: if DATANODETYPE = idp (16 dec ,10000 bin ,0x10 exac)
 		if ((NODE_TYPE & 10000) > 0)
 	    		if (ret_code = get_aggregated_metrics(query_registered_users, &registeredusers))
-				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d][Query=%s]\n",ret_code,query_registered_users);
+				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d]\n",ret_code);
 
 	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%ld] , [%ld] , [%ld] !\n", downdatacount, downdatasize, registeredusers);
 
@@ -272,9 +272,9 @@ void * precompute_data_metrics(void *arg)
 		pmesg(LOG_ERROR,__FILE__,__LINE__,"The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to provide data and users metrics. Please check!\n");	
  		} 
 
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
-	    //sleep(DATA_METRICS_SPAN); // TEST_
-	    //i--;  // TEST_
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
+	    sleep(DATA_METRICS_SPAN); // TEST_
+	    i--;  // TEST_
 	}
 	return NULL;
 }
@@ -292,7 +292,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  //int iterator = 3;  TEST_
+  int iterator = 3;  // TEST_
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -362,6 +362,12 @@ main (int argc, char **argv)
       if (mandatory)
 	{
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please note that %d DB properties are missing in the esgf.properties file. Please check! Exit\n",mandatory);
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Mandatory properties are:\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[db.host], [db.database], [db.port], [db.user]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.host]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[node.manager.service.app.home]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[dashboard.ip.app.home]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please check!!!\n");
 	  myfree (esgf_properties);
 	  myfree (POSTGRES_HOST);
 	  myfree (POSTGRES_DB_NAME);
@@ -407,7 +413,7 @@ main (int argc, char **argv)
       return 0;
     }
 
-  //print_all_properties (); // TEST_ 
+  print_all_properties (); // TEST_ 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -422,8 +428,8 @@ main (int argc, char **argv)
   pthread_create (&pth, NULL, &precompute_data_metrics,NULL);
 
   //counter = 0;
-  //while (iterator--)   //  TEST_ 
-  while (1)		// PRODUCTION_ 
+  //while (1)		// PRODUCTION_ 
+  while (iterator--)   //  TEST_ 
     {
       // Removing old metrics every 1 day 
       if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
@@ -461,11 +467,10 @@ main (int argc, char **argv)
     }				// forever loop end
 
   // end thread
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data cube for data download metrics thread joins the main program before existing...");
   if (pthread_join (pth, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
   else
-  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"done!\n");
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master!\n");
 
   // freeing space
   fprintf(stderr,"***************************************************\n");
@@ -582,7 +587,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   DATA_METRICS_SPAN=1; // default 1 hour 
 				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
-  *mandatory_properties = 5;	// number of mandatory properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
     {
@@ -637,12 +642,13 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "node.manager.app.home")))
+	  if (!(strcmp (buffer, "node.manager.service.app.home")))
 	    {
 	      strcpy (REGISTRATION_XML_PATH =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;
+	      (*mandatory_properties)--;
 	    }
 	  if (!(strcmp (buffer, "dashboard.ip.app.home")))
 	    {
@@ -650,6 +656,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;
+	      (*mandatory_properties)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.connection_timeout")))
 	    {
