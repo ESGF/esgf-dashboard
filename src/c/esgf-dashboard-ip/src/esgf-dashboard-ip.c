@@ -205,6 +205,25 @@ int automatic_registration_xml_feed (void *arg)
   return 0;
 }
 
+void * data_download_metrics_dw_reconciliation(void *arg)
+{
+	int i; 
+
+	i=0; 
+	//while (1) // PRODUCTION_
+	while (i<0) // while(i) TEST_  ---- while (1) PRODUCTION_
+	{
+
+	    if (i>0)  // skip the first time, because the process is called once before this loop	
+	    	reconciliation_process();
+
+	    sleep(DATA_METRICS_SPAN); // TEST_ 
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
+	    i++;  // TEST_
+	}
+
+	return NULL;
+}
 
 // Todo: this function could be improved taking from the esgf.properties the node type
 void * precompute_data_metrics(void *arg)
@@ -292,7 +311,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 3;  // TEST_
+  int iterator = 0;  // TEST_
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -422,16 +441,17 @@ main (int argc, char **argv)
   snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
+  reconciliation_process();
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
   // start thread 
-  pthread_create (&pth, NULL, &precompute_data_metrics,NULL);
+  pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
 
   //counter = 0;
   //while (1)		// PRODUCTION_ 
   while (iterator--)   //  TEST_ 
     {
-      // Removing old metrics every 1 day 
+      // Removing old metrics (todo: every 1 day) 
       if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
       if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
@@ -582,7 +602,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 295;
   HOSTS_LOADING_SPAN = 120;
-  HISTORY_MONTH=3;
+  HISTORY_MONTH=1;
   HISTORY_DAY=0;
   DATA_METRICS_SPAN=1; // default 1 hour 
 				// TO DO: to add the node.manager.app.home as a mandatory property

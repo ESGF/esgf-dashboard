@@ -212,14 +212,16 @@ function createHostMap(lat, lng, name, activity) {
 		zoom: 12,
 		center: latlng,
 		scrollwheel: false,
-		mapTypeId: google.maps.MapTypeId.ROADMAP
+		//mapTypeId: google.maps.MapTypeId.ROADMAP
+		mapTypeId: google.maps.MapTypeId.TERRAIN
 	};
 	serverMap = new google.maps.Map(document.getElementById("server_map_canvas"), myOptions);
 	var marker = new google.maps.Marker({
 	    position: latlng,
 	    map: serverMap,
 		title: name,
-	    icon: chooseIcon(activity,"png")
+	    //icon: chooseIcon(activity,"png")//
+		icon: chooseIcon(activity,"availability","svg")
 	});
 	
 	google.maps.event.addListener(marker, 'click', function() {
