@@ -12,6 +12,8 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
+#define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
+
 int retrieve_localhost_metrics()
 {
    retrieve_localhost_cpu_metrics();
@@ -94,7 +96,7 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
 
   //snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query to be submitted : [%s]\n",submitted_query);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission\n");
   //res = PQexec(conn, query_history);
   res = PQexec(conn, submitted_query);
 
@@ -311,3 +313,85 @@ int get_aggregated_metrics(char *submitted_query, long int *metrics)
 }
 
 
+ 
+
+int reconciliation_process()
+{
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process START\n");
+	PGconn *conn;
+	PGresult *res;
+	long int numTuples;
+
+	/* Connect to database */
+	char conninfo[1024] = {'\0'};
+	
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP1, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP2, QUERY8, QUERY4))
+		return -2;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK]\n");
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP3, QUERY8, QUERY4))
+		return -3;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK]\n");
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP4, QUERY8, QUERY4))
+		return -4;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK]\n");
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK]\n");
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE, QUERY8, QUERY4)) 
+		return -7;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.1 [OK]\n");
+
+	// OPEN CONNECTION  
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: START\n");
+
+        snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+	conn = PQconnectdb ((const char *) conninfo);
+
+	if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 7.2: Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+	// SELECT START 
+
+	res = PQexec(conn,QUERY_DATA_DOWNLOAD_METRICS_FINALDW_GET_RAW_DATA);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 7.2: SELECT data from dwstep6 FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -3;
+    	}
+
+	numTuples = PQntuples(res);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: Number of entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	unsigned t;
+	for(t = 0; t < numTuples; t ++) {
+		// reconciliation at the tuple level
+		if ((t % 10) ==0)
+		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: Processing entry [%f] \n",(((float) t+1))/((float) numTuples));
+		/*hosts[t].id = atoi(PQgetvalue(res, t, 0));
+		strcpy(hosts[t].hostName, PQgetvalue(res, t, 1));
+		hosts[t].portNumber = atoi(PQgetvalue(res, t, 2));*/
+	}
+	PQclear(res);
+	// SELECT END
+
+	// CLOSE CONNECTION  
+    	PQfinish(conn);
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7: END [OK]\n");
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process END\n");
+ 	return 0;
+}
