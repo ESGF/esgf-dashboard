@@ -39,11 +39,13 @@
 
 // GLOBAL METRICS for DATA and USERS
 
-#define GET_DOWNLOADED_DATA_SIZE "select sum (downloadsize) from esgf_dashboard.analytics2;"
+#define GET_DOWNLOADED_DATA_SIZE "select sum (size) from esgf_dashboard.finaldw;"
 
-#define GET_DOWNLOADED_DATA_COUNT "select sum(downloadcount) from esgf_dashboard.analytics2;"
+#define GET_DOWNLOADED_DATA_COUNT "select count(*) from esgf_dashboard.finaldw;"
 
 #define GET_REGISTERED_USERS_COUNT "select count(distinct(username)) from esgf_security.user where openid like 'https://%s%';"
+
+#define GET_LAST_IMPORT_ID "select lastprocessed_id from esgf_dashboard.reconciliation_process;"
 
 #define START_TRANSACTION_CPU_METRICS "start transaction; lock esgf_dashboard.cpu_metrics;"
 #define STORE_CPU_METRICS "INSERT into esgf_dashboard.cpu_metrics(loadavg1,loadavg5,loadavg15,time_stamp) values(%f,%f,%f,now());"
@@ -62,9 +64,11 @@
 
 #define QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6 "drop table if exists esgf_dashboard.dwstep6; create table esgf_dashboard.dwstep6 as (select dwstep4.project, dwstep4.model, dwstep4.experiment, dwstep4.datasetname, dwstep4.datasetid, dwstep4.size, dwstep4.url, dwstep4.mv, dwstep5.value as realm from esgf_dashboard.dwstep4 LEFT OUTER JOIN esgf_dashboard.dwstep5 ON (dwstep4.datasetid = dwstep5.dataset_id) );"
 
-#define QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE "drop table if exists esgf_dashboard.finaldw; create table esgf_dashboard.finaldw;"
+#define QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE "drop table if exists esgf_dashboard.finaldw; create table esgf_dashboard.finaldw  (al_id integer, project character varying(1024),model character varying(1024),experiment character varying(512), url character varying(1024),mv integer, realm character varying(512), user_id_hash character varying(512), user_idp character varying(256), year double precision, month double precision, day  double precision, hour double precision, service_type character varying(512), remote_addr character varying(128), datasetname character varying(255),size bigint,success integer, duration double precision);"
 
-#define QUERY_DATA_DOWNLOAD_METRICS_FINALDW_GET_RAW_DATA "select al.id as al_id, dwstep6.project, dwstep6.model, dwstep6.experiment, dwstep6.url, dwstep6.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6.datasetname, dwstep6.size, al.success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6 where dwstep6.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
+#define QUERY_DATA_DOWNLOAD_METRICS_FINALDW_GET_RAW_DATA "select al.id as al_id, dwstep6.project, dwstep6.model, dwstep6.experiment, dwstep6.url, dwstep6.mv, dwstep6.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6.datasetname, dwstep6.size, (case success when 't' then 1 else 0 end) success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6 where dwstep6.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
+
+
 
 // --------------------------------------------------------
 

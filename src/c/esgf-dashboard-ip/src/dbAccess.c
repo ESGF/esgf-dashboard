@@ -257,7 +257,7 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 }
 
 
-int get_aggregated_metrics(char *submitted_query, long int *metrics) 
+int get_single_value(char *submitted_query, long int *metrics) 
 {
   PGconn *conn;
   PGresult *res;
@@ -267,7 +267,7 @@ int get_aggregated_metrics(char *submitted_query, long int *metrics)
 
   /* Connect to database */
   *metrics=0;
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get Aggregated Metrics - START\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - START\n");
 
   snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
   conn = PQconnectdb ((const char *) conninfo);
@@ -285,17 +285,17 @@ int get_aggregated_metrics(char *submitted_query, long int *metrics)
 
    if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP - Query ERROR \n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP - Query ERROR \n");
 	        PQclear(res);
 		PQfinish(conn);
 		return -2;
     	}
 
    numTuples = PQntuples(res);
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Aggregated Metrics [Tuples=%ld] \n",numTuples);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld] \n",numTuples);
    if (numTuples!=1) 
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get Aggregated Metrics STOP Too many Tuples ERROR [%ld]\n",numTuples);
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP Too many Tuples ERROR [%ld]\n",numTuples);
 	        PQclear(res);
 		PQfinish(conn);
 		return -3;
@@ -304,7 +304,7 @@ int get_aggregated_metrics(char *submitted_query, long int *metrics)
    // setting return metrics	
    *metrics = atol(PQgetvalue(res, 0, 0));
 
-   pmesg(LOG_DEBUG,__FILE__,__LINE__," Get Aggregated Metrics - END [value=%ld] \n", *metrics);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - END [value=%ld] \n", *metrics);
    PQclear(res);
 
    PQfinish(conn);
@@ -321,7 +321,10 @@ int reconciliation_process()
 	PGconn *conn;
 	PGresult *res;
 	long int numTuples;
-
+	long int lastimport_id;
+	int ret_code;
+	
+	lastimport_id=-1;
 	/* Connect to database */
 	char conninfo[1024] = {'\0'};
 	
@@ -344,21 +347,31 @@ int reconciliation_process()
 		return -6;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK]\n");
 
-	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE, QUERY8, QUERY4)) 
+	if (ret_code = get_single_value(GET_LAST_IMPORT_ID, &lastimport_id))
 		return -7;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.1 [OK]\n");
-
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.1 [OK]\n",lastimport_id);
+	
+	if (lastimport_id<0)
+		return -8;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2 [OK] [LastID=%ld]\n",lastimport_id);
+	
+	if (!lastimport_id) {
+		if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE, QUERY8, QUERY4)) 
+			return -9;
+ 		else 
+			pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.3 [OK]\n");
+	}
 	// OPEN CONNECTION  
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: START\n");
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8: START\n");
 
         snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
 	conn = PQconnectdb ((const char *) conninfo);
 
 	if (PQstatus(conn) != CONNECTION_OK)
         {
-                pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 7.2: Connection to database failed: %s\n", PQerrorMessage(conn));
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 8.1: Connection to database failed: %s\n", PQerrorMessage(conn));
 		PQfinish(conn);
-		return -1;
+		return -10;
         }
 
 	// SELECT START 
@@ -367,31 +380,32 @@ int reconciliation_process()
 
 	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 7.2: SELECT data from dwstep6 FAILED\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 8.2: SELECT data from dwstep6 FAILED\n");
 	        PQclear(res);
 		PQfinish(conn);
-		return -3;
+		return -11;
     	}
 
 	numTuples = PQntuples(res);
-	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: Number of entries from the access_logging table to be processed [%ld] \n",numTuples);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.3: Number of entries from the access_logging table to be processed [%ld] \n",numTuples);
 
 	unsigned t;
 	for(t = 0; t < numTuples; t ++) {
 		// reconciliation at the tuple level
-		if ((t % 10) ==0)
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2: Processing entry [%f] \n",(((float) t+1))/((float) numTuples));
+		if ((t % 100) ==0)
+		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: Processing entry [%.2f%] \n",(((float) t+1)*100)/((float) numTuples));
 		/*hosts[t].id = atoi(PQgetvalue(res, t, 0));
 		strcpy(hosts[t].hostName, PQgetvalue(res, t, 1));
 		hosts[t].portNumber = atoi(PQgetvalue(res, t, 2));*/
 	}
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: Processing entry [100%] \n");
 	PQclear(res);
 	// SELECT END
 
 	// CLOSE CONNECTION  
     	PQfinish(conn);
 
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7: END [OK]\n");
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8: END [OK]\n");
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process END\n");
  	return 0;
 }

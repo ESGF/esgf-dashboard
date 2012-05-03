@@ -259,10 +259,10 @@ void * precompute_data_metrics(void *arg)
 
 	    // Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
 	    if (DASHBOARD_SERVICE_PATH) {	 
-	    	if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
+	    	if (ret_code = get_single_value(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
 			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
 
-	    	if (ret_code = get_aggregated_metrics(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
+	    	if (ret_code = get_single_value(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
 			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
 
 	    	snprintf (query_registered_users,sizeof (query_registered_users),GET_REGISTERED_USERS_COUNT, ESGF_HOSTNAME);
@@ -270,7 +270,7 @@ void * precompute_data_metrics(void *arg)
 			
 		// todo: if DATANODETYPE = idp (16 dec ,10000 bin ,0x10 exac)
 		if ((NODE_TYPE & 10000) > 0)
-	    		if (ret_code = get_aggregated_metrics(query_registered_users, &registeredusers))
+	    		if (ret_code = get_single_value(query_registered_users, &registeredusers))
 				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d]\n",ret_code);
 
 	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%ld] , [%ld] , [%ld] !\n", downdatacount, downdatasize, registeredusers);
