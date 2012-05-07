@@ -94,7 +94,7 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
 
   //snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission\n");
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission [%s]\n",submitted_query);
   //res = PQexec(conn, query_history);
   res = PQexec(conn, submitted_query);
 

@@ -10,7 +10,6 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-drop table esgf_dashboard.data_download_metrics_dw;
 drop table esgf_dashboard.reconciliation_process;
 
 SET search_path = public, pg_catalog;
