@@ -211,12 +211,13 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 
 	i=0; 
 	//while (1) // PRODUCTION_
-	while (i<0) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (i<15) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
-
-	    if (i>0)  // skip the first time, because the process is called once before this loop	
+	    // skip the first time, because the process is called once before this loop	
+	    if (i>0) {  
 	    	reconciliation_process();
-
+		compute_aggregate_data_user_metrics();	
+		}
 	    sleep(DATA_METRICS_SPAN); // TEST_ 
 	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
 	    i++;  // TEST_
@@ -226,7 +227,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 }
 
 // Todo: this function could be improved taking from the esgf.properties the node type
-void * precompute_data_metrics(void *arg)
+int compute_aggregate_data_user_metrics()
 {
   	int ret_code;
 	long int downdatacount;
@@ -237,28 +238,12 @@ void * precompute_data_metrics(void *arg)
 	char query_registered_users[2048] = { '\0' };
 	FILE *fp;
 
-	int i; // TEST_
+	downdatacount = 0;
+	downdatasize  = 0;
+        registeredusers = 0;
 
-	i=1; // TEST_
-	//while (1) // PRODUCTION_
-	while (i) // while(i) TEST_  ---- while (1) PRODUCTION_
-	{
-	    downdatacount = 0;
-	    downdatasize  = 0;
-            registeredusers = 0;
-
-	    // Pre-computation of the 4D data mart for the data download (size,count) metrics	
-
-	    if (ret_code = transaction_based_query(QUERY7, QUERY8, QUERY4))
-		{
-		 pmesg(LOG_ERROR,__FILE__,__LINE__,"Compute data metrics FAILED! Are you running the publisher DB? [Code %d]\n",ret_code);
-  		 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating a static data cube!\n");
-	    	 if (ret_code=transaction_based_query(QUERY9, QUERY8, QUERY4))
-		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Computation of a static data cube FAILED! [Code %d]\n",ret_code);
-		}
-
-	    // Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
-	    if (DASHBOARD_SERVICE_PATH) {	 
+	// Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
+	if (DASHBOARD_SERVICE_PATH) {	 
 	    	if (ret_code = get_single_value(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
 			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
 
@@ -287,15 +272,11 @@ void * precompute_data_metrics(void *arg)
 	    	} else {
  	    		pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file.The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to store the data and users metrics. Please check!\n");
 	    	}
-	    } else { // the DASHBOARD_SERVICE_PATH is NULL <=> 'dashboard.ip.app.home' not set in the esgf.properties file
+        } else { // the DASHBOARD_SERVICE_PATH is NULL <=> 'dashboard.ip.app.home' not set in the esgf.properties file
 		pmesg(LOG_ERROR,__FILE__,__LINE__,"The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to provide data and users metrics. Please check!\n");	
- 		} 
+ 	} 
 
-	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
-	    sleep(DATA_METRICS_SPAN); // TEST_
-	    i--;  // TEST_
-	}
-	return NULL;
+	return 0;
 }
 
 int
@@ -311,13 +292,14 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 0;  // TEST_
+  int iterator = 15;  // TEST_
   int opt_t = 0;
   int mandatory;
   int allprop;
   int ret_code;
   char query_remove_old_service_metrics[2048] = { '\0' };
   char query_remove_old_local_cpu_metrics[2048] = { '\0' };
+  char query_remove_old_local_memory_metrics[2048] = { '\0' };
  
   // setting log level to the lowest one (DEBUG) 
   msglevel=2; //default = WARNING 
@@ -440,8 +422,10 @@ main (int argc, char **argv)
 
   snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
+  snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
   reconciliation_process();
+  compute_aggregate_data_user_metrics();
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
   // start thread 
@@ -456,6 +440,8 @@ main (int argc, char **argv)
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
       if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
+      if (ret_code=transaction_based_query(query_remove_old_local_memory_metrics,START_TRANSACTION_MEMORY_METRICS, END_TRANSACTION_MEMORY_METRICS))
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local memory metrics FAILED! [Code %d]\n",ret_code);
 
       // Calling the automatic registration_xml_feed into the parser
       automatic_registration_xml_feed (esgf_registration_xml_path);
@@ -604,7 +590,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   HOSTS_LOADING_SPAN = 120;
   HISTORY_MONTH=1;
   HISTORY_DAY=0;
-  DATA_METRICS_SPAN=1; // default 1 hour 
+  DATA_METRICS_SPAN=1; 		// default 1 hour 
 				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file

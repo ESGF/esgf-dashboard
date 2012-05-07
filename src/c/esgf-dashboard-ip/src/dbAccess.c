@@ -17,7 +17,45 @@
 int retrieve_localhost_metrics()
 {
    retrieve_localhost_cpu_metrics();
+   retrieve_localhost_memory_metrics();
    return 0;
+}
+
+int retrieve_localhost_memory_metrics()
+{
+ // retrieving memory (swap/ram) metrics
+
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_memory_metric_insert[2048] = { '\0' };
+  char freeram[256] = { '\0' };
+  char usedram[256] = { '\0' };
+  char freeswap[256] = { '\0' };
+  char usedswap[256] = { '\0' };
+  int ret_code;
+  int i=0;
+  char line [ 1024 ]; /* or other suitable maximum line size */
+
+  sprintf (esgf_nodetype_filename, "/proc/meminfo");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		
+    return -1;
+
+ while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+       {
+        i++;
+	// mettere un case sulla variabile i
+        fputs ( line, stdout ); /* write the line */
+       }
+ fclose ( file );
+
+ pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", freeram,usedram,freeswap,usedswap);
+snprintf (query_memory_metric_insert,sizeof (query_memory_metric_insert),STORE_MEMORY_METRICS,atoll(freeram),atoll(usedram),atoll(freeswap),atoll(usedswap));
+	
+  if (ret_code = transaction_based_query(query_memory_metric_insert,START_TRANSACTION_MEMORY_METRICS,END_TRANSACTION_MEMORY_METRICS))
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Error storing the memory metrics in the DB! [Code %d]\n",ret_code);
+
+  return 0;
 }
 
 int retrieve_localhost_cpu_metrics()
@@ -331,18 +369,23 @@ int reconciliation_process()
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP1, QUERY8, QUERY4))
 		return -1;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP2, QUERY8, QUERY4))
 		return -2;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP3, QUERY8, QUERY4))
 		return -3;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP4, QUERY8, QUERY4))
 		return -4;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5, QUERY8, QUERY4)) 
 		return -5;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6, QUERY8, QUERY4)) 
 		return -6;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK]\n");
@@ -415,7 +458,7 @@ int reconciliation_process()
 			for (w=0 ; w < nFields ; w++)
 			{	
 				long long int long_int_value;
-				if (!strcmp(PQfname(res, w),"year") || !strcmp(PQfname(res, w),"mv") || !strcmp(PQfname(res, w),"success") || !strcmp(PQfname(res, w),"month") || !strcmp(PQfname(res, w),"day") || !strcmp(PQfname(res, w),"hour")) 
+				if (!strcmp(PQfname(res, w),"year") || !strcmp(PQfname(res, w),"mv") || !strcmp(PQfname(res, w),"success") || !strcmp(PQfname(res, w),"month") || !strcmp(PQfname(res, w),"day") || !strcmp(PQfname(res, w),"hour") || !strcmp(PQfname(res, w),"datasetid") || !strcmp(PQfname(res, w),"file_id") ) 
 					{
 				  	if (w)
 	  					snprintf (values_list,sizeof (values_list),"%s,%ld",values_list_temp, atol(PQgetvalue(res, t, w)));
@@ -469,6 +512,12 @@ int reconciliation_process()
 	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: Processing entry [100%] \n");
 	PQclear(res);
 	// SELECT END
+
+	// to do: creating the CMIP5 data warehouse with VARIABLE as a new dimension
+
+	//if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6, QUERY8, QUERY4)) 
+	//	return -6;
+ 	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK]\n");
 
 	// CLOSE CONNECTION  
     	PQfinish(conn);
