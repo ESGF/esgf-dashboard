@@ -39,7 +39,7 @@
 
 // GLOBAL METRICS for DATA and USERS
 
-#define GET_DOWNLOADED_DATA_SIZE "select sum (size) from esgf_dashboard.finaldw where success=1;"
+#define GET_DOWNLOADED_DATA_SIZE "select sum (size/1024) from esgf_dashboard.finaldw where success=1;"
 
 #define GET_DOWNLOADED_DATA_COUNT "select count(*) from esgf_dashboard.finaldw where success=1;"
 
@@ -54,8 +54,8 @@
 #define END_TRANSACTION_CPU_METRICS "end transaction;"
 
 // MEMORY QUERIES
-#define START_TRANSACTION_MEMORY_METRICS "start transaction; lock esgf_dashboard.cpu_metrics;"
-#define STORE_MEMORY_METRICS "INSERT into esgf_dashboard.cpu_metrics(freeram,usedram,freeswap,usedswap,time_stamp) values(%ld,%ld,%ld,%ld,now());"
+#define START_TRANSACTION_MEMORY_METRICS "start transaction; lock esgf_dashboard.memory_metrics;"
+#define STORE_MEMORY_METRICS "INSERT into esgf_dashboard.memory_metrics(freeram,usedram,freeswap,usedswap,time_stamp) values(%ld,%ld,%ld,%ld,now());"
 #define REMOVE_OLD_MEMORY_METRICS "DELETE from esgf_dashboard.memory_metrics where time_stamp < (now() - interval '%d months' - interval '%d day');"
 #define END_TRANSACTION_MEMORY_METRICS "end transaction;"
 
@@ -94,7 +94,7 @@
 // end Laptop queries */ 
 
 
-#define QUERY_DATA_DOWNLOAD_METRICS_GET_RAW_DATA "select al.id as al_id, dwstep6.datasetid, dwstep6.file_id, dwstep6.project, dwstep6.model, dwstep6.experiment, dwstep6.url, dwstep6.mv, dwstep6.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6.datasetname, dwstep6.size, (case success when 't' then 1 else 0 end) success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6 where dwstep6.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
+#define QUERY_DATA_DOWNLOAD_METRICS_GET_RAW_DATA "select al.id as al_id, dwstep6.datasetid, dwstep6.file_id, dwstep6.project, dwstep6.model, dwstep6.experiment, dwstep6.url, dwstep6.mv, dwstep6.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6.datasetname, (dwstep6.size)/1024 as size, (case success when 't' then 1 else 0 end) success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6 where dwstep6.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
 
 #define QUERY_INSERT_DATA_DOWNLOAD_METRICS_FINALDW "insert into esgf_dashboard.finaldw(%s) values(%s);"
 #define QUERY_UPDATE_LAST_PROCESSED_AL_ID "update esgf_dashboard.reconciliation_process set lastprocessed_id =%lld, time_stamp=now();"

@@ -46,7 +46,6 @@ static char *USAGE =
 void readConfig (void);
 int myfree (char *mystring);
 void print_all_properties (void);
-//void print_logs_before_starting (char *esgf_registration_xml_path);
 //void get_event (int fd, const char *target);
 //void handle_error (int error);
 
@@ -68,12 +67,6 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTNAME = [%s]\n",ESGF_HOSTNAME);
 }
 
-/*void
-print_logs_before_starting (char *esgf_registration_xml_path)
-{
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Information provider startup...\n");
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Feeding [%s]\n", esgf_registration_xml_path);
-}*/
 
 
 /* Allow for 1024 simultanious events */
@@ -210,17 +203,16 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	//while (1) // PRODUCTION_
-	while (i<15) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
 	    	reconciliation_process();
 		compute_aggregate_data_user_metrics();	
 		}
-	    sleep(DATA_METRICS_SPAN); // TEST_ 
-	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_
-	    i++;  // TEST_
+	    //sleep(DATA_METRICS_SPAN); // TEST_ 
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
+	    i++;  
 	}
 
 	return NULL;
@@ -292,7 +284,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 15;  // TEST_
+  int iterator = 1;  // TEST_ >1  PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -414,11 +406,9 @@ main (int argc, char **argv)
       return 0;
     }
 
-  print_all_properties (); // TEST_ 
+  //print_all_properties (); // TEST_ 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
-
-  //print_logs_before_starting (esgf_registration_xml_path);
 
   snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
@@ -431,18 +421,22 @@ main (int argc, char **argv)
   // start thread 
   pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
 
-  //counter = 0;
-  //while (1)		// PRODUCTION_ 
-  while (iterator--)   //  TEST_ 
+  counter = 0;
+ // PRODUCTION_  while (iterator)
+ // TEST_  while (iterator--)
+  while (iterator)   
     {
-      // Removing old metrics (todo: every 1 day) 
-      if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
-      if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
-      if (ret_code=transaction_based_query(query_remove_old_local_memory_metrics,START_TRANSACTION_MEMORY_METRICS, END_TRANSACTION_MEMORY_METRICS))
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local memory metrics FAILED! [Code %d]\n",ret_code);
-
+      // Removing old metrics once 1 day
+      if ((counter % 288) == 0) {
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics (once a day)\n");
+      	if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
+		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
+      	if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
+		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
+      	if (ret_code=transaction_based_query(query_remove_old_local_memory_metrics,START_TRANSACTION_MEMORY_METRICS, END_TRANSACTION_MEMORY_METRICS))
+		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local memory metrics FAILED! [Code %d]\n",ret_code);
+	counter=0;
+      }
       // Calling the automatic registration_xml_feed into the parser
       automatic_registration_xml_feed (esgf_registration_xml_path);
 
@@ -469,7 +463,7 @@ main (int argc, char **argv)
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Waiting for %d sec\n", PING_SPAN_NO_HOSTS);
 	  sleep (PING_SPAN_NO_HOSTS);
 	}
-     
+      counter++; 
     }				// forever loop end
 
   // end thread
@@ -588,8 +582,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN = 295;
   PING_SPAN_NO_HOSTS = 295;
   HOSTS_LOADING_SPAN = 120;
-  HISTORY_MONTH=1;
-  HISTORY_DAY=0;
+  HISTORY_MONTH=0;
+  HISTORY_DAY=10;
   DATA_METRICS_SPAN=1; 		// default 1 hour 
 				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file

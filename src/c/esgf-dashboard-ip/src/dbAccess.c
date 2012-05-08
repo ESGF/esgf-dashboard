@@ -28,11 +28,13 @@ int retrieve_localhost_memory_metrics()
   char esgf_nodetype_filename[256] = { '\0' };
   char query_memory_metric_insert[2048] = { '\0' };
   char freeram[256] = { '\0' };
-  char usedram[256] = { '\0' };
+  char totram[256] = { '\0' };
   char freeswap[256] = { '\0' };
-  char usedswap[256] = { '\0' };
+  char totswap[256] = { '\0' };
+  long int fram,tram,fswap,tswap,uram,uswap;
   int ret_code;
   int i=0;
+  int j=0;
   char line [ 1024 ]; /* or other suitable maximum line size */
 
   sprintf (esgf_nodetype_filename, "/proc/meminfo");
@@ -44,13 +46,49 @@ int retrieve_localhost_memory_metrics()
  while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
        {
         i++;
-	// mettere un case sulla variabile i
-        fputs ( line, stdout ); /* write the line */
+	if (i==1 || i==2 || i==12 || i==13) {
+        	fputs ( line, stdout ); /* write the line */
+  		char * pch= NULL;
+  		pch = strtok (line," ");
+		j=0;
+  		while (pch != NULL)
+  		{
+			j++;
+    			pch = strtok (NULL, " ");
+			if (j==1) {
+				switch (i) {
+				case 1:
+    					snprintf(totram, sizeof(totram),"%s",pch);
+					tram=atol(totram);
+					break;
+				case 2:
+    					snprintf(freeram, sizeof(freeram),"%s",pch);
+					fram=atol(freeram);
+					break;
+				case 12:
+    					snprintf(totswap, sizeof(totswap),"%s",pch);
+					tswap=atol(totswap);
+					break;
+				case 13:
+    					snprintf(freeswap, sizeof(freeswap),"%s",pch);
+					fswap=atol(freeswap);
+					break;
+				default:
+					break;
+				}
+			}
+  		}
+	}
        }
  fclose ( file );
 
- pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", freeram,usedram,freeswap,usedswap);
-snprintf (query_memory_metric_insert,sizeof (query_memory_metric_insert),STORE_MEMORY_METRICS,atoll(freeram),atoll(usedram),atoll(freeswap),atoll(usedswap));
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram,fram,tswap,fswap);
+
+ uram = tram-fram;
+ uswap= tswap-fswap;
+ pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", fram,uram,fswap,uswap);
+ snprintf(query_memory_metric_insert,sizeof(query_memory_metric_insert),STORE_MEMORY_METRICS,fram,uram,fswap,uswap);
 	
   if (ret_code = transaction_based_query(query_memory_metric_insert,START_TRANSACTION_MEMORY_METRICS,END_TRANSACTION_MEMORY_METRICS))
       pmesg(LOG_ERROR,__FILE__,__LINE__,"Error storing the memory metrics in the DB! [Code %d]\n",ret_code);
