@@ -331,7 +331,7 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 }
 
 
-int get_single_value(char *submitted_query, long int *metrics) 
+int get_single_value(char *submitted_query, long long int *metrics) 
 {
   PGconn *conn;
   PGresult *res;
@@ -366,7 +366,7 @@ int get_single_value(char *submitted_query, long int *metrics)
     	}
 
    numTuples = PQntuples(res);
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld] \n",numTuples);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld][%s] \n",numTuples,submitted_query);
    if (numTuples!=1) 
     	{
 	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP Too many Tuples ERROR [%ld]\n",numTuples);
@@ -376,9 +376,10 @@ int get_single_value(char *submitted_query, long int *metrics)
     	}
 
    // setting return metrics	
-   *metrics = atol(PQgetvalue(res, 0, 0));
+   
+   *metrics = atoll(PQgetvalue(res, 0, 0));
 
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - END [value=%ld] \n", *metrics);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - END [value=%lld] \n", *metrics);
    PQclear(res);
 
    PQfinish(conn);
@@ -395,7 +396,7 @@ int reconciliation_process()
 	PGconn *conn;
 	PGresult *res;
 	long int numTuples;
-	long int lastimport_id;
+	long long int lastimport_id;
 	int ret_code, nFields;
 	
 	lastimport_id=-1;
@@ -424,17 +425,57 @@ int reconciliation_process()
 		return -5;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK]\n");
 
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5B, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5B [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5C, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5C [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5D, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5D [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5E, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5E [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP5F, QUERY8, QUERY4)) 
+		return -5;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5F [OK]\n");
+
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6, QUERY8, QUERY4)) 
 		return -6;
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK]\n");
 
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6B, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6B [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6C, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6C [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6D, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6D [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6E, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6E [OK]\n");
+
+	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP6F, QUERY8, QUERY4)) 
+		return -6;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6F [OK]\n");
+
 	if (ret_code = get_single_value(GET_LAST_IMPORT_ID, &lastimport_id))
 		return -7;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.1 [OK]\n",lastimport_id);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.1 [OK]\n");
 	
 	if (lastimport_id<0)
 		return -8;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2 [OK] [LastID=%ld]\n",lastimport_id);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 7.2 [OK] [LastID=%lld]\n",lastimport_id);
 	
 	if (!lastimport_id) {
 		if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_FINALDW_CREATE, QUERY8, QUERY4)) 

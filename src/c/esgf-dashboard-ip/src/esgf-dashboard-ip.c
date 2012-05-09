@@ -203,7 +203,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (0) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -222,9 +222,9 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 int compute_aggregate_data_user_metrics()
 {
   	int ret_code;
-	long int downdatacount;
-	long int downdatasize;
-	long int registeredusers;
+	long long int downdatacount;
+	long long int downdatasize;
+	long long int registeredusers;
 	char metrics_filename[1024] = { '\0' };
 	char metrics_content[2048] = { '\0' };
 	char query_registered_users[2048] = { '\0' };
@@ -250,11 +250,11 @@ int compute_aggregate_data_user_metrics()
 	    		if (ret_code = get_single_value(query_registered_users, &registeredusers))
 				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d]\n",ret_code);
 
-	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%ld] , [%ld] , [%ld] !\n", downdatacount, downdatasize, registeredusers);
+	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%lld] , [%lld] , [%lld] !\n", downdatacount, downdatasize, registeredusers);
 
 	    	// Storing data into data_users.metrics
 	    	snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
-	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%ld,DOWNLOADSIZE=%ld,USERS=%ld",downdatacount,downdatasize,registeredusers);
+	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%lld,DOWNLOADSIZE=%lld,USERS=%lld",downdatacount,downdatasize,registeredusers);
  
 	    	fp=fopen(metrics_filename, "w+");
 	    	if (fp!=NULL) {
@@ -424,7 +424,7 @@ main (int argc, char **argv)
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator)   
+  while (iterator--)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
@@ -438,7 +438,7 @@ main (int argc, char **argv)
 	counter=0;
       }
       // Calling the automatic registration_xml_feed into the parser
-      automatic_registration_xml_feed (esgf_registration_xml_path);
+      //automatic_registration_xml_feed (esgf_registration_xml_path);
 
       if (hosts)
 	 free (hosts);
