@@ -203,7 +203,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (0) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -424,7 +424,7 @@ main (int argc, char **argv)
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator--)   
+  while (iterator)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
@@ -438,7 +438,7 @@ main (int argc, char **argv)
 	counter=0;
       }
       // Calling the automatic registration_xml_feed into the parser
-      //automatic_registration_xml_feed (esgf_registration_xml_path);
+      automatic_registration_xml_feed (esgf_registration_xml_path);
 
       if (hosts)
 	 free (hosts);
