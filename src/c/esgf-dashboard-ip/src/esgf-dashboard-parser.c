@@ -88,7 +88,7 @@
 #define QUERY_INSERT_NEW_HOST  "INSERT into esgf_dashboard.host(name,ip) values('%s','%s');"
 
 // QUERY QUERY_UPDATE_HOST_TYPE update the node type of a host in the database
-#define QUERY_UPDATE_HOST_TYPE  "UPDATE esgf_dashboard.host set nodetype=%d where id=%d;"
+#define QUERY_UPDATE_HOST_TYPE  "UPDATE esgf_dashboard.host set nodetype=%d,swrelease='%s',swversion='%s' where id=%d;"
 
 // QUERY QUERY_GET_PROJECT_ID retrieves the id value of a specific project (peer group) 
 #define QUERY_GET_PROJECT_ID "SELECT id from esgf_dashboard.project_dash where name='%s';"
@@ -480,6 +480,8 @@ parse_registration_xml_file (xmlNode * a_node)
 	      char *node_ip;
 	      char *node_hostname;
 	      char *node_type;
+	      char *swrelease;
+	      char *swversion;
 	      int number_of_projects;
 	      long int project_ids[4096] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of projects in the hashtable
 	      long int service_ids[4096] = { 0 }; // TO DO: this should be dynamically allocated starting from the total number of services in the hashtable
@@ -572,6 +574,33 @@ parse_registration_xml_file (xmlNode * a_node)
 		      continue;	
  		    }
 
+		  swrelease = xmlGetProp (node_node, REG_ATTR_NODE_RELEASE);
+		  if (swrelease == NULL || !strcmp (swrelease, "")) 
+		    {
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_RELEASE);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      xmlFree (node_hostname);
+		      xmlFree (node_type);
+		      xmlFree (swrelease);
+		      continue;	
+ 		    }
+
+		  swversion = xmlGetProp (node_node, REG_ATTR_NODE_VERSION);
+		  if (swversion == NULL || !strcmp (swversion, "")) 
+		    {
+		      pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [skip current NODE element]\n",REG_ATTR_NODE_VERSION);
+		      xmlFree (organization);
+		      xmlFree (npg_project);
+		      xmlFree (node_ip);
+		      xmlFree (node_hostname);
+		      xmlFree (node_type);
+		      xmlFree (swrelease);
+		      xmlFree (swversion);
+		      continue;	
+ 		    }
+
 		  support_email = xmlGetProp (node_node, REG_ATTR_NODE_SUPPORTEMAIL);
 		  if (support_email == NULL || !strcmp (support_email, ""))
 		    pmesg(LOG_WARNING,__FILE__,__LINE__,"Missing/invalid %s [No problem... the attribute is not mandatory]\n",REG_ATTR_NODE_SUPPORTEMAIL);
@@ -581,6 +610,8 @@ parse_registration_xml_file (xmlNode * a_node)
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Hostname attribute: %s\n", node_hostname);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"IP attribute: %s\n", node_ip);
 		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Node type attribute: %s\n", node_type);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Node release attribute: %s\n", swrelease);
+		  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Node version attribute: %s\n", swversion);
 
 		  if (hashtbl_result = hashtbl_get (hashtbl_hosts, node_ip))
 		    {
@@ -614,7 +645,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		  // updating data node type
 		  if (node_type)
 		    {
-		  	snprintf (update_host_type_query,sizeof (update_host_type_query),QUERY_UPDATE_HOST_TYPE,atoi(node_type),host_id);
+		  	snprintf (update_host_type_query,sizeof (update_host_type_query),QUERY_UPDATE_HOST_TYPE,atoi(node_type),swrelease,swversion,host_id);
 		  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query nodetype [%s]\n",update_host_type_query);
 		  	submit_query (conn, update_host_type_query);
 		    }
@@ -1285,6 +1316,8 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (support_email);
 	      xmlFree (node_type);
 	      xmlFree (node_hostname);
+	      xmlFree (swrelease);
+	      xmlFree (swversion);
 	    }			// end of loop on NODE element
 
 	}			// end of "if a REGISTRATION element
