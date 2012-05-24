@@ -1319,6 +1319,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (swrelease);
 	      xmlFree (swversion);
 	    }			// end of loop on NODE element
+		//to be done: clean up old projects (projects with no id in the relation with service)
 
 	}			// end of "if a REGISTRATION element
     }				// end of loop on REGISTRATION element
