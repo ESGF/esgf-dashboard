@@ -221,7 +221,7 @@ int
 submit_query (PGconn * conn, char *query)
 {
   PGresult *res;
-  //fprintf (stderr, "Query: %s\n", query);
+  fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
 
@@ -1319,6 +1319,7 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (swrelease);
 	      xmlFree (swversion);
 	    }			// end of loop on NODE element
+		//to be done: clean up old projects (projects with no id in the relation with service)
 
 	}			// end of "if a REGISTRATION element
     }				// end of loop on REGISTRATION element

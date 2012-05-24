@@ -203,11 +203,11 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<5) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
-	    	reconciliation_process();
+	    	//reconciliation_process();
 		compute_aggregate_data_user_metrics();	
 		}
 	    //sleep(DATA_METRICS_SPAN); // TEST_ 
@@ -236,11 +236,11 @@ int compute_aggregate_data_user_metrics()
 
 	// Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
 	if (DASHBOARD_SERVICE_PATH) {	 
-	    	if (ret_code = get_single_value(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
-			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
+	    	//if (ret_code = get_single_value(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
+		//	pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
 
-	    	if (ret_code = get_single_value(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
-			pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
+	    	//if (ret_code = get_single_value(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
+		//	pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
 
 	    	snprintf (query_registered_users,sizeof (query_registered_users),GET_REGISTERED_USERS_COUNT, ESGF_HOSTNAME);
 	
@@ -254,7 +254,7 @@ int compute_aggregate_data_user_metrics()
 
 	    	// Storing data into data_users.metrics
 	    	snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
-	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%lld,DOWNLOADSIZE=%lld,USERS=%lld",downdatacount,downdatasize,registeredusers);
+	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%lld,DOWNLOADSIZE=%lld,DOWNLOADUSERS=0,REGISTEREDUSERS=%lld",downdatacount,downdatasize,registeredusers);
  
 	    	fp=fopen(metrics_filename, "w+");
 	    	if (fp!=NULL) {
@@ -414,7 +414,7 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
-  reconciliation_process();
+  //reconciliation_process();
   compute_aggregate_data_user_metrics();
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
@@ -583,9 +583,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   PING_SPAN_NO_HOSTS = 295;
   HOSTS_LOADING_SPAN = 120;
   HISTORY_MONTH=0;
-  HISTORY_DAY=10;
+  HISTORY_DAY=7;
   DATA_METRICS_SPAN=1; 		// default 1 hour 
-				// TO DO: to add the node.manager.app.home as a mandatory property
   *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
 
