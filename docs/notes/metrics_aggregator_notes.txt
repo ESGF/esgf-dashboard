@@ -1,0 +1,32 @@
+Date: May 10th, 2012
+
+Notes on how to proceed with the download metrics aggregation
+process:
+
+Concept:
+Local node download metrics are collected by every data node
+publishing some information on the data corpus.
+A node can be classified as an "aggregator" by defining the attribute
+"aggregator" (at the Node level) and setting it to a list of "peer
+groups".  This allows us to leverage a the previously know group
+concept. 
+
+Each designated aggregator will "crawl" download metrics from the
+group members, defined in the "aggregator" attribute for that node.
+Aggregator nodes manage both local and aggregated metrics.  Both types
+of information can be requested by an external aggregator (based on
+query request syntax).
+
+Group levels...
+
+Group A - a1, a2, a3, a4 (a5)
+Group B - b1, b2, b3, b4 (b5)
+Group C - c1, c2, c3, c4 (c5)
+
+Top level Group
+Group "ESGF" - a5, b5, (c5)
+
+consider that c5 is in both groups "C" and "ESGF"
+And manages 3 data warehouses: c5 (local), "C" and "ESGF"
+
+-sandro, gavin
