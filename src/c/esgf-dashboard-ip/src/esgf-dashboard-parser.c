@@ -221,7 +221,7 @@ int
 submit_query (PGconn * conn, char *query)
 {
   PGresult *res;
-  //fprintf (stderr, "Query: %s\n", query);
+  fprintf (stderr, "Query: %s\n", query);
 
   res = PQexec (conn, query);
 
