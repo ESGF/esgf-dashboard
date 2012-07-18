@@ -203,15 +203,15 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<5) TEST_  ---- while (1) PRODUCTION_
+	while (i<5) // while(i<5) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
-	    	//reconciliation_process();
+	    	reconciliation_process();
 		compute_aggregate_data_user_metrics();	
 		}
-	    //sleep(DATA_METRICS_SPAN); // TEST_ 
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
+	    sleep(DATA_METRICS_SPAN); // TEST_ 
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
 	    i++;  
 	}
 
@@ -284,7 +284,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 1;  // TEST_ >1  PRODUCTION_ 1 
+  int iterator = 3;  // TEST_ >3  PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -406,7 +406,7 @@ main (int argc, char **argv)
       return 0;
     }
 
-  //print_all_properties (); // TEST_ 
+  print_all_properties (); // TEST_ --- PRODUCTION_ // da commentare 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -414,7 +414,7 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
-  //reconciliation_process();
+  reconciliation_process();
   compute_aggregate_data_user_metrics();
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
@@ -424,7 +424,7 @@ main (int argc, char **argv)
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator)   
+  while (iterator--)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
