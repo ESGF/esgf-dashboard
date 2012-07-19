@@ -3,6 +3,10 @@
  *
  *      Author: University of Salento and CMCC 
  */
+#include <sys/types.h>
+#include <fcntl.h>
+#include <curl/curl.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "libpq-fe.h"
@@ -138,7 +142,7 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
   char conninfo[1024] = {'\0'};
 
   /* Connect to database */
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - START\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - START\n");
 
   snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
   conn = PQconnectdb ((const char *) conninfo);
@@ -153,12 +157,12 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
   // start transaction
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",QUERY6);
   //res = PQexec(conn, QUERY6);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",open_transaction);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",open_transaction);
   res = PQexec(conn, open_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed [%s]\n",open_transaction);
 	        PQclear(res);
 		PQfinish(conn);
 		return -2;
@@ -170,13 +174,13 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
 
   //snprintf (query_history,sizeof (query_history),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics: [%s]\n",query_history);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission [%s]\n",submitted_query);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission [%s]\n",submitted_query);
   //res = PQexec(conn, query_history);
   res = PQexec(conn, submitted_query);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query submission failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query submission failed [%s]\n", submitted_query);
 	        PQclear(res);
 		PQfinish(conn);
 		return -4;
@@ -187,16 +191,16 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
   //res = PQexec(conn, QUERY4);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",QUERY4);
   res = PQexec(conn, stop_transaction);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",stop_transaction);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",stop_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed [%s]\n",stop_transaction);
 	        PQclear(res);
 		PQfinish(conn);
 		return -3;
     	}
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - END\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - END\n");
 
   PQclear(res);
   PQfinish(conn);
@@ -341,7 +345,7 @@ int get_single_value(char *submitted_query, long long int *metrics)
 
   /* Connect to database */
   *metrics=0;
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - START\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - START\n");
 
   snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
   conn = PQconnectdb ((const char *) conninfo);
@@ -359,14 +363,14 @@ int get_single_value(char *submitted_query, long long int *metrics)
 
    if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP - Query ERROR \n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP - Query ERROR [%s]\n", submitted_query);
 	        PQclear(res);
 		PQfinish(conn);
 		return -2;
     	}
 
    numTuples = PQntuples(res);
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld][%s] \n",numTuples,submitted_query);
+   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld][%s] \n",numTuples,submitted_query);
    if (numTuples!=1) 
     	{
 	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP Too many Tuples ERROR [%ld]\n",numTuples);
@@ -379,7 +383,7 @@ int get_single_value(char *submitted_query, long long int *metrics)
    
    *metrics = atoll(PQgetvalue(res, 0, 0));
 
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - END [value=%lld] \n", *metrics);
+   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Get value - END [value=%lld] \n", *metrics);
    PQclear(res);
 
    PQfinish(conn);
@@ -389,21 +393,186 @@ int get_single_value(char *submitted_query, long long int *metrics)
 
 
  
+int federation_level_aggregation_metrics()
+{
+	PGconn *conn;
+	PGresult *res;
+	char conninfo[1024] = {'\0'};
+	long int numTuples;
+	long long int lastimport_id,t,w;
+	int ret_code, nFields;
+  	char peername[512] = { '\0' };
+
+	// OPEN CONNECTION  
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federation-level stats aggregation process START\n");
+
+        snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+	conn = PQconnectdb ((const char *) conninfo);
+
+	if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Stats-Aggregator: Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+	// SELECT START 
+
+	res = PQexec(conn,QUERY_STATS_AGGREGATOR_GET_HOSTLIST);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Stats-Aggregator: SELECT data from aggregation_process FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Stats-Aggregator: Number of fields/entries from the aggregation_process table to be processed [%ld,%d] \n",nFields,numTuples);
+	
+	for(t = 0; t < numTuples; t ++) 
+		{
+  			 char remove_stats_feddw[1024] = { '\0' };
+  			 char update_query_timestamp[1024] = { '\0' };
+
+	  		 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
+			 w = atol(PQgetvalue(res, t, 1)); 
+ 			 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing entry [%s,%ld]\n",peername,w);
+			 snprintf (update_query_timestamp, sizeof (update_query_timestamp),QUERY_UPDATE_PEER_TIMESTAMP,peername);
+			 
+			 snprintf (remove_stats_feddw, sizeof (remove_stats_feddw),QUERY_REMOVE_STATS_FEDDW,peername);
+
+			 if (w==-1)
+				remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp,START_TRANSACTION_FEDDW,END_TRANSACTION_FEDDW);
+			 if (w==0) 
+				{
+				remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp,START_TRANSACTION_FEDDW,END_TRANSACTION_FEDDW);
+				harvest_stats(w,conn,peername);
+				}
+			 if (w>0) 
+				harvest_stats(w,conn,peername);	
+		}
+
+	// CLOSE CONNECTION  
+	PQclear(res);
+    	PQfinish(conn);
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federation-level stats aggregation process END\n");
+
+
+  return 0;
+}
+
+int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
+{
+  CURL *curl;
+  PGresult *res;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;  
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char url_action[10024];
+  long int delta_id,i;
+  int exit_while, right_url;  
+
+  delta_id=500;
+  exit_while=1;
+  
+  while (exit_while)
+   {
+    snprintf (url_action, sizeof (url_action),URL_STATS,peername,processed_id,delta_id);
+    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Crawling %s\n",url_action);
+
+    // filename to be stats_<host>_<processed_id>.tmp
+
+    tmp=fopen("stats.tmp", "w");
+    if(tmp==NULL) 
+	{
+    	 pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
+    	 return -2; 
+  	}
+
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, url_action);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+    curl_res = curl_easy_perform(curl);
+    if(curl_res) 
+   	{
+    	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR in dowloading file\n");
+    	fclose(tmp);
+    	curl_easy_cleanup(curl);
+    	return -1;
+   	}	
+
+    fclose(tmp);
+    curl_easy_cleanup(curl);
+
+    file=fopen("stats.tmp", "r");
+
+    if (file == NULL)    
+    	return -1;
+
+    i=0;
+    right_url = 1; 
+    char line [ 1024 ];
+
+    while ( (fgets ( line, sizeof line, file ) != NULL) && (right_url) ) 
+       	{
+  		char insert_remote_stat[10024] = { '\0' };
+		i++;
+		if (i==1)
+        	{
+		   if (strcmp(line,"REMOTE_STATS_ACTION\n"))
+        		{
+			right_url=0;	
+			exit_while=0;
+        		} 
+		   continue;
+        	} 
+                fputs ( line, stdout ); 
+    		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_REMOTE_STAT,line);
+		printf("Query %s\n",insert_remote_stat);	
+	
+  		res = PQexec(conn, insert_remote_stat);
+
+  		if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        	{
+                	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in federated-dw failed\n");
+                	PQclear(res);
+                	return -3;
+        	}
+  		PQclear(res);
+       	} 
+
+  fclose ( file );
+
+  if ((i==1) && (right_url==1))
+	exit_while=0;
+
+  processed_id += delta_id;
+ } 
+ 
+ return 0;
+}
 
 int reconciliation_process()
 {
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process START\n");
 	PGconn *conn;
 	PGresult *res;
 	long int numTuples;
 	long long int lastimport_id;
 	int ret_code, nFields;
-	
-	lastimport_id=-1;
-	/* Connect to database */
 	char conninfo[1024] = {'\0'};
   	char attributes_list[2048] = { '\0' };
   	char attributes_list_temp[2048] = { '\0' };
+
+	lastimport_id=-1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process START\n");
 	
 	if (transaction_based_query(QUERY_DATA_DOWNLOAD_METRICS_DWSTEP1, QUERY8, QUERY4))
 		return -1;
@@ -496,6 +665,7 @@ int reconciliation_process()
 		PQfinish(conn);
 		return -10;
         }
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.1 [OK]\n");
 
 	// SELECT START 
 
@@ -508,10 +678,11 @@ int reconciliation_process()
 		PQfinish(conn);
 		return -11;
     	}
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.2 [OK]\n");
 
 	numTuples = PQntuples(res);
 	nFields = PQnfields(res);
-	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.3: Number of fields/entries from the access_logging table to be processed [%ld,%d] \n",nFields,numTuples);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.3: Number of NEW entries from the access_logging table to be processed [%ld] \n",numTuples);
 
 	if (nFields>0)
 	{
@@ -576,14 +747,14 @@ int reconciliation_process()
 			snprintf (update_query_lastalid, sizeof (update_query_lastalid),QUERY_UPDATE_LAST_PROCESSED_AL_ID,last_al_id);
 			if (insert_data_into_finaldw(conn,insert_query_finaldw,update_query_lastalid,START_TRANSACTION_FINALDW_INGESTION,END_TRANSACTION_FINALDW_INGESTION))
 			{
-			// exit from the ingestion process
-			pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: ERROR Processing entry [%ld/%ld][EntryID=%lld] \n",t,numTuples,last_al_id);
-			pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: STOP Processing entries\n");
-			w=nFields;
-			t=numTuples;
+			pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 8.4: ERROR Processing entry [%ld/%ld][EntryID=%lld] \n",t+1,numTuples,last_al_id);
+			//pmesg(LOG_ERROR,__FILE__,__LINE__,"Step 8.4: STOP Processing entries\n");
+			// exit from the ingestion process (now disabled)
+			//w=nFields;
+			//t=numTuples;
 			}
 			else
-				pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: Processing entry OK [%ld/%ld][EntryID=%lld] \n",t,numTuples,last_al_id);
+				pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 8.4: Processing entry OK [%ld/%ld][EntryID=%lld] \n",t+1,numTuples,last_al_id);
 
 		}
 	}
@@ -611,7 +782,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
  // PGconn *conn;
   PGresult *res;
 
-  char conninfo[1024] = {'\0'};
+  //char conninfo[1024] = {'\0'};
 
   /* Connect to database */
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction based query - START\n");
@@ -628,7 +799,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
 
   // start transaction
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction: [%s]\n",open_transaction);
-  res = PQexec(conn, open_transaction);
+  /*res = PQexec(conn, open_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
@@ -637,7 +808,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
 		//PQfinish(conn);
 		return -2;
     	}
-  PQclear(res);
+  PQclear(res);*/
 
   // Query submission ingestion entry in finaldw 
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query submission\n");
@@ -645,7 +816,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in finaldw failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in localdw failed\n");
 	        PQclear(res);
 		//PQfinish(conn);
 		return -4;
@@ -658,7 +829,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query update last_al_id failed\n");
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query update last processed id failed\n");
 	        PQclear(res);
 		//PQfinish(conn);
 		return -4;
@@ -666,7 +837,7 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
   PQclear(res);
 
   // close transaction
-  res = PQexec(conn, stop_transaction);
+  /*res = PQexec(conn, stop_transaction);
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction: [%s]\n",stop_transaction);
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
@@ -677,9 +848,61 @@ int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_l
 		return -3;
     	}
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction ended successfully!\n");
+  
+  PQclear(res);
+   */
+  //PQfinish(conn);
+
+  return 0;
+}
+
+int remove_stats_from_federation_level_dw(PGconn *conn, char *submitted_query, char* update_timestamp_query ,char* open_transaction, char* stop_transaction) 
+{
+  PGresult *res;
+
+  char conninfo[1024] = {'\0'};
+
+  res = PQexec(conn, open_transaction);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+	        PQclear(res);
+		return -2;
+    	}
+  PQclear(res);
+
+  res = PQexec(conn, submitted_query);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query DELETE stats from federation-level dw failed\n");
+	        PQclear(res);
+		return -4;
+    	}
+  PQclear(res);
+
+  res = PQexec(conn, update_timestamp_query);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Query update timestamp failed\n");
+	        PQclear(res);
+		return -4;
+    	}
+  PQclear(res);
+
+  res = PQexec(conn, stop_transaction);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+	        PQclear(res);
+		return -3;
+    	}
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction ended successfully!\n");
 
   PQclear(res);
-  //PQfinish(conn);
 
   return 0;
 }

@@ -11,5 +11,6 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 drop table esgf_dashboard.aggregation_process;
+drop table esgf_dashboard.federationdw;
 
 SET search_path = public, pg_catalog;
