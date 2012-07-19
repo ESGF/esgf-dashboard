@@ -17,6 +17,7 @@
 #include "../include/debug.h"
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
+#define TEMP_STATS_FILE ".stats.tmp"
 
 int retrieve_localhost_metrics()
 {
@@ -546,7 +547,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
 
     // filename to be stats_<host>_<processed_id>.tmp
 
-    tmp=fopen("stats.tmp", "w");
+    tmp=fopen(TEMP_STATS_FILE, "w");
     if(tmp==NULL) 
 	{
     	 pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
@@ -568,7 +569,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
     fclose(tmp);
     curl_easy_cleanup(curl);
 
-    file=fopen("stats.tmp", "r");
+    file=fopen(TEMP_STATS_FILE, "r");
 
     if (file == NULL)    
     	return -1;
@@ -603,6 +604,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
        	} 
 
   fclose ( file );
+  remove(TEMP_STATS_FILE);
 
   if ((i==1) && (right_url==1))
 	exit_while=0;
