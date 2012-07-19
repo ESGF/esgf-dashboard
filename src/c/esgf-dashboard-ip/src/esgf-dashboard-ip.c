@@ -206,8 +206,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	while (i<5) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
-	    if (i>1) {  
-	    	//reconciliation_process();
+	    if (i>2) {  
+	    	reconciliation_process();
 		//compute_aggregate_data_user_metrics();	
 		federation_level_aggregation_metrics();
 		}

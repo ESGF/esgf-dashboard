@@ -392,6 +392,47 @@ int get_single_value(char *submitted_query, long long int *metrics)
 }
 
 
+long int get_last_processed_id (PGconn * conn, char *query)
+{
+  PGresult *res;
+  long int fk;
+
+  res = PQexec (conn, query);
+  if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
+    {
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT command did not return tuples properly\n");
+      PQclear (res);
+      return -1;
+    }
+
+  if ((PQntuples (res)) != 1)
+    {
+      PQclear (res);
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT command returns more than 1 tuple\n");
+      return -2;
+    }
+
+  fk = atol (PQgetvalue (res, 0, 0));
+
+  PQclear (res);
+  return fk;
+}
+
+int store_last_id_feddw(PGconn * conn, long int last_id_feddw, char* peername)
+{
+  PGresult *res;
+  char insert_last_id[1024] = { '\0' };
+
+  snprintf (insert_last_id, sizeof (insert_last_id),QUERY_UPDATE_PEER_LAST_ID,last_id_feddw,peername);
+  res = PQexec(conn, insert_last_id);
+
+  if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+       	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query update lastprocessed_id in federated-dw failed [%s]\n",peername);
+
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing entry [%s] END ==> Last_id=%ld\n",peername,last_id_feddw);
+  PQclear(res);
+}
+
  
 int federation_level_aggregation_metrics()
 {
@@ -436,23 +477,34 @@ int federation_level_aggregation_metrics()
 		{
   			 char remove_stats_feddw[1024] = { '\0' };
   			 char update_query_timestamp[1024] = { '\0' };
+  			 char get_last_id_query[1024] = { '\0' };
+			 long int last_id_feddw;
 
-	  		 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
+	  		 last_id_feddw = 0;
+			 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
 			 w = atol(PQgetvalue(res, t, 1)); 
  			 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing entry [%s,%ld]\n",peername,w);
 			 snprintf (update_query_timestamp, sizeof (update_query_timestamp),QUERY_UPDATE_PEER_TIMESTAMP,peername);
-			 
 			 snprintf (remove_stats_feddw, sizeof (remove_stats_feddw),QUERY_REMOVE_STATS_FEDDW,peername);
+			 snprintf (get_last_id_query, sizeof (get_last_id_query),QUERY_GET_LAST_PROCESSED_ID_FED,peername);
 
-			 if (w==-1)
+			 if (w==-1) {
+ 			 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] = delete node stats from federationdw\n",peername);
 				remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp,START_TRANSACTION_FEDDW,END_TRANSACTION_FEDDW);
-			 if (w==0) 
-				{
+				}
+			 if (w==0) {
+ 			 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] = delete node stats from federationdw & get them from scratch\n",peername);
 				remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp,START_TRANSACTION_FEDDW,END_TRANSACTION_FEDDW);
 				harvest_stats(w,conn,peername);
+				if ((last_id_feddw = get_last_processed_id(conn,get_last_id_query)) > 0 )
+					store_last_id_feddw(conn,last_id_feddw, peername);
 				}
-			 if (w>0) 
+			 if (w>0) {
+ 			 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] = get stats from id=%ld\n",peername,w);
 				harvest_stats(w,conn,peername);	
+				if ((last_id_feddw = get_last_processed_id(conn,get_last_id_query)) > 0 )
+					store_last_id_feddw(conn, last_id_feddw,peername);
+				}
 		}
 
 	// CLOSE CONNECTION  
@@ -464,6 +516,10 @@ int federation_level_aggregation_metrics()
 
   return 0;
 }
+
+
+
+
 
 int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
 {
@@ -486,7 +542,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
   while (exit_while)
    {
     snprintf (url_action, sizeof (url_action),URL_STATS,peername,processed_id,delta_id);
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Crawling %s\n",url_action);
+    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Contacting [hostname=%s] [startID=%ld] [deltaID=%ld] \n",peername,processed_id,delta_id);
 
     // filename to be stats_<host>_<processed_id>.tmp
 
@@ -534,18 +590,15 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
         		} 
 		   continue;
         	} 
-                fputs ( line, stdout ); 
+                //fputs ( line, stdout ); 
     		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_REMOTE_STAT,line);
-		printf("Query %s\n",insert_remote_stat);	
+		//printf("Query %s\n",insert_remote_stat);	
 	
   		res = PQexec(conn, insert_remote_stat);
 
   		if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
-        	{
                 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in federated-dw failed\n");
-                	PQclear(res);
-                	return -3;
-        	}
+
   		PQclear(res);
        	} 
 
