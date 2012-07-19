@@ -561,6 +561,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
     if(curl_res) 
    	{
     	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR in dowloading file\n");
+  	remove(TEMP_STATS_FILE);
     	fclose(tmp);
     	curl_easy_cleanup(curl);
     	return -1;

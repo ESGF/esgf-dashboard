@@ -116,7 +116,6 @@
 
 //#define URL_STATS "http://%s/ESGFNodeDesktop/gridJson/GetStats?al_id=%ld&delta=%ld"
 #define URL_STATS "http://%s:8080/ESGFNodeDesktop/gridJson/GetStats?al_id=%ld&delta=%ld"
-//#define URL_STATS "http://www.example%s_%ld_%ld.org"
 
 #define QUERY_INSERT_DATA_DOWNLOAD_METRICS_FINALDW "insert into esgf_dashboard.finaldw(%s,peername) values(%s,'%s');"
 #define QUERY_UPDATE_LAST_PROCESSED_AL_ID "update esgf_dashboard.reconciliation_process set lastprocessed_id =%lld, time_stamp=now();"
