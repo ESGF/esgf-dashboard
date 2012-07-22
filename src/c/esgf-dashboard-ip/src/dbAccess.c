@@ -52,7 +52,7 @@ int retrieve_localhost_memory_metrics()
        {
         i++;
 	if (i==1 || i==2 || i==12 || i==13) {
-        	fputs ( line, stdout ); /* write the line */
+        	//fputs ( line, stdout ); /* write the line */
   		char * pch= NULL;
   		pch = strtok (line," ");
 		j=0;
