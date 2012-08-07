@@ -178,7 +178,7 @@ setup_dashboard_webapp() {
 
     local upgrade=${1:-0}
 
-    local default="N"
+    local default="Y"
     local dosetup
     if [ -d ${dashboard_app_home} ]; then 
         echo "Detected an existing dashboard services installation..."
