@@ -101,6 +101,9 @@ geoip_dist_url=${esg_dist_url}/geoip/GeoIP.tar.gz
 geoip_dat_dist_url=${esg_dist_url}/geoip/GeoLiteCity.dat.gz
 geoip_version=1.4.8
 
+dashboard_log_dir=${dashboard_log_dir:-"/var/log"}
+dashboard_log_file=${dashboard_log_target:-"${dashboard_log_dir}/esgf-dashboard-ip.log"}
+
 init() {
     debug_print "esgf-dashoard->init()..."
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
@@ -430,6 +433,7 @@ setup_dashboard_provider() {
 	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
 	if [ ! -e "${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip" ]; then
             echo" ERROR: Did NOT successfully build ESGF Dashboard IP Executable!!" && popd >& /dev/null && checked_done 1
+            setup_dashboard_logrotate
         fi
     else
 	echo" ERROR: Could NOT successfully build ESGF Dashboard IP!!"
@@ -501,7 +505,7 @@ start_dashboard_services() {
     $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     pgrep esgf-dashboard && echo " -> Detected already running dashboard service (must explicitly stop or restart to start new instance)" && return 0
     echo
-    ${esgf_dashboard_ip_install_dir}/bin/ip.service start 2>&1 | tee /var/log/esgf-dashboard-ip.log.last >(cat >> /var/log/esgf-dashboard-ip.log) >& /dev/null &
+    ${esgf_dashboard_ip_install_dir}/bin/ip.service start 2>&1 | tee ${dashboard_log_target}.last >(cat >> ${dashboard_log_target}) >& /dev/null &
     [ $? != 0 ] && echo " ERROR: Could not start esgf dashboard provider" && return 1
     return 0
 }
@@ -520,6 +524,52 @@ restart_dashboard_services() {
     start_dashboard_services
 }
 
+setup_dashboard_logrotate() {
+
+    [ ! -e /usr/sbin/logrotate ] && echo "Not able to find logrotate here [/usr/local/logrotate] [FAIL]" && return 1
+
+    #TODO: Make these vars properties that can be set by user.
+    #      Check property values against values in the logrotate file values to know when to rewrite.
+    local log_rot_size="512M"
+    local log_rot_num_files="20"
+    local dashboard_log_dir=${dashboard_log_dir:-"/var/log"}
+    local dashboard_log_file=${dashboard_log_file:-"${dashboard_log_dir}/esgf-dashboard-ip.log"}
+    local dashboard_logrotate_config="/etc/logrotate.d/esgf_dashboard"
+    local dashboard_user=${dashboard_user:-"root"}
+    local dashboard_group=${dashboard_group:-"root"}
+
+    [ ! -e "${dashboard_log_dir}" ] && echo "Sorry, could not find log dir [${dashboard_install_dir}]  [FAIL]" && return 2
+
+    if [ ! -e "${dashboard_logrotate_config}" ] || ((force_install)); then
+        echo "Installing dashboard log rotation... [${dashboard_logrotate_config}]"
+        cat >> ${dashboard_logrotate_config} <<EOF
+"${dashboard_log_file}" {
+    copytruncate
+    size ${log_rot_size}
+    rotate ${log_rot_num_files}
+    maxage 365
+    compress
+    missingok
+    create 0644 ${dashboard_user:-"root"} ${dashboard_group:-"root"}
+}
+EOF
+        chmod 644 ${dashboard_logrotate_config}
+        ((DEBUG)) && cat ${dashboard_logrotate_config}
+    fi
+
+    #------
+    #Create the files to be rotated if they don't already exist...
+    #------
+    [ ! -e "${dashboard_log_file}" ] && echo "Hmm... Don't see [${dashboard_log_file}], creating..." \
+        && touch ${dashboard_log_file} \
+        && chmod 644 ${dashboard_log_file} \
+        && chown ${dashboard_user:-"root"} ${dashboard_group:-"root"}
+    #------
+
+    [ ! -e /etc/cron.daily/logrotate ] && echo "WARNING: Not able to find script [/etc/cron.daily/logrotate]" && return 3
+    echo "Dashboard logfile rotation file installed $([ -e "${dashboard_logrotate_config}" ] && echo "[OK] " || echo "[FAIL] ")"
+    return 0
+}
 
 #--------------------------------------------------
 #NOTE: This must be run AFTER the esg node web app
