@@ -9,6 +9,35 @@ public enum SqlQuery {
 	
 	USER_DN_VALIDATION("SELECT id FROM  esgf_dashboard.user1 WHERE dn=? LIMIT 1;"),
 	
+	// new queries 
+	GET_ALL_HOSTS_WITH_ACTIVE_SERVICES("SELECT h.id, h.ip, h.name, h.city, h.latitude, h.longitude " + 
+	  "FROM esgf_dashboard.host h " +
+	  "INNER JOIN esgf_dashboard.service_instance s " +
+	  "ON h.id=s.idHost " +
+	  "INNER JOIN esgf_dashboard.uses u " +
+	  "ON u.idServiceInstance=s.id " +
+	  "INNER JOIN esgf_dashboard.project_dash p " +
+	  "ON p.id=u.idProject " +
+	  "WHERE u.endDate IS NULL " +
+	  "AND p.endDate IS NULL " +
+	  "GROUP BY h.id, h.ip, h.name, h.city, h.latitude, h.longitude " +
+	  "ORDER BY h.ip;"),
+
+	   
+	GET_ALL_HOSTS_OF_ONE_PROJECT_WITH_ACTIVE_SERVICES("SELECT h.id, h.ip, h.name, h.city, h.latitude, h.longitude " + 
+	  "FROM esgf_dashboard.host h " +
+	  "INNER JOIN esgf_dashboard.service_instance s " +
+	  "ON h.id=s.idHost " +
+	  "INNER JOIN esgf_dashboard.uses u " +
+	  "ON u.idServiceInstance=s.id " +
+	  "INNER JOIN esgf_dashboard.project_dash p " +
+	  "ON p.id=u.idProject " +
+	  "WHERE u.endDate IS NULL " +
+	  "AND p.endDate IS NULL " +
+	      "AND p.name=? " + 
+	      "GROUP BY h.id,h.ip,h.name,h.city,h.latitude,h.longitude " +
+	  "ORDER BY h.ip;"),
+	
 	// small change 
 	LOGIN("SELECT id, name, surname FROM  esgf_dashboard.user1 WHERE username=? AND password=? AND accountCertified=1;"),
 //	LOGIN("SELECT id, name, surname FROM user1 WHERE username=? AND accountCertified=1;"),
