@@ -117,6 +117,14 @@
 // QUERY QUERY_REMOVE_SERVICE_FROM_PROJECT remove all of the service-project associations which are not longer valid
 #define QUERY_REMOVE_SERVICE_FROM_PROJECT  "DELETE from esgf_dashboard.uses where idserviceinstance=%ld and idproject not in %s"
 
+// QUERY QUERY_EXCLUDE_EXISTING_PROJECT set endate = now (ending project) when no services are associated to it 
+#define QUERY_EXCLUDE_EXISTING_PROJECT "update esgf_dashboard.project_dash set enddate=now() where enddate is null and id not in (select distinct idproject from esgf_dashboard.uses);"
+
+// QUERY QUERY_INCLUDE_EXISTING_PROJECT set endate = NULL (running project) when at least 1 service is associated to it 
+#define QUERY_INCLUDE_EXISTING_PROJECT "update esgf_dashboard.project_dash set enddate=NULL where id in (select distinct idproject from esgf_dashboard.uses);"
+
+
+
 // QUERY QUERY_ADD_RSSFEED_TO_HOST binds a rssfeed to a host in the database
 #define QUERY_ADD_RSSFEED_TO_HOST  "INSERT into esgf_dashboard.hasfeed(idrssfeed, idhost) values(%ld,%ld);"
 
@@ -313,6 +321,9 @@ parse_registration_xml_file (xmlNode * a_node)
   char conninfo_printf[1024] = { '\0' };
   char open_transaction[2048] = { '\0' };
   char close_transaction[2048] = { '\0' };
+  char exclude_projects_with_no_services_query[2048] = { '\0' };
+  char include_projects_with_1more_service_query[2048] = { '\0' };
+
   HASHTBL *hashtbl_projects;
   HASHTBL *hashtbl_hosts;
   HASHTBL *hashtbl_services;
@@ -1320,6 +1331,12 @@ parse_registration_xml_file (xmlNode * a_node)
 	      xmlFree (swversion);
 	    }			// end of loop on NODE element
 		//to be done: clean up old projects (projects with no id in the relation with service)
+	    snprintf(exclude_projects_with_no_services_query, sizeof(exclude_projects_with_no_services_query),QUERY_EXCLUDE_EXISTING_PROJECT);
+	    submit_query (conn, exclude_projects_with_no_services_query);
+	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query [%s]\n",exclude_projects_with_no_services_query);
+	    snprintf(include_projects_with_1more_service_query, sizeof(include_projects_with_1more_service_query),QUERY_INCLUDE_EXISTING_PROJECT);
+	    submit_query (conn,include_projects_with_1more_service_query);
+	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query [%s]\n",include_projects_with_1more_service_query);
 
 	}			// end of "if a REGISTRATION element
     }				// end of loop on REGISTRATION element
