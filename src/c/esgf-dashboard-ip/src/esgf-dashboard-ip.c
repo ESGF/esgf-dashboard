@@ -203,16 +203,16 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
-	    	reconciliation_process();
+	    	//reconciliation_process();
 		compute_aggregate_data_user_metrics();	
-		federation_level_aggregation_metrics();
+		//federation_level_aggregation_metrics();
 		}
-	    //sleep(DATA_METRICS_SPAN); // TEST_ 
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
+	    sleep(DATA_METRICS_SPAN); // TEST_ 
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
 	    i++;  
 	}
 
@@ -246,6 +246,7 @@ int compute_aggregate_data_user_metrics()
 	
 			
 		// todo: if DATANODETYPE = idp (16 dec ,10000 bin ,0x10 exac)
+		// external idp: new code testing a new esgf property related to internal/external idp node	
 		if ((NODE_TYPE & 10000) > 0)
 	    		if (ret_code = get_single_value(query_registered_users, &registeredusers))
 				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d]\n",ret_code);
@@ -284,7 +285,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 1;  // TEST_   PRODUCTION_ 1 
+  int iterator = 3;  // TEST_   PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -414,9 +415,9 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
-  reconciliation_process();
+  //reconciliation_process();
   compute_aggregate_data_user_metrics();
-  federation_level_aggregation_metrics();
+  //federation_level_aggregation_metrics();
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
@@ -426,7 +427,7 @@ main (int argc, char **argv)
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator)   
+  while (iterator--)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
@@ -454,7 +455,9 @@ main (int argc, char **argv)
 	{
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Host/services found. Let's check them...\n");
 	  pingHostList (hosts, numHosts);
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Availability check - START\n");
 	  writeResults (hosts, numHosts);
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Availability check - END\n");
 	  //counter = (counter + 1) % HOSTS_LOADING_SPAN;
 	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Metrics have been collected. Now waiting for %d sec\n",PING_SPAN);
 	  sleep (PING_SPAN);

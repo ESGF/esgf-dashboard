@@ -322,7 +322,7 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Service Metrics [%d] -> %s\n",index, insert_query);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Service Metrics [%d] -> %s\n",index, insert_query);
 
 		res = PQexec(conn, insert_query);
 
