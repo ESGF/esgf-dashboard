@@ -230,41 +230,46 @@ int compute_aggregate_data_user_metrics()
 	char query_registered_users[2048] = { '\0' };
 	FILE *fp;
 
-	downdatacount = 0;
-	downdatasize  = 0;
-        registeredusers = 0;
-
 	// Pre-computation of metrics: total data download (size,count) and total number of registered users x host 
 	if (DASHBOARD_SERVICE_PATH) {	 
+	
+		if (!IDP_TYPE) { // IDP_TYPE==0 means that this node is an ESGF P2P IDP node
+    			pmesg(LOG_DEBUG,__FILE__,__LINE__,"Node acting as a proxy for external idp registered users metrics. It is expected to have an external sensor providing the metrics!\n");
+			return 0;
+		}  
 	    	//if (ret_code = get_single_value(GET_DOWNLOADED_DATA_COUNT, &downdatacount))
 		//	pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download count metrics [Code %d]\n",ret_code);
 
 	    	//if (ret_code = get_single_value(GET_DOWNLOADED_DATA_SIZE, &downdatasize))
 		//	pmesg(LOG_ERROR,__FILE__,__LINE__,"There was an issue retrieving the data download size metrics [Code %d]\n",ret_code);
 
+		downdatacount = 0;
+		downdatasize  = 0;
+        	registeredusers = 0;
+
 	    	snprintf (query_registered_users,sizeof (query_registered_users),GET_REGISTERED_USERS_COUNT, ESGF_HOSTNAME);
 	
 			
 		// todo: if DATANODETYPE = idp (16 dec ,10000 bin ,0x10 exac)
-		// external idp: new code testing a new esgf property related to internal/external idp node	
-		if ((NODE_TYPE & 10000) > 0)
+		// to do: external idp: new code testing a new esgf property related to internal/external idp node	
+		// To do: this part must be changed to have different files containing these values separately 
+		if ((NODE_TYPE & 10000) > 0) {
 	    		if (ret_code = get_single_value(query_registered_users, &registeredusers))
 				pmesg(LOG_ERROR,__FILE__,__LINE__,"Error retrieving the total number of users from esgf_security DB! [Code %d]\n",ret_code);
+	    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%lld] , [%lld] , [%lld] !\n", downdatacount, downdatasize, registeredusers);
 
-	    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Retrieved metrics (data,users) [%lld] , [%lld] , [%lld] !\n", downdatacount, downdatasize, registeredusers);
-
-	    	// Storing data into data_users.metrics
-	    	snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
-	    	snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%lld,DOWNLOADSIZE=%lld,DOWNLOADUSERS=0,REGISTEREDUSERS=%lld",downdatacount,downdatasize,registeredusers);
- 
-	    	fp=fopen(metrics_filename, "w+");
-	    	if (fp!=NULL) {
-	    		fprintf(fp, "%s",metrics_content);
-	    		fclose(fp);	
-	    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Data users Metrics successfully stored!\n");
-	    	} else {
- 	    		pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file.The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to store the data and users metrics. Please check!\n");
-	    	}
+    			// Storing data into data_users.metrics
+    			snprintf (metrics_filename,sizeof (metrics_filename),"%s/data_users.metrics",DASHBOARD_SERVICE_PATH);
+    			snprintf (metrics_content,sizeof (metrics_content),"DOWNLOADCOUNT=%lld,DOWNLOADSIZE=%lld,DOWNLOADUSERS=0,REGISTEREDUSERS=%lld",downdatacount,downdatasize,registeredusers);
+    			fp=fopen(metrics_filename, "w+");
+    			if (fp!=NULL) {
+    				fprintf(fp, "%s",metrics_content);
+    				fclose(fp);	
+    				pmesg(LOG_DEBUG,__FILE__,__LINE__,"Data users Metrics successfully stored!\n");
+    			} else {
+    				pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed to open the data_users.metrics file.The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to store the data and users metrics. Please check!\n");
+    			}
+		} 
         } else { // the DASHBOARD_SERVICE_PATH is NULL <=> 'dashboard.ip.app.home' not set in the esgf.properties file
 		pmesg(LOG_ERROR,__FILE__,__LINE__,"The 'dashboard.ip.app.home' property must be properly set in the esgf.properties file to provide data and users metrics. Please check!\n");	
  	} 
@@ -590,7 +595,8 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   HISTORY_MONTH=0;
   HISTORY_DAY=7;
   DATA_METRICS_SPAN=1; 		// default 1 hour 
-  *notfound = 16;		// number of total properties to be retrieved from the esgf.properties file
+  IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
+  *notfound = 17;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
@@ -690,6 +696,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "esgf.ip.downdatarefresh.hour")))
 	    {
 	      DATA_METRICS_SPAN = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.idp.type")))
+	    {
+	      IDP_TYPE = atoi (value_buffer);
 	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.debug.level")))

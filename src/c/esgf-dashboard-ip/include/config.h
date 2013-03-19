@@ -23,6 +23,7 @@ int HOSTS_LOADING_SPAN;
 int HISTORY_MONTH;
 int HISTORY_DAY;
 long int DATA_METRICS_SPAN; // hours
+int IDP_TYPE; // 0 external IDP use case ; 1 default, classical ESGF P2P IDP 
 int NODE_TYPE;
 
 struct geo_output_struct
