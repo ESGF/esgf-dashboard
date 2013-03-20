@@ -133,6 +133,13 @@
 #define QUERY_GET_LAST_PROCESSED_ID_FED  "select max(al_id) from esgf_dashboard.federationdw where peername='%s';"
 #define QUERY_UPDATE_PEER_LAST_ID "update esgf_dashboard.aggregation_process set lastprocessed_id=%ld where hostname='%s';"
 
+// PLAN B
+
+#define QUERY_PLANB_SUMMARY_DB_TMP "drop table if exists esgf_dashboard.planb_metrics_tmp; create table esgf_dashboard.planb_metrics_tmp as (SELECT EXTRACT (YEAR FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as year, EXTRACT (MONTH FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as month, count(*) as downloads, count(distinct url) as files, count(distinct user_id_hash) as users, sum(fixed_log.size)/1024/1024/1024 as gb FROM (SELECT file.url, log.user_id_hash, max(log.date_fetched) as date_fetched, max(file.size) as size FROM esgf_node_manager.access_logging as log join public.file_version as file on (log.url LIKE '%.nc' AND regexp_replace(log.url, E'^.*/(cmip5/.*\.nc)$', E'\\1') = file.url) where log.success and log.duration > 1000 group by file.url,log.user_id_hash) as fixed_log group by year,month order by year,month);"
+
+#define QUERY_PLANB_ADD_HOSTNAME_COLUMN "alter table esgf_dashboard.planb_metrics_tmp add column host varchar(1024);"
+#define QUERY_PLANB_ADD_HOSTNAME_VALUE "update esgf_dashboard.planb_metrics_tmp set host='%s'"
+#define QUERY_PLANB_SUMMARY_DB "drop table if exists esgf_dashboard.planb_metrics; alter table esgf_dashboard.planb_metrics_tmp rename to planb_metrics;"
 
 // --------------------------------------------------------
 

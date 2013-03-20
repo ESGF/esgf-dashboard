@@ -616,6 +616,33 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
  return 0;
 }
 
+int reconciliation_process_planB()
+{
+  	char update_query_hostname[2048] = { '\0' };
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB START\n");
+	
+	if (transaction_based_query(QUERY_PLANB_SUMMARY_DB_TMP, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
+
+	if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK]\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,ESGF_HOSTNAME);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK]\n");
+
+	if (transaction_based_query(QUERY_PLANB_SUMMARY_DB, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK]\n");
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
+ 	return 0;
+}
+
 int reconciliation_process()
 {
 	PGconn *conn;

@@ -420,7 +420,7 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
-  //reconciliation_process();
+  reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
   //federation_level_aggregation_metrics();
 
