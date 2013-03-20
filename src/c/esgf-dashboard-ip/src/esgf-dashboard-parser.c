@@ -1138,7 +1138,7 @@ parse_registration_xml_file (xmlNode * a_node)
 		/***********************************************************************/
 
 			  // Start "if internal node is a GridFTPService ELEMENT"       
-			  if (!strcmp
+/*			  if (!strcmp
 			      (int_node->name, REG_ELEMENT_GRIDFTPSERVICE))
 			    {
 
@@ -1286,7 +1286,7 @@ parse_registration_xml_file (xmlNode * a_node)
 
 				}	// end of loop on internal GRIFTPSERVICE elements (CONFIGURATION, etc.)
 
-			    }	// end of "if internal node is a GridFTPService ELEMENT"
+			    } */	// end of "if internal node is a GridFTPService ELEMENT"
 
 			}	// end of "if internal_node is an ELEMENT node 
 		    }		// end of loop on INTERNALNODE elements 
