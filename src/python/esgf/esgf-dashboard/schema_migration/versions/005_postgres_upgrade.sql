@@ -16,4 +16,16 @@ SET default_with_oids = false;
 
 delete from esgf_dashboard.service_instance where port<>80;
 
+create table esgf_dashboard.aggregation_process_planb (
+        host character varying(1024) PRIMARY KEY,
+        time_stamp timestamp without time zone DEFAULT now() NOT NULL,
+	action bigint DEFAULT 0 NOT NULL,
+	counter_aggr bigint DEFAULT 0 NOT NULL
+);
+
+create table esgf_dashboard.federationdw_planb  (id serial primary key, year integer, month integer, downloads bigint, files bigint, users bigint, gb numeric, host character varying(1024) UNIQUE NOT NULL);
+
+ALTER TABLE esgf_dashboard.aggregation_process_planb OWNER TO dbsuper;
+ALTER TABLE esgf_dashboard.federationdw_planb OWNER TO dbsuper;
+
 SET search_path = public, pg_catalog;

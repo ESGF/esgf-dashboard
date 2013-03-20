@@ -434,6 +434,82 @@ int store_last_id_feddw(PGconn * conn, long int last_id_feddw, char* peername)
   PQclear(res);
 }
 
+int federation_level_aggregation_metrics_planB()
+{
+	PGconn *conn;
+	PGresult *res;
+	char conninfo[1024] = {'\0'};
+	long int numTuples;
+	long long int t,w; // w is the action
+	int ret_code, nFields;
+  	char peername[512] = { '\0' };
+
+	// OPEN CONNECTION  
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federation-level stats aggregation process planB START\n");
+
+        snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+	conn = PQconnectdb ((const char *) conninfo);
+
+	if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Stats-Aggregator planB: Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+	// SELECT START 
+
+	res = PQexec(conn,QUERY_STATS_AGGREGATOR_GET_HOSTLIST_PLANB);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Stats-Aggregator planB: SELECT data from aggregation_process FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Stats-Aggregator planB: Number of fields/entries from the aggregation_process table to be processed [%ld,%d] \n",nFields,numTuples);
+
+	for(t = 0; t < numTuples; t ++) 
+		{
+		 char remove_stats_feddw[1024] = { '\0' };
+  		 char update_query_timestamp_counter_aggr[1024] = { '\0' };
+  		 char get_last_id_query[1024] = { '\0' };
+		 long int last_id_feddw;
+
+  		 last_id_feddw = 0;
+		 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
+		 w = atol(PQgetvalue(res, t, 1)); 
+ 		 pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing entry planB [%s,%ld]\n",peername,w);
+		 snprintf (update_query_timestamp_counter_aggr, sizeof (update_query_timestamp_counter_aggr),QUERY_UPDATE_PEER_TIMESTAMP_PLANB,peername);
+		 snprintf (remove_stats_feddw, sizeof (remove_stats_feddw),QUERY_REMOVE_STATS_FEDDW_PLANB,peername);
+		 //snprintf (get_last_id_query, sizeof (get_last_id_query),QUERY_GET_LAST_PROCESSED_ID_FED,peername);
+
+		 if (w==-1) {
+ 		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw\n",peername);
+			remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
+			}
+		 if (w==0) {
+ 		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch\n",peername);
+			remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
+			harvest_stats_planB(conn,peername);
+			}
+		 if (w==1) {
+ 		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = skipping node\n",peername);
+			}
+		}
+
+	// CLOSE CONNECTION  
+	PQclear(res);
+    	PQfinish(conn);
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federation-level stats planB aggregation process END\n");
+
+  return 0;
+}
  
 int federation_level_aggregation_metrics()
 {
@@ -519,7 +595,88 @@ int federation_level_aggregation_metrics()
 }
 
 
+int harvest_stats_planB(PGconn *conn,char *peername)
+{
+  CURL *curl;
+  PGresult *res;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;  
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char url_action[10024];
+  long int i;
+  int right_url;  
 
+  snprintf (url_action, sizeof (url_action),URL_STATS_PLANB,peername);
+  //snprintf (url_action, sizeof (url_action),URL_STATS_PLANB);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Contacting [hostname=%s]\n",peername);
+
+  // filename to be stats_<host>_<processed_id>.tmp
+
+  tmp=fopen(TEMP_STATS_FILE, "w");
+  if(tmp==NULL) 
+	{
+    	 pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
+    	 return -2; 
+  	}
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+  if(curl_res) 
+   	{
+    	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR in dowloading file\n");
+  	remove(TEMP_STATS_FILE);
+    	fclose(tmp);
+    	curl_easy_cleanup(curl);
+    	return -1;
+   	}	
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  file=fopen(TEMP_STATS_FILE, "r");
+
+  if (file == NULL)    
+       	{
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Error opening file\n");
+    	return -1;
+     	} 
+
+  i=0;
+  right_url = 1; 
+  char line [ 1024 ];
+
+  while ( (fgets ( line, sizeof line, file ) != NULL) && (right_url) ) 
+       	{
+  		char insert_remote_stat[10024] = { '\0' };
+		i++;
+		if (i==1)
+        	{
+		   if (strcmp(line,"REMOTE_STATS_ACTION\n"))
+			right_url=0;	
+		   continue;
+        	} 
+                fputs ( line, stdout ); 
+    		//snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_REMOTE_STAT,line);
+		//printf("Query %s\n",insert_remote_stat);	
+	
+  		//res = PQexec(conn, insert_remote_stat);
+
+  		//if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+                //	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in federated-dw failed\n");
+
+  		//PQclear(res);
+       	} 
+  
+  fclose ( file );
+  remove(TEMP_STATS_FILE);
+  
+ return 0;
+}
 
 
 int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
