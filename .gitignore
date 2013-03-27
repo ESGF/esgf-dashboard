@@ -57,6 +57,7 @@ generated/
 /src/c/esgf-dashboard-ip/src/esgf-dashboard-ip
 /src/c/esgf-dashboard-ip/src/esgf-iplookup
 /src/c/esgf-dashboard-ip/stamp-h1
+src/c/esgf-dashboard-ip/src/stats_storage_engine/
 
 ################################
 #Generated from templated files
