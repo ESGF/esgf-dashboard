@@ -364,7 +364,7 @@ int get_single_value(char *submitted_query, long long int *metrics)
 
    if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP - Query ERROR [%s]\n", submitted_query);
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value - Query ERROR [%s]\n", submitted_query);
 	        PQclear(res);
 		PQfinish(conn);
 		return -2;
@@ -374,7 +374,7 @@ int get_single_value(char *submitted_query, long long int *metrics)
    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Value [Tuples=%ld][%s] \n",numTuples,submitted_query);
    if (numTuples!=1) 
     	{
-	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value STOP Too many Tuples ERROR [%ld]\n",numTuples);
+	        pmesg(LOG_ERROR,__FILE__,__LINE__," Get value - Too many Tuples ERROR [%ld]\n",numTuples);
 	        PQclear(res);
 		PQfinish(conn);
 		return -3;
@@ -487,13 +487,13 @@ int federation_level_aggregation_metrics_planB()
 		 snprintf (update_query_timestamp_counter_aggr, sizeof (update_query_timestamp_counter_aggr),QUERY_UPDATE_PEER_TIMESTAMP_PLANB,peername);
 		 snprintf (remove_stats_feddw, sizeof (remove_stats_feddw),QUERY_REMOVE_STATS_FEDDW_PLANB,peername);
 		 //snprintf (get_last_id_query, sizeof (get_last_id_query),QUERY_GET_LAST_PROCESSED_ID_FED,peername);
-
+		 // to be added: a transactional mechanism that delete stats only if I have the new ones!!!
 		 if (w==-1) {
  		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw\n",peername);
 			remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
 			}
 		 if (w==0) {
- 		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch\n",peername);
+ 		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch (non-transact)\n",peername);
 			remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
 			harvest_stats_planB(conn,peername);
 			}
@@ -511,7 +511,7 @@ int federation_level_aggregation_metrics_planB()
   return 0;
 }
  
-int federation_level_aggregation_metrics()
+/*int federation_level_aggregation_metrics()
 {
 	PGconn *conn;
 	PGresult *res;
@@ -592,7 +592,7 @@ int federation_level_aggregation_metrics()
 
 
   return 0;
-}
+}*/
 
 
 int harvest_stats_planB(PGconn *conn,char *peername)
@@ -629,7 +629,7 @@ int harvest_stats_planB(PGconn *conn,char *peername)
   curl_res = curl_easy_perform(curl);
   if(curl_res) 
    	{
-    	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR in dowloading file\n");
+    	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting [%s] or downloading stats\n",peername);
   	remove(TEMP_STATS_FILE);
     	fclose(tmp);
     	curl_easy_cleanup(curl);
@@ -656,20 +656,20 @@ int harvest_stats_planB(PGconn *conn,char *peername)
 		i++;
 		if (i==1)
         	{
-		   if (strcmp(line,"REMOTE_STATS_ACTION\n"))
+		   if (strcmp(line,"USAGESTATS\n"))
 			right_url=0;	
 		   continue;
         	} 
-                fputs ( line, stdout ); 
-    		//snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_REMOTE_STAT,line);
-		//printf("Query %s\n",insert_remote_stat);	
+                //fputs ( line, stdout ); 
+    		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_REMOTE_STAT_PLANB,line);
+		//fprintf(stdout, "Harvesting : %s",insert_remote_stat);	
 	
-  		//res = PQexec(conn, insert_remote_stat);
+  		res = PQexec(conn, insert_remote_stat);
 
-  		//if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
-                //	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in federated-dw failed\n");
+  		if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+                	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in federated-dw failed [%s]\n",insert_remote_stat);
 
-  		//PQclear(res);
+  		PQclear(res);
        	} 
   
   fclose ( file );
@@ -800,7 +800,7 @@ int reconciliation_process_planB()
  	return 0;
 }
 
-int reconciliation_process()
+/*int reconciliation_process()
 {
 	PGconn *conn;
 	PGresult *res;
@@ -1014,7 +1014,7 @@ int reconciliation_process()
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process END\n");
  	return 0;
-}
+}*/
 
 
 int insert_data_into_finaldw(PGconn *conn, char *submitted_query, char* update_last_al_id_query ,char* open_transaction, char* stop_transaction) 

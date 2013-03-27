@@ -23,7 +23,7 @@ create table esgf_dashboard.aggregation_process_planb (
 	counter_aggr bigint DEFAULT 0 NOT NULL
 );
 
-create table esgf_dashboard.federationdw_planb  (id serial primary key, year integer, month integer, downloads bigint, files bigint, users bigint, gb numeric, host character varying(1024) UNIQUE NOT NULL);
+create table esgf_dashboard.federationdw_planb  (id serial primary key, year integer, month integer, downloads bigint, files bigint, users bigint, gb numeric, host character varying(1024) NOT NULL, time_stamp timestamp without time zone DEFAULT now() NOT NULL);
 
 ALTER TABLE esgf_dashboard.aggregation_process_planb OWNER TO dbsuper;
 ALTER TABLE esgf_dashboard.federationdw_planb OWNER TO dbsuper;

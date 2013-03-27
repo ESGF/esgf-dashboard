@@ -136,6 +136,8 @@
 #define END_TRANSACTION_FEDDW_PLANB "end transaction;"
 
 #define INSERT_REMOTE_STAT "insert into esgf_dashboard.federationdw(al_id, datasetid,file_id,project,model,experiment, url,mv, var, realm, user_id_hash, user_idp, year, month, day, hour , service_type, remote_addr , datasetname ,time_frequency , institute , product ,ensemble ,cmor_table , size ,success , duration , peername) values%s" 
+#define INSERT_REMOTE_STAT_PLANB "insert into esgf_dashboard.federationdw_planb(year, month, downloads,files,users,gb,host) values%s" 
+
 #define QUERY_GET_LAST_PROCESSED_ID_FED  "select max(al_id) from esgf_dashboard.federationdw where peername='%s';"
 #define QUERY_UPDATE_PEER_LAST_ID "update esgf_dashboard.aggregation_process set lastprocessed_id=%ld where hostname='%s';"
 
