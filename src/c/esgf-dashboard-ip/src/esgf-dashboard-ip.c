@@ -203,13 +203,14 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (i<30) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
 	    	reconciliation_process_planB();
 		compute_aggregate_data_user_metrics();	
-		federation_level_aggregation_metrics_planB();
+		if (FEDERATED_STATS) 
+			federation_level_aggregation_metrics_planB();
 		}
 	    sleep(1); // TEST_ 
 	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a hour
@@ -290,7 +291,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 30;  // TEST_   PRODUCTION_ 1 
+  int iterator = 3;  // TEST_   PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -422,7 +423,8 @@ main (int argc, char **argv)
 
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
-  federation_level_aggregation_metrics_planB();
+  if (FEDERATED_STATS)
+	federation_level_aggregation_metrics_planB();
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
@@ -594,9 +596,10 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   HOSTS_LOADING_SPAN = 120;
   HISTORY_MONTH=0;
   HISTORY_DAY=7;
+  FEDERATED_STATS = 0;		// federated stats enabled=1 or disabled=0. Default disabled! 
   DATA_METRICS_SPAN=24;		// default 24 hour   
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
-  *notfound = 17;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 18;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
@@ -696,6 +699,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "esgf.ip.downdatarefresh.hour")))
 	    {
 	      DATA_METRICS_SPAN = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.federated_stats")))
+	    {
+	      FEDERATED_STATS = atoi (value_buffer);
 	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.idp.type")))
