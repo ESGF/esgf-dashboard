@@ -102,6 +102,7 @@ Builds the project via ant (obviously).
     <arg value="git tag | sed 's/^v//' | sort -s -t. -k1,1n -k2,2n -k3,3n  | sed -ne 's/\([0-9]*\.[0-9]*\.[0-9]*\)-\([a-zA-Z0-9_-]*\)-release.*$/\2/p'| tail -n 1"/>
   </exec>
 
+  <property name="ivy_retrieve_type" value="jar"/>
   <property name="filter" value="false"/>
 
   <!-- **static defines** -->
@@ -227,7 +228,7 @@ Builds the project via ant (obviously).
   
   
   <target name="init-ivy" depends="init">
-    <property name="ivy_version" value="2.1.0" />
+    <property name="ivy_version" value="2.3.0" />
     <taskdef resource="org/apache/ivy/ant/antlib.xml"
              uri="antlib:org.apache.ivy.ant" classpath="${lib_dir}/ivy-${ivy_version}.jar"/>
     <ivy:settings file="./ivysettings.xml">
@@ -237,6 +238,7 @@ Builds the project via ant (obviously).
   
   <target name="deps" depends="init-ivy" description="(Sets up library dependencies: Ivy)">
     <mkdir dir="${lib_fetched_dir}"/>
+    <ivy:resolve type="${ivy_retrieve_type}"/>
     <ivy:retrieve sync="true"/>
     <ivy:deliver deliverpattern="dist/[artifact]-[revision].[ext]"
                  pubrevision="${version_num}" status="milestone" />
