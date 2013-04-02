@@ -203,7 +203,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		cpu_realtime_monitoring_setup();
