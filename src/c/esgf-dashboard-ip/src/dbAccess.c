@@ -1146,3 +1146,120 @@ int remove_stats_from_federation_level_dw(PGconn *conn, char *submitted_query, c
 
   return 0;
 }
+
+// realtime cpu monitoring
+
+int realtime_cpu_get_stats(void)
+{
+  char esgf_nodetype_filename[256] = { '\0' };
+  char loadavg1[256] = { '\0' };
+  char loadavg5[256] = { '\0' };
+  char loadavg15[256] = { '\0' };
+  int counter;
+
+  sprintf (esgf_nodetype_filename, "/proc/loadavg");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)
+    return -1;
+
+  if ((fscanf (file, "%s", loadavg1)) == EOF)
+    return -1;
+  if ((fscanf (file, "%s", loadavg5)) == EOF)
+    return -1;
+  if ((fscanf (file, "%s", loadavg15)) == EOF)
+    return -1;
+  fprintf(stdout,"Cpu load average metrics [%s] [%s] [%s]\n", loadavg1, loadavg5,loadavg15);
+  fclose (file);
+  rotate_realtime_stats(REALTIME_CPU_1M, REALTIME_CPU_1M_TEMP, loadavg1);
+  rotate_realtime_stats(REALTIME_CPU_5M, REALTIME_CPU_5M_TEMP, loadavg5);
+  rotate_realtime_stats(REALTIME_CPU_15M, REALTIME_CPU_15M_TEMP, loadavg15);
+
+ return 0;
+}
+
+int rotate_realtime_stats(char* filestats, char* filestats_tmp, char* metric)
+ {
+  FILE *fromFile;
+  time_t current_time;
+  char metrics_filename[1024] = { '\0' };
+  char metrics_filename_tmp[1024] = { '\0' };
+  FILE *toFile;
+  char* c2_time_string;
+  char last_value[256] = { '\0' };
+  char c2_copy[256] = { '\0' };
+  char str[256] = { '\0' };
+  int i;
+
+  snprintf (metrics_filename_tmp,sizeof (metrics_filename_tmp),"%s/%s",DASHBOARD_SERVICE_PATH,filestats_tmp);
+  open_create_file(&toFile,metrics_filename_tmp, "w+"); //overwrite file or create it if it does not exists.
+  time(&(current_time));
+  c2_time_string = ctime(&(current_time));
+  snprintf(c2_copy,sizeof(c2_copy),"%s",c2_time_string);
+  c2_time_string[strlen(c2_time_string)-1]='\0';
+  c2_copy[strlen(c2_copy)-6]='\0';
+  printf("Time is %s [%s]\n", c2_time_string,(c2_copy+11) );
+
+  // writing the new stats on top
+   //snprintf(last_value,sizeof(last_value),"%s&%s\n",metric,c2_time_string);
+   snprintf(last_value,sizeof(last_value),"%s&%s\n",metric,(c2_copy+11));
+   if (fputs(last_value,toFile)==EOF)
+        fprintf(stdout,"Error writing the file\n");
+
+  // now copy the remaining ones from the prod file
+  snprintf (metrics_filename,sizeof (metrics_filename),"%s/%s",DASHBOARD_SERVICE_PATH,filestats);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Setting proper path for realtime monitoring cpu file [%s]!\n",metrics_filename);
+  open_create_file(&fromFile , metrics_filename,"r"); // r  - open for reading 
+  //snprintf(last_value, sizeof(last_value),metric);
+
+  // iterate on prod file and temp file
+  i=1;
+  while (i<10)
+      {
+        if (fgets(str,256,fromFile)!=NULL)
+                {
+                //fprintf(stdout,"Copying %s\n",str); //fputs(str,toFile);
+                snprintf(last_value, sizeof(last_value),"%s",str);
+                fputs(last_value,toFile);
+                }
+        else
+                {
+                //fprintf(stdout,"Padding with %s",last_value); //fputs(metric,toFile);
+                fputs(last_value,toFile);
+                }
+        i++;
+      }
+  fclose(fromFile);
+  fclose(toFile);
+  rename(metrics_filename_tmp,metrics_filename);
+  // display new file content
+  open_create_file(&fromFile , metrics_filename,"r"); // r  - open for reading 
+  while (fgets(str,256,fromFile)!=NULL)
+        {
+        str[strlen(str)-1]='\0';
+        fprintf(stdout,"[%s] ",str);
+        }
+  fprintf(stdout,"\n");
+  fclose(fromFile);
+
+  return 0;
+}
+
+int open_create_file(FILE** file , char* filename, char* mode)
+{
+    *file = fopen(filename,mode);
+    if ((*file) == NULL)
+        {
+         fprintf(stdout,"Can't open binary file [%s] in [%s] mode\n",filename,mode);
+         return -1;
+        }
+    return 0;
+}
+
+int close_file(FILE* file)
+{
+    fclose( file );
+    return 0;
+}
+
+

@@ -149,9 +149,22 @@
 #define QUERY_PLANB_ADD_HOSTNAME_VALUE "update esgf_dashboard.finaldw_planb_tmp set host='%s'"
 #define QUERY_PLANB_SUMMARY_DB "drop table if exists esgf_dashboard.finaldw_planb; alter table esgf_dashboard.finaldw_planb_tmp rename to finaldw_planb;"
 
+// MACROS FOR REALTIME MONITORING
+
+#define REALTIME_CPU_1M "realtime_cpu_1m.dat"
+#define REALTIME_CPU_5M "realtime_cpu_5m.dat"
+#define REALTIME_CPU_15M "realtime_cpu_15m.dat"
+#define REALTIME_CPU_1M_TEMP "realtime_cpu_1m.dat.temp"
+#define REALTIME_CPU_5M_TEMP "realtime_cpu_5m.dat.temp"
+#define REALTIME_CPU_15M_TEMP "realtime_cpu_15m.dat.temp"
+
+// END MACROS FOR REALTIME MONITORING
+
 // --------------------------------------------------------
 
 struct host * loadHosts(unsigned *numHosts);
 int writeResults(struct host *hosts, const unsigned numHosts);
+int realtime_cpu_get_stats(void);
+int initialize_stats_file(char* filename);
 
 #endif /* DBACCESS_H_ */

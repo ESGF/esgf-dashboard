@@ -198,12 +198,29 @@ int automatic_registration_xml_feed (void *arg)
   return 0;
 }
 
+void * realtime_monitoring(void *arg)
+{
+	int i; 
+
+	i=0; 
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	{
+	    if (!i) //the first time it creates the files
+  		cpu_realtime_monitoring_setup();
+    	    realtime_cpu_get_stats();
+	    sleep(1); 
+	    i++;  
+	}
+
+	return NULL;
+}
+
 void * data_download_metrics_dw_reconciliation(void *arg)
 {
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -212,8 +229,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 		if (FEDERATED_STATS) 
 			federation_level_aggregation_metrics_planB();
 		}
-	    //sleep(1); // TEST_ 
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	    sleep(1); // TEST_ 
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
 	    i++;  
 	}
 
@@ -278,10 +295,35 @@ int compute_aggregate_data_user_metrics()
 	return 0;
 }
 
+int initialize_stats_file(char* filename)
+{
+    FILE *binaryFile;
+    char metrics_filename[1024] = { '\0' };
+
+    snprintf (metrics_filename,sizeof (metrics_filename),"%s/%s",DASHBOARD_SERVICE_PATH,filename);
+    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Initialize stats file [%s]!\n",metrics_filename);
+    
+    if (open_create_file(&binaryFile , metrics_filename,"r")) // r  - open for reading 
+        open_create_file(&binaryFile ,metrics_filename, "w+");
+    close_file(binaryFile);
+    return 0;
+}
+
+int cpu_realtime_monitoring_setup(void)
+{
+    initialize_stats_file(REALTIME_CPU_1M);
+    initialize_stats_file(REALTIME_CPU_5M);
+    initialize_stats_file(REALTIME_CPU_15M);
+    // 3 files for realtime cpu monitoring exists now! 
+    return 0;
+}
+
+
 int
 main (int argc, char **argv)
 {
   pthread_t pth;		// this is our thread identifier
+  //pthread_t pth_realtime;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -421,6 +463,7 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
+
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
   if (FEDERATED_STATS)
@@ -430,11 +473,12 @@ main (int argc, char **argv)
 
   // start thread 
   pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
+  //pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator)   
+  while (iterator--)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
@@ -483,7 +527,12 @@ main (int argc, char **argv)
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master!\n");
-
+  // end thread
+  /*if (pthread_join (pth_realtime, NULL))
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
+  */
   // freeing space
   fprintf(stderr,"***************************************************\n");
   fprintf(stderr,"[END] esgf-dashboard-ip with a FINITE loop\n");
