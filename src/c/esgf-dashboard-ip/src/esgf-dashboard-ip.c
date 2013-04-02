@@ -203,7 +203,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<10) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		cpu_realtime_monitoring_setup();
@@ -323,7 +323,7 @@ int
 main (int argc, char **argv)
 {
   pthread_t pth;		// this is our thread identifier
-  //pthread_t pth_realtime;		// this is our thread identifier
+  pthread_t pth_realtime;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -473,7 +473,7 @@ main (int argc, char **argv)
 
   // start thread 
   pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
-  //pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
@@ -528,11 +528,11 @@ main (int argc, char **argv)
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master!\n");
   // end thread
-  /*if (pthread_join (pth_realtime, NULL))
+  if (pthread_join (pth_realtime, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
-  */
+  
   // freeing space
   fprintf(stderr,"***************************************************\n");
   fprintf(stderr,"[END] esgf-dashboard-ip with a FINITE loop\n");
