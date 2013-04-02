@@ -114,15 +114,28 @@ int retrieve_localhost_cpu_metrics()
   sprintf (esgf_nodetype_filename, "/proc/loadavg");
   FILE *file = fopen (esgf_nodetype_filename, "r");
 
-  if (file == NULL)		
+  if (file == NULL)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Open /proc/loadavg failed\n");
     return -1;
+  }
 
-  if ((fscanf (file, "%s", loadavg1)) == EOF)	
-    return -1;			
-  if ((fscanf (file, "%s", loadavg5)) == EOF)	
-    return -1;			
-  if ((fscanf (file, "%s", loadavg15)) == EOF)	
-    return -1;			
+  if ((fscanf (file, "%s", loadavg1)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg1 failed\n");
+    return -1;
+  }
+  if ((fscanf (file, "%s", loadavg5)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg5 failed\n");
+    return -1;
+  }
+  if ((fscanf (file, "%s", loadavg15)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg15 failed\n");
+    return -1;
+  }
+
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Cpu load average metrics [%s] [%s] [%s]\n", loadavg1, loadavg5,loadavg15);
 
   snprintf (query_cpu_metric_insert,sizeof (query_cpu_metric_insert),STORE_CPU_METRICS,atof(loadavg1),atof(loadavg5),atof(loadavg15));
@@ -1161,15 +1174,29 @@ int realtime_cpu_get_stats(void)
   FILE *file = fopen (esgf_nodetype_filename, "r");
 
   if (file == NULL)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Open /proc/loadavg failed\n");
     return -1;
+  }
 
   if ((fscanf (file, "%s", loadavg1)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg1 failed\n");
     return -1;
+  }
   if ((fscanf (file, "%s", loadavg5)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg5 failed\n");
     return -1;
+  }
   if ((fscanf (file, "%s", loadavg15)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg15 failed\n");
     return -1;
-  fprintf(stdout,"Cpu load average metrics [%s] [%s] [%s]\n", loadavg1, loadavg5,loadavg15);
+  }
+
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime Cpu - load average metrics [%s] [%s] [%s]\n", loadavg1, loadavg5,loadavg15);
+
   fclose (file);
   rotate_realtime_stats(REALTIME_CPU_1M, REALTIME_CPU_1M_TEMP, loadavg1);
   rotate_realtime_stats(REALTIME_CPU_5M, REALTIME_CPU_5M_TEMP, loadavg5);
