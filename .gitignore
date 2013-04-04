@@ -62,6 +62,9 @@ generated/
 /src/c/esgf-dashboard-ip/src/stats_storage_engine/raw_stats.dat.old
 /src/c/esgf-dashboard-ip/src/stats_storage_engine/start_stats_time.dat
 /src/c/esgf-dashboard-ip/src/stats_storage_engine/start_stats_time.dat.old
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/realtime
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/display
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/test
 
 
 ################################
