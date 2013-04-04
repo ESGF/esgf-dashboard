@@ -1225,7 +1225,7 @@ int rotate_realtime_stats(char* filestats, char* filestats_tmp, char* metric)
   snprintf(c2_copy,sizeof(c2_copy),"%s",c2_time_string);
   c2_time_string[strlen(c2_time_string)-1]='\0';
   c2_copy[strlen(c2_copy)-6]='\0';
-  printf("Time is %s [%s]\n", c2_time_string,(c2_copy+11) );
+  //printf("Time is %s [%s]\n", c2_time_string,(c2_copy+11) );
 
   // writing the new stats on top
    //snprintf(last_value,sizeof(last_value),"%s&%s\n",metric,c2_time_string);
@@ -1235,13 +1235,13 @@ int rotate_realtime_stats(char* filestats, char* filestats_tmp, char* metric)
 
   // now copy the remaining ones from the prod file
   snprintf (metrics_filename,sizeof (metrics_filename),"%s/%s",DASHBOARD_SERVICE_PATH,filestats);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Setting proper path for realtime monitoring cpu file [%s]!\n",metrics_filename);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Setting proper path for realtime monitoring cpu file [%s]!\n",metrics_filename);
   open_create_file(&fromFile , metrics_filename,"r"); // r  - open for reading 
   //snprintf(last_value, sizeof(last_value),metric);
 
   // iterate on prod file and temp file
   i=1;
-  while (i<10)
+  while (i<REALTIME_SAMPLES)
       {
         if (fgets(str,256,fromFile)!=NULL)
                 {
@@ -1260,14 +1260,14 @@ int rotate_realtime_stats(char* filestats, char* filestats_tmp, char* metric)
   fclose(toFile);
   rename(metrics_filename_tmp,metrics_filename);
   // display new file content
-  open_create_file(&fromFile , metrics_filename,"r"); // r  - open for reading 
-  while (fgets(str,256,fromFile)!=NULL)
-        {
-        str[strlen(str)-1]='\0';
-        fprintf(stdout,"[%s] ",str);
-        }
-  fprintf(stdout,"\n");
-  fclose(fromFile);
+  //open_create_file(&fromFile , metrics_filename,"r"); // r  - open for reading 
+  //while (fgets(str,256,fromFile)!=NULL)
+  //      {
+  //      str[strlen(str)-1]='\0';
+  //      fprintf(stdout,"[%s] ",str);
+  //     }
+  //fprintf(stdout,"\n");
+  //fclose(fromFile);
 
   return 0;
 }
