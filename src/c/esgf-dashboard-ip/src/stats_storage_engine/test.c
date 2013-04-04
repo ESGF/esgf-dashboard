@@ -49,6 +49,7 @@ int main(void)
     long long int time_counter;
     long long int windows_pointers[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     long long int windows_length[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    long long int windows_limits[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     double aggregated_values[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     double window_avg_values_p[7];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     double window_avg_values_o[7];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
@@ -58,6 +59,14 @@ int main(void)
     if (open_create_file(&binaryFile , FILE_NAME_STATS,"r")) // r  - open for reading 
         open_create_file(&binaryFile ,FILE_NAME_STATS, "w+");
     close_file(binaryFile);
+    windows_limits[0]=1;
+    windows_limits[1]=12;
+    windows_limits[2]=12*24;
+    windows_limits[3]=12*24*7;
+    windows_limits[4]=12*24*30;
+    windows_limits[5]=12*24*365;
+    windows_limits[6]=0;  //never!!! aggregation by ALL
+    		
     // file exists now!	
     
 
@@ -224,14 +233,24 @@ int main(void)
 		windows_pointers[0]=num_interval; // now the window exists!!!
 		aggregated_values[0]+=availability_struct.metrics;
 		windows_length[0]++;
+		fread(&(stats_array[0]), sizeof(struct stats_struct), 1, windows_FILE_pointer[0]);
 		}
 		else 
-		 if (windows_length[0] == 1) // if the window reached the limit... then move the window!!!
+    		{
+		 if (windows_length[0] == 1) // if the window reaches the limit... then move the window!!!
     			{
 			windows_pointers[0]++;
 			aggregated_values[0]+=availability_struct.metrics;
-			aggregated_values[0]-=
+			aggregated_values[0]-=stats_array[0].metrics;
+			fread(&(stats_array[0]), sizeof(struct stats_struct), 1, windows_FILE_pointer[0]);
+   			} 
+			else // this piece of code will be never executed for last5min 
+    			{
+			  windows_length[0]++;
+			  aggregated_values[0]+=availability_struct.metrics;
    			}
+
+   		}
      
  
      // to be added: calcolo di tutte le nuove medie togliendo il primo elemento e aggiungendo l'ultimo letto!!!	
