@@ -2,6 +2,12 @@
       <property name="ivy.default.root.url" value="http://esgf.org/ivy" override="false"/>
       <settings defaultResolver="default-chain"/>
       
+      <resolvers>
+        <filesystem name="local" m2compatible="true">
+          <artifact pattern="${user.home}/.ivy2/cache/[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"/>
+        </filesystem>
+      </resolvers>
+
       <!-- ESGF Devel repository -->
       <include url="${ivy.default.root.url}/ivysettings-esgf-repo-devel.xml"/>
 
