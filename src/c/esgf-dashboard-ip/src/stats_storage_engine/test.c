@@ -18,6 +18,16 @@ struct start_stats_struct
  time_t start_time; // number of 5min intervals from the time0 (first run) 
 };
 
+struct windows_struct 
+{
+    long long int windows_pointers[7]; // windows pointers for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    long long int windows_length[7];  // current windows length for 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    long long int windows_limits[7];  // time windows dimension for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    double aggregated_values[7]; 	// aggregated values last 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    double window_avg_values_p[7];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    double window_avg_values_o[7];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+};
+
 int main(void)
 {
     time_t current_time;
@@ -47,35 +57,19 @@ int main(void)
     FILE* pointer_1h;	
     double av_5m;
     int time_interval=5;
+    int windows_number=6;  // number of time_windows to be managed (initially 3, then 6)
     long long int time_counter;
-    long long int windows_pointers[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    long long int windows_length[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    long long int windows_limits[7];  // time windows dimension 
-    double aggregated_values[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    double window_avg_values_p[7];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    double window_avg_values_o[7];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    struct windows_struct win_struct;
 
 	
     // creates the raw stats file if not existing 
     if (open_create_file(&binaryFile , FILE_NAME_STATS,"r")) // r  - open for reading 
         open_create_file(&binaryFile ,FILE_NAME_STATS, "w+");
     close_file(binaryFile);
-    windows_limits[0]=1;
-    windows_limits[1]=2;
-    windows_limits[2]=4;
-    /*windows_limits[0]=1;
-    windows_limits[1]=12;
-    windows_limits[2]=12*24;
-    windows_limits[3]=12*24*7;
-    windows_limits[4]=12*24*30;
-    windows_limits[5]=12*24*365;*/
-    windows_limits[6]=0;  //never!!! aggregation by ALL
-    		
     // file exists now!	
-    
-
-    // stats file exists now!	
-
+	
+    setup_win_struct(&win_struct);
+    		
     //initialize_stats_pointers_files(FILE_NAME_STATS, &pointer[0], &null_rec_pointer);
 
     // ***** START setup start time only at the beginning of the information provider ******
@@ -115,22 +109,15 @@ int main(void)
     printf("Synchronized (current time -1) for stats is: %s\n", c2_time_string);
     // ***** END setup start time only at the beginning of the information provider ******
 		
-    // defining pointers for stats
-    //num_interval_1h=num_interval-12;
-    //initialize_stats_file_pointers(&pointer_1h, FILE_NAME_STATS, num_interval_1h);
-    //fclose (pointer_1h);
-   
-    // building pointers and time windows for 1h,1d,1w,1m,1y,all
-
     // initializing pointers
     // Todo : think in a different way about the 7th values of all the arrays!!!!
-    for (i=0; i<3; i++) 
+    for (i=0; i<windows_number; i++) 
     	{
-         windows_pointers[i]=0;  // 0 means undefined 
-         windows_length[i]=0;  // 0 number of samples in the interval 
-         aggregated_values[i]=0;  // 0 sum 
-         window_avg_values_p[i]=0;  // 0 average 
-         window_avg_values_o[i]=0;  // 0 average 
+         win_struct.windows_pointers[i]=0;  // 0 means undefined 
+         win_struct.windows_length[i]=0;  // 0 number of samples in the interval 
+         win_struct.aggregated_values[i]=0;  // 0 sum 
+         win_struct.window_avg_values_p[i]=0;  // 0 average 
+         win_struct.window_avg_values_o[i]=0;  // 0 average 
     	 open_create_file(&(windows_FILE_pointer[i]), FILE_NAME_STATS,"r"); 
    	}
     
@@ -141,74 +128,43 @@ int main(void)
     	if (!fread(&stats, sizeof(struct stats_struct), 1, binaryFile))
 		break;
 	time_counter = stats.intervals;
-    	for (i=0; i<3; i++) 
-		if (time_counter<=num_interval &&  time_counter>=(num_interval-windows_limits[i]+1))
+    	for (i=0; i<windows_number; i++) 
+		if (time_counter<=num_interval &&  time_counter>=(num_interval-win_struct.windows_limits[i]+1))
     			{
-    			fprintf(stdout,"Last [%d] minutes event [%d]\n",i,time_counter);
-			if (!windows_pointers[i]) // set pointer if undefined
-				windows_pointers[i]=time_counter;
-			aggregated_values[i]+=stats.metrics;
-			windows_length[i]++;
+    			//fprintf(stdout,"Last [%d] minutes event [%d]\n",i,time_counter);
+			if (!win_struct.windows_pointers[i]) // set pointer if undefined
+				win_struct.windows_pointers[i]=time_counter;
+			win_struct.aggregated_values[i]+=stats.metrics;
+			win_struct.windows_length[i]++;
    			}
 			else
 				fread(&(stats_array[i]), sizeof(struct stats_struct), 1, windows_FILE_pointer[i]);
-/*
-	if (time_counter<=num_interval &&  time_counter>(num_interval-windows_limits[1])) 
-    		{
-    		fprintf(stdout,"Last hour event [%d]\n",time_counter);
-		if (!windows_pointers[1]) // set pointer if undefined
-			windows_pointers[1]=time_counter;
-		aggregated_values[1]+=stats.metrics;
-		windows_length[1]++;
-   		}
-		else
-			fread(&(stats_array[1]), sizeof(struct stats_struct), 1, windows_FILE_pointer[1]);
-
-	if (time_counter<=num_interval &&  time_counter>(num_interval-windows_limits[2])) 
-    		{
-    		fprintf(stdout,"Last day event [%d]\n",time_counter);
-		if (!windows_pointers[2]) // set pointer if undefined
-			windows_pointers[2]=time_counter;
-		aggregated_values[2]+=stats.metrics;
-		windows_length[2]++;
-   		}
-		else
-			fread(&(stats_array[2]), sizeof(struct stats_struct), 1, windows_FILE_pointer[2]);
-*/
-    	//fprintf(stdout,"Reading file %lld=%4.2f\n",stats.intervals, stats.metrics);
    	}
    close_file(binaryFile);
+   for (i=0; i<windows_number; i++) 
+    	fprintf(stdout,"Last [%d] minutes window pointer [%d]\n",i,win_struct.windows_pointers[i]);
 
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-   	window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
-   /*window_avg_values_p[6]=aggregated_values[6]/num_interval;*/
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
+   	win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
+   /*win_struct.window_avg_values_p[6]=win_struct.aggregated_values[6]/num_interval;*/
    	
 
-   //for (i=0 ; i<7; i++)
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-	if (windows_length[i])
-   		window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
+	if (win_struct.windows_length[i])
+   		win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
 	else
-		window_avg_values_o[i]=-1; // -1 means undefined
-   //window_avg_values_o[6]=aggregated_values[6]/num_interval;
+		win_struct.window_avg_values_o[i]=-1; // -1 means undefined
+   //win_struct.window_avg_values_o[6]=win_struct.aggregated_values[6]/num_interval;
 
-   //for (i=0 ; i<7; i++)
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-	if (windows_length[i])
-   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,windows_length[i], window_avg_values_o[i]);
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
+	if (win_struct.windows_length[i])
+   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,win_struct.windows_length[i], win_struct.window_avg_values_o[i]);
 	else
    		fprintf(stdout, "Average_o[%d] is undefined\n",i);
 
-   //for (i=0 ; i<7; i++)
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-   		fprintf(stdout, "Average_p[%d]  = %4.2f\n", i,window_avg_values_p[i]);
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
+   		fprintf(stdout, "Average_p[%d]  = %4.2f\n", i,win_struct.window_avg_values_p[i]);
 
-   // end building pointers and time windows for 1h,1d,1w,1m,1y,all
-
-   //for (i=0 ; i<7; i++)
-   //for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-   //		fprintf(stdout, "Pointer[%d]=%lld   value=%4.2f\n",i ,stats_array[i].intervals,stats_array[i].metrics);
-   
   //return 0;
 
    while (counter--) 
@@ -228,81 +184,74 @@ int main(void)
 	
     event_last5_minutes_occurred(&availability_struct);
     
-    for (i=0 ; i<3; i++)
-    	if (!windows_pointers[i]) // set pointer if undefined (this means it does not exist an older last5 min sample)
+    for (i=0 ; i<windows_number; i++)
+    	if (!win_struct.windows_pointers[i]) // set pointer if undefined (this means it does not exist an older last5 min sample)
     		{
-		windows_pointers[i]=num_interval; // now the window exists!!!
-		aggregated_values[i]+=availability_struct.metrics;
-   		window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
-		windows_length[i]++;
-   		window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+		win_struct.windows_pointers[i]=num_interval; // now the window exists!!!
+		win_struct.aggregated_values[i]+=availability_struct.metrics;
+   		win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
+		win_struct.windows_length[i]++;
+   		win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
 		fread(&(stats_array[i]), sizeof(struct stats_struct), 1, windows_FILE_pointer[i]);
     		fprintf(stdout, "1 Pointer %d moved to [%lld] [%4.2f] \n", i,stats_array[i].intervals, stats_array[i].metrics);
 		}
 		else 
     		{
-		 if (windows_length[i] == windows_limits[i]) // if the window reaches the limit... then move the window!!!
+		 if (win_struct.windows_length[i] == win_struct.windows_limits[i]) // if the window reaches the limit... then move the window!!!
     			{
-			windows_pointers[i]++;
-			aggregated_values[i]+=availability_struct.metrics;
-			aggregated_values[i]-=stats_array[i].metrics;
-   			window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
-   			window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+			win_struct.windows_pointers[i]++;
+			win_struct.aggregated_values[i]+=availability_struct.metrics;
+			win_struct.aggregated_values[i]-=stats_array[i].metrics;
+   			win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
+   			win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
 			fread(&(stats_array[i]), sizeof(struct stats_struct), 1, windows_FILE_pointer[i]);
     			fprintf(stdout, "2 Pointer %d moved to [%lld] [%4.2f] \n", i,stats_array[i].intervals, stats_array[i].metrics);
    			} 
 			else // this piece of code will be never executed for last5min 
     			{
-			  windows_length[i]++;
-			  aggregated_values[i]+=availability_struct.metrics;
-   			  window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
-   			  window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+			  win_struct.windows_length[i]++;
+			  win_struct.aggregated_values[i]+=availability_struct.metrics;
+   			  win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
+   			  win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
    			}
 
    		}
 
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
 		{
-   		fprintf(stdout, "Average_p[%d] on [%d] values = [%4.2f]\n", i,windows_limits[i],window_avg_values_p[i]);
-   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,windows_length[i], window_avg_values_o[i]);
+   		fprintf(stdout, "Average_p[%d] on [%d] values = [%4.2f]\n", i,win_struct.windows_limits[i],win_struct.window_avg_values_p[i]);
+   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,win_struct.windows_length[i], win_struct.window_avg_values_o[i]);
      		}
     sleep(time_interval);
-    //read_stats_from_file(pointer_1h,&availability_struct_1h);
-    //fprintf(stdout, "********* 1h pointer--> [%lld] [%4.2f] \n", availability_struct_1h.intervals, availability_struct_1h.metrics);
-    //av_5m = availability_struct.metrics;
-    
-    
-    /*if (!(num_interval % (12*1)) ) // 12 campioni di 5 minuti = 1h
-	event_last_hour_occurred(num_interval);
-
-    if (!(num_interval % (12*24)) ) // 12*24 campioni di 5 minuti = 1day
-	event_last_day_occurred(num_interval);
-
-    if (!(num_interval % (12*24*7)) ) // 12*24*7 campioni di 5 minuti = 1week
-	event_last_week_occurred(num_interval);
-
-    if (!(num_interval % (12*24*30)) ) // 12*24*30 campioni di 5 minuti = 1month (actually 30days)
-	event_last30_days_occurred(num_interval);
-
-    if (!(num_interval % (12*24*365)) ) // 12*24*365 campioni di 5 minuti = 1year
-	event_last_year_occurred(num_interval);*/	
     }
     
-    //fprintf(stdout, "Displaying file content \n");
-    //open_create_file(&binaryFile , FILE_NAME_STATS,"r+"); 
-    //display_file(binaryFile);
-    //close_file(binaryFile);
-
-    //fclose (pointer_1h);
-
-   //for (i=0 ; i<7; i++)
-
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   for (i=0 ; i<windows_number; i++) // to be replaced with the line above (7 instead of 3)
    	close_file(windows_FILE_pointer[i]);
    		
     fprintf(stdout, "end process\n");
     return 0;
 }
+
+
+int setup_win_struct(struct windows_struct *win_struct)
+{
+	// TEST_
+    win_struct->windows_limits[0]=1;
+    win_struct->windows_limits[1]=2;
+    win_struct->windows_limits[2]=4;
+    win_struct->windows_limits[3]=8;
+    win_struct->windows_limits[4]=16;
+    win_struct->windows_limits[5]=32;
+	// PRODUCTION_
+    /*win_struct.windows_limits[0]=1;
+    win_struct.windows_limits[1]=12;
+    win_struct.windows_limits[2]=12*24;
+    win_struct.windows_limits[3]=12*24*7;
+    win_struct.windows_limits[4]=12*24*30;
+    win_struct.windows_limits[5]=12*24*365;*/
+    win_struct.windows_limits[6]=0;  //never!!! aggregation by ALL
+}
+
 
 int display_file(FILE* file)
 {
