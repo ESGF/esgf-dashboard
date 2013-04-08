@@ -34,7 +34,7 @@ int main(void)
     int cur_year;
     int i;
     //int counter=10512;		  
-    int counter=24;		  
+    int counter=12;		  
     long long int num_interval,pointer;
     long long int num_interval_1h;
     FILE *binaryFile;
@@ -49,7 +49,7 @@ int main(void)
     long long int time_counter;
     long long int windows_pointers[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     long long int windows_length[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    long long int windows_limits[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    long long int windows_limits[7];  // time windows dimension 
     double aggregated_values[7];  // last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     double window_avg_values_p[7];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
     double window_avg_values_o[7];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
@@ -173,9 +173,13 @@ int main(void)
    	}
    close_file(binaryFile);
 
-   window_avg_values_p[0]=aggregated_values[0]/1;
-   window_avg_values_p[1]=aggregated_values[1]/12;
-   window_avg_values_p[2]=aggregated_values[2]/(12*24);
+   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   	window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
+   	
+   	
+   //window_avg_values_p[0]=aggregated_values[0]/1;
+   //window_avg_values_p[1]=aggregated_values[1]/12;
+   //window_avg_values_p[2]=aggregated_values[2]/(12*24);
    /*window_avg_values_p[3]=aggregated_values[3]/(12*24*7);
    window_avg_values_p[4]=aggregated_values[4]/(12*24*30);
    window_avg_values_p[5]=aggregated_values[5]/(12*24*365);
@@ -203,13 +207,10 @@ int main(void)
    // end building pointers and time windows for 1h,1d,1w,1m,1y,all
 
    //for (i=0 ; i<7; i++)
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-   	close_file(windows_FILE_pointer[i]);
-   //for (i=0 ; i<7; i++)
-   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
-   		fprintf(stdout, "Pointer[%d]=%lld   value=%4.2f\n",i ,stats_array[i].intervals,stats_array[i].metrics);
+   //for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   //		fprintf(stdout, "Pointer[%d]=%lld   value=%4.2f\n",i ,stats_array[i].intervals,stats_array[i].metrics);
    
-  return 0;
+  //return 0;
 
    while (counter--) 
     {
@@ -220,44 +221,49 @@ int main(void)
 
     // generate the metrics
     availability_struct.intervals=num_interval;
-    availability_struct.metrics= 1+(int) (100.0*rand()/(RAND_MAX+1.0));
+    availability_struct.metrics= 1+(int) (100.0*rand()/(RAND_MAX+1.0)); 
+
     fprintf(stdout, "Generated metrics [%lld] [%4.2f] \n", availability_struct.intervals, availability_struct.metrics);
 	
-    //fseek(binaryFile, sizeof(availability_struct), SEEK_END);
-
     event_last5_minutes_occurred(&availability_struct);
     
-   //for (i=0 ; i<7; i++)
-    if (!windows_pointers[0]) // set pointer if undefined (this means it does not exist an older last5 min sample)
+    for (i=0 ; i<3; i++)
+    	if (!windows_pointers[i]) // set pointer if undefined (this means it does not exist an older last5 min sample)
     		{
-		windows_pointers[0]=num_interval; // now the window exists!!!
-		aggregated_values[0]+=availability_struct.metrics;
-		windows_length[0]++;
-		fread(&(stats_array[0]), sizeof(struct stats_struct), 1, windows_FILE_pointer[0]);
+		windows_pointers[i]=num_interval; // now the window exists!!!
+		aggregated_values[i]+=availability_struct.metrics;
+   		window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
+		windows_length[i]++;
+   		window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+		fread(&(stats_array[i]), sizeof(struct stats_struct), 1, windows_FILE_pointer[i]);
 		}
 		else 
     		{
-		 if (windows_length[0] == 1) // if the window reaches the limit... then move the window!!!
+		 if (windows_length[i] == windows_limits[i]) // if the window reaches the limit... then move the window!!!
     			{
-			windows_pointers[0]++;
-			aggregated_values[0]+=availability_struct.metrics;
-			aggregated_values[0]-=stats_array[0].metrics;
-			fread(&(stats_array[0]), sizeof(struct stats_struct), 1, windows_FILE_pointer[0]);
+			windows_pointers[i]++;
+			aggregated_values[i]+=availability_struct.metrics;
+			aggregated_values[i]-=stats_array[i].metrics;
+   			window_avg_values_p[i]=aggregated_values[i]/windows_limits[i];
+   			window_avg_values_o[i]=aggregated_values[i]/windows_length[i];
+			fread(&(stats_array[i]), sizeof(struct stats_struct), 1, windows_FILE_pointer[i]);
    			} 
 			else // this piece of code will be never executed for last5min 
     			{
-			  windows_length[0]++;
-			  aggregated_values[0]+=availability_struct.metrics;
+			  windows_length[i]++;
+			  aggregated_values[i]+=availability_struct.metrics;
    			}
 
    		}
+
+   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   		fprintf(stdout, "Average_p[%d]  = %4.2f\n", i,window_avg_values_p[i]);
+   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+	if (windows_length[i])
+   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,windows_length[i], window_avg_values_o[i]);
+	else
+   		fprintf(stdout, "Average_o[%d] is undefined\n",i);
      
- 
-     // to be added: calcolo di tutte le nuove medie togliendo il primo elemento e aggiungendo l'ultimo letto!!!	
-  
- 
- 
-    
     //read_stats_from_file(pointer_1h,&availability_struct_1h);
     //fprintf(stdout, "********* 1h pointer--> [%lld] [%4.2f] \n", availability_struct_1h.intervals, availability_struct_1h.metrics);
     //av_5m = availability_struct.metrics;
@@ -285,6 +291,13 @@ int main(void)
     //close_file(binaryFile);
 
     //fclose (pointer_1h);
+
+   //for (i=0 ; i<7; i++)
+
+   for (i=0 ; i<3; i++) // to be replaced with the line above (7 instead of 3)
+   	close_file(windows_FILE_pointer[i]);
+   		
+    fprintf(stdout, "end process\n");
     return 0;
 }
 
