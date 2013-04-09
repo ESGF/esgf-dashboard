@@ -96,19 +96,19 @@ int main(void)
 			if (win_struct.windows_length[i] == win_struct.windows_limits[i])   
 				{
  			   	win_struct.windows_pointers[i]++;
-				fprintf(stdout, "Regular window movement\n");
+				fprintf(stdout, "Regular window shift\n");
 				}
 			else 
 				if ((num_interval-win_struct.windows_pointers[i])==win_struct.windows_limits[i])
 					{
-					fprintf(stdout, "I got you!\n");	
+					fprintf(stdout, "I found out a jump point!\n");	
 					win_struct.windows_pointers[i]=win_struct.stats_array[i].intervals;
 					}
 
 			win_struct.aggregated_values[i]+=availability_struct.metrics;
    			win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
    			win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
-    			fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
+    			//fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
    			} 
 			else // this piece of code will be never executed for last5min 
     			{
@@ -117,6 +117,8 @@ int main(void)
    			  win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
    			  win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
    			}
+			
+    		fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
 
    		}
 
