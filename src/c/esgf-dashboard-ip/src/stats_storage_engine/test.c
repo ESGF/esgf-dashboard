@@ -57,7 +57,7 @@ int main(void)
     
     setup_time_windows(windows_number, num_interval, &win_struct);
 	
-    display_windows_metrics(windows_number, &win_struct);
+    //display_windows_metrics(windows_number, &win_struct);
 
    while (counter--) 
     {
@@ -66,15 +66,10 @@ int main(void)
     c_time_string = ctime(&(current_time));
     printf("***************************************************\n");
     printf("Regular current time for stats is %s", c_time_string);
-
-    // generate the metrics
-    availability_struct.intervals=num_interval;
-    //availability_struct.metrics= 1+(int) (10.0*rand()/(RAND_MAX+1.0)); 
-    availability_struct.metrics= num_interval; 
-
-    fprintf(stdout, "Generated metrics [%lld] [%4.2f] \n", availability_struct.intervals, availability_struct.metrics);
 	
-    event_last5_minutes_occurred(&availability_struct);
+    produce_and_append_next_sample_to_raw_file(&availability_struct,num_interval);
+	
+    // to be done: a new function for the part below
     
     for (i=0 ; i<windows_number; i++)
     	if (!win_struct.windows_pointers[i]) // set pointer if undefined (this means it does not exist an older last5 min sample)
@@ -108,9 +103,8 @@ int main(void)
 			win_struct.aggregated_values[i]+=availability_struct.metrics;
    			win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
    			win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
-    			//fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
    			} 
-			else // this piece of code will be never executed for last5min 
+			else 
     			{
 			  win_struct.windows_length[i]++;
 			  win_struct.aggregated_values[i]+=availability_struct.metrics;
@@ -122,13 +116,6 @@ int main(void)
 
    		}
 
-   /*for (i=0 ; i<windows_number; i++) 
-		{
-   		fprintf(stdout, "Average_p[%d] on [%d] values = [%4.2f]\n", i,win_struct.windows_limits[i],win_struct.window_avg_values_p[i]);
-   		fprintf(stdout, "Average_o[%d] on [%d] values = [%4.2f]\n", i,win_struct.windows_length[i], win_struct.window_avg_values_o[i]);
-     		}*/
-    //for (i=0; i<windows_number; i++) 
-    //	fprintf(stdout,"Last [%d] minutes window pointer [%d]\n",i,win_struct.windows_pointers[i]);
     sleep(time_interval);
     }
     
@@ -249,7 +236,7 @@ int setup_start_time(time_t *current_time, long long int *num_interval, int time
     if ((int)diff_time % time_interval)
     {
 	// the line below will be commented ones the sleep one will be uncommented
-    	printf("sleep(%d) seconds\n", time_interval- ((int)diff_time % time_interval));	
+    	printf("Synchronize (%d) seconds\n", time_interval- ((int)diff_time % time_interval));	
 	sleep(time_interval- ((int)diff_time % time_interval));
     	*current_time = *current_time + time_interval - ((int)diff_time % time_interval);
     } 
@@ -426,15 +413,21 @@ int close_file(FILE* file)
     return 0;
 }*/ 
 
-int event_last5_minutes_occurred(struct stats_struct *availability_struct)
+int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,long long int num_interval)
     {
-    // store the metric in the raw file
+    // append the metric in the raw file
     // todo: lock file to be added
         FILE *binaryF;
+    	// generate the metrics
+    	availability_struct->intervals=num_interval;
+    	//availability_struct.metrics= 1+(int) (10.0*rand()/(RAND_MAX+1.0)); 
+    	availability_struct->metrics= num_interval; 
+
+    	fprintf(stdout, "Generated metrics [%lld] [%4.2f] \n", availability_struct->intervals, availability_struct->metrics);
+
     	open_create_file(&binaryF,FILE_NAME_STATS,"a+"); // a+ - open for reading and writing (append if file exists)
     	write_stats_to_file(binaryF,availability_struct);
     	close_file(binaryF);
-    	printf("- Event last 5 minutes occured [5m=%lld]\n\n",availability_struct->intervals);
         return 0;
     }
 
