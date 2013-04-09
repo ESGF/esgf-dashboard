@@ -96,12 +96,12 @@ int main(void)
 			if (win_struct.windows_length[i] == win_struct.windows_limits[i])   
 				{
  			   	win_struct.windows_pointers[i]++;
-				fprintf(stdout, "Regular window shift\n");
+				fprintf(stdout, "Regular window\n");
 				}
 			else 
 				if ((num_interval-win_struct.windows_pointers[i])==win_struct.windows_limits[i])
 					{
-					fprintf(stdout, "I found out a jump point!\n");	
+					fprintf(stdout, "Non regular window!\n");	
 					win_struct.windows_pointers[i]=win_struct.stats_array[i].intervals;
 					}
 
