@@ -32,99 +32,138 @@ struct windows_struct
 
 int main(void)
 {
-    time_t current_time;
-    char* c_time_string;
-    int i;
-    int counter=10; // iterations		  
-    long long int num_interval;
-    struct stats_struct availability_struct,stats;	
-    int time_interval=5;   // number of seconds (sleep time_interval)
-    int windows_number=6;  // number of time_windows to be managed (initially 3, then 6)
-    struct windows_struct win_struct;
+   time_t current_time;
+   char* c_time_string;
+   int i;
+   int counter=10; // iterations		  
+   long long int num_interval;
+   struct stats_struct availability_struct,stats;	
+   int time_interval=5;   // number of seconds (sleep time_interval)
+   int windows_number=6;  // number of time_windows to be managed (initially 3, then 6)
+   struct windows_struct win_struct;
 
+   //todo: read config file for all the sensors!!!
+   
+   // creates the raw metrics file if not existing 
+   create_raw_file_if_not_existing(FILE_NAME_STATS);
 	
-    // creates the raw stats file if not existing 
-    create_raw_file_if_not_existing(FILE_NAME_STATS);
-	
-    // setup win struct 
-    setup_win_struct_limits(&win_struct,&windows_number);
+   // setup start time and synchronize current_time 
+   setup_and_synchronize_start_time(&current_time, &num_interval, time_interval);
 
-    // setup start time and synchronize current_time 
-    setup_start_time(&current_time, &num_interval, time_interval);
+   // setup win struct 
+   setup_win_struct_limits(&win_struct,&windows_number);
     		
-    // initializing pointers
-    setup_win_struct_pointers(windows_number,&win_struct);
-    
-    setup_time_windows(windows_number, num_interval, &win_struct);
-	
-    //display_windows_metrics(windows_number, &win_struct);
+   // initializing pointers
+   reset_win_struct_pointers(windows_number,&win_struct);
 
+   // setting up pointers	
+   setup_time_windows(windows_number, num_interval, &win_struct);
+
+   //todo: create database cache table -- table name= sensor_<metric>	
+	
+   //display_windows_metrics(windows_number, &win_struct);
+
+   // this part should the one in the thread cycle
    while (counter--) 
     {
+    // next serial timestamp 
     num_interval++;	
-    current_time = current_time + time_interval;
-    c_time_string = ctime(&(current_time));
-    printf("***************************************************\n");
-    printf("Regular current time for stats is %s", c_time_string);
+	
+    // first version is serial based on the num_interval %% sensor_timespan == 0 ; sleep is sleep(1) 
+
+    compute_and_display_current_time_stamp(&current_time, time_interval);
 	
     produce_and_append_next_sample_to_raw_file(&availability_struct,num_interval);
-	
-    // to be done: a new function for the part below
-    
-    for (i=0 ; i<windows_number; i++)
-    	if (!win_struct.windows_pointers[i]) // set pointer if undefined (this means it does not exist an older last5 min sample)
-    		{
-		fread(&(win_struct.stats_array[i]), sizeof(struct stats_struct), 1, win_struct.windows_FILE_pointer[i]);
-		win_struct.windows_pointers[i]=num_interval; // now the window exists!!!
-		win_struct.windows_length[i]++;
-		win_struct.aggregated_values[i]+=availability_struct.metrics;	
-   		win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
-   		win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
-    		fprintf(stdout, "|A->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
-		}
-		else 
-    		{ 
-		 if (win_struct.windows_length[i] == win_struct.windows_limits[i] || ((num_interval-win_struct.windows_pointers[i])==(win_struct.windows_limits[i]))) 
-    			{
-			win_struct.aggregated_values[i]-=win_struct.stats_array[i].metrics;
-			fread(&(win_struct.stats_array[i]), sizeof(struct stats_struct), 1, win_struct.windows_FILE_pointer[i]);
-			if (win_struct.windows_length[i] == win_struct.windows_limits[i])   
-				{
- 			   	win_struct.windows_pointers[i]++;
-				fprintf(stdout, "Regular window\n");
-				}
-			else 
-				if ((num_interval-win_struct.windows_pointers[i])==win_struct.windows_limits[i])
-					{
-					fprintf(stdout, "Non regular window!\n");	
-					win_struct.windows_pointers[i]=win_struct.stats_array[i].intervals;
-					}
+     
+    shift_windows_set(windows_number,&availability_struct,&win_struct, num_interval); 
+    //todo: store local metrics in the database cache table -- recuperare dall'hostname l'IDhost 
 
-			win_struct.aggregated_values[i]+=availability_struct.metrics;
-   			win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
-   			win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
-   			} 
-			else 
-    			{
-			  win_struct.windows_length[i]++;
-			  win_struct.aggregated_values[i]+=availability_struct.metrics;
-   			  win_struct.window_avg_values_p[i]=win_struct.aggregated_values[i]/win_struct.windows_limits[i];
-   			  win_struct.window_avg_values_o[i]=win_struct.aggregated_values[i]/win_struct.windows_length[i];
-   			}
-			
-    		fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct.windows_pointers[i],availability_struct.metrics,win_struct.aggregated_values[i],win_struct.windows_length[i], win_struct.window_avg_values_o[i],win_struct.window_avg_values_p[i]);
-
-   		}
-
+    //todo: store external metrics in the database cache table	
     sleep(time_interval);
     }
     
+   display_windows_pointers(windows_number, &win_struct);
+   close_windows_FILE_pointers(windows_number, &win_struct);
+
+   return 0;
+}
+
+int compute_and_display_current_time_stamp(time_t *current_time, int time_interval)
+{
+    char* c_time_string;
+
+    *current_time = *current_time + time_interval;
+    c_time_string = ctime(current_time);
+    fprintf(stdout, "***************************************************\n");
+    fprintf(stdout, "Regular current time for stats is %s", c_time_string);
+   return 0;
+}
+
+int close_windows_FILE_pointers(int windows_number, struct windows_struct *win_struct)
+{
+   int i;
    for (i=0 ; i<windows_number; i++) 
-   	close_file(win_struct.windows_FILE_pointer[i]);
+   	close_file(win_struct->windows_FILE_pointer[i]);
+    return 0;
+}
+
+int display_windows_pointers(int windows_number, struct windows_struct *win_struct)
+{
+   int i;
    for (i=0; i<windows_number; i++) 
-    	fprintf(stdout,"|C-> [%d] Window pointer [%lld]\n",i,win_struct.windows_pointers[i]);
-   		
-    fprintf(stdout, "end process\n");
+    	fprintf(stdout,"|C-> [%d] Window pointer [%lld]\n",i,win_struct->windows_pointers[i]);
+   fprintf(stdout, "end process\n");
+   return 0;
+}
+
+int shift_windows_set(int windows_number,struct stats_struct *availability_struct,struct windows_struct *win_struct, long long int num_interval)
+{
+    int i;
+
+    for (i=0 ; i<windows_number; i++)
+    	if (!(win_struct->windows_pointers[i])) // set pointer if undefined (this means it does not exist an older last5 min sample)
+    		{
+		fread(&(win_struct->stats_array[i]), sizeof(struct stats_struct), 1, win_struct->windows_FILE_pointer[i]);
+		win_struct->windows_pointers[i]=num_interval; // now the window exists!!!
+		win_struct->windows_length[i]++;
+		win_struct->aggregated_values[i]+=(availability_struct->metrics);	
+   		win_struct->window_avg_values_p[i]=win_struct->aggregated_values[i]/win_struct->windows_limits[i];
+   		win_struct->window_avg_values_o[i]=win_struct->aggregated_values[i]/win_struct->windows_length[i];
+    		fprintf(stdout, "|A->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct->windows_pointers[i],availability_struct->metrics,win_struct->aggregated_values[i],win_struct->windows_length[i], win_struct->window_avg_values_o[i],win_struct->window_avg_values_p[i]);
+		}
+		else 
+    		{ 
+		 if (win_struct->windows_length[i] == win_struct->windows_limits[i] || ((num_interval-win_struct->windows_pointers[i])==(win_struct->windows_limits[i]))) 
+    			{
+			win_struct->aggregated_values[i]-=win_struct->stats_array[i].metrics;
+			fread(&(win_struct->stats_array[i]), sizeof(struct stats_struct), 1, win_struct->windows_FILE_pointer[i]);
+			if (win_struct->windows_length[i] == win_struct->windows_limits[i])   
+				{
+ 			   	win_struct->windows_pointers[i]++;
+				fprintf(stdout, "Regular window\n");
+				}
+			else 
+				if ((num_interval-win_struct->windows_pointers[i])==win_struct->windows_limits[i])
+					{
+					fprintf(stdout, "Non regular window!\n");	
+					win_struct->windows_pointers[i]=win_struct->stats_array[i].intervals;
+					}
+
+			win_struct->aggregated_values[i]+=(availability_struct->metrics);
+   			win_struct->window_avg_values_p[i]=win_struct->aggregated_values[i]/win_struct->windows_limits[i];
+   			win_struct->window_avg_values_o[i]=win_struct->aggregated_values[i]/win_struct->windows_length[i];
+   			} 
+			else 
+    			{
+			  win_struct->windows_length[i]++;
+			  win_struct->aggregated_values[i]+=(availability_struct->metrics);
+   			  win_struct->window_avg_values_p[i]=win_struct->aggregated_values[i]/win_struct->windows_limits[i];
+   			  win_struct->window_avg_values_o[i]=win_struct->aggregated_values[i]/win_struct->windows_length[i];
+   			}
+			
+    		fprintf(stdout, "|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,win_struct->windows_pointers[i],availability_struct->metrics,win_struct->aggregated_values[i],win_struct->windows_length[i], win_struct->window_avg_values_o[i],win_struct->window_avg_values_p[i]);
+
+   		}
     return 0;
 }
 
@@ -199,7 +238,7 @@ int setup_time_windows(int windows_number, long long int num_interval, struct wi
 }
 
 
-int setup_start_time(time_t *current_time, long long int *num_interval, int time_interval)
+int setup_and_synchronize_start_time(time_t *current_time, long long int *num_interval, int time_interval)
 {
     FILE *binaryFile;
     struct start_stats_struct start_time_struct;	
@@ -246,7 +285,7 @@ int setup_start_time(time_t *current_time, long long int *num_interval, int time
     return 0; 
 } 
 
-int setup_win_struct_pointers(int windows_number,struct windows_struct *win_struct)
+int reset_win_struct_pointers(int windows_number,struct windows_struct *win_struct)
 {
     int i;
     for (i=0; i<windows_number; i++) 
@@ -260,6 +299,19 @@ int setup_win_struct_pointers(int windows_number,struct windows_struct *win_stru
    	}
     return 0; 
 } 
+
+/*int setup_host_based_aggregation_table
+CREATE TABLE service_instance (
+    id integer NOT NULL,
+    port bigint NOT NULL,
+    name character varying(255),
+    institution character varying(255),
+    mail_admin character varying(255),
+    idhost bigint NOT NULL,
+    UNIQUE(port,idhost)
+);*/
+
+
 
 int setup_win_struct_limits(struct windows_struct *win_struct, int *windows_number)
 {
