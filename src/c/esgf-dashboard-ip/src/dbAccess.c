@@ -1290,3 +1290,77 @@ int close_file(FILE* file)
 }
 
 
+int realtime_mem_get_stats(void)
+{
+ // retrieving memory (swap/ram) metrics
+
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_memory_metric_insert[2048] = { '\0' };
+  char freeram[256] = { '\0' };
+  char totram[256] = { '\0' };
+  char freeswap[256] = { '\0' };
+  char totswap[256] = { '\0' };
+  char swapstr[256] = { '\0' };
+  char ramstr[256] = { '\0' };
+  long int fram,tram,fswap,tswap,uram,uswap;
+  int ret_code;
+  int i=0;
+  int j=0;
+  char line [ 1024 ]; /* or other suitable maximum line size */
+
+  sprintf (esgf_nodetype_filename, "/proc/meminfo");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		
+    return -1;
+
+ while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+       {
+        i++;
+	if (i==1 || i==2 || i==12 || i==13) {
+        	//fputs ( line, stdout ); /* write the line */
+  		char * pch= NULL;
+  		pch = strtok (line," ");
+		j=0;
+  		while (pch != NULL)
+  		{
+			j++;
+    			pch = strtok (NULL, " ");
+			if (j==1) {
+				switch (i) {
+				case 1:
+    					snprintf(totram, sizeof(totram),"%s",pch);
+					tram=atol(totram);
+					break;
+				case 2:
+    					snprintf(freeram, sizeof(freeram),"%s",pch);
+					fram=atol(freeram);
+					break;
+				case 12:
+    					snprintf(totswap, sizeof(totswap),"%s",pch);
+					tswap=atol(totswap);
+					break;
+				case 13:
+    					snprintf(freeswap, sizeof(freeswap),"%s",pch);
+					fswap=atol(freeswap);
+					break;
+				default:
+					break;
+				}
+			}
+  		}
+	}
+       }
+  fclose ( file );
+
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
+  snprintf(ramstr,sizeof(ramstr),"%s$%s",freeram,totram);
+  snprintf(swapstr,sizeof(swapstr),"%s$%s",freeswap,totswap);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram,fram,tswap,fswap);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics strings: RAM [%s] SWAP [%s] \n", ramstr,swapstr);
+
+  rotate_realtime_stats(REALTIME_MEM_RAM, REALTIME_MEM_RAM_TEMP, ramstr);
+  rotate_realtime_stats(REALTIME_MEM_SWAP, REALTIME_MEM_SWAP_TEMP, swapstr);
+  return 0;
+}
+

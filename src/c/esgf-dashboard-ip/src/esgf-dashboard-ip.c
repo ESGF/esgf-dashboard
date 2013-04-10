@@ -203,11 +203,12 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<30) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
-  		cpu_realtime_monitoring_setup();
+  		realtime_monitoring_setup();
     	    realtime_cpu_get_stats();
+	    realtime_mem_get_stats();
 	    sleep(1); 
 	    i++;  
 	}
@@ -220,7 +221,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (0) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -309,11 +310,13 @@ int initialize_stats_file(char* filename)
     return 0;
 }
 
-int cpu_realtime_monitoring_setup(void)
+int realtime_monitoring_setup(void)
 {
     initialize_stats_file(REALTIME_CPU_1M);
     initialize_stats_file(REALTIME_CPU_5M);
     initialize_stats_file(REALTIME_CPU_15M);
+    initialize_stats_file(REALTIME_MEM_RAM);
+    initialize_stats_file(REALTIME_MEM_SWAP);
     // 3 files for realtime cpu monitoring exists now! 
     return 0;
 }
@@ -333,7 +336,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 1;  // TEST_   PRODUCTION_ 1 
+  int iterator = 0;  // TEST_   PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
