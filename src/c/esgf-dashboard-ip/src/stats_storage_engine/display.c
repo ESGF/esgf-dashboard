@@ -32,21 +32,23 @@ int main(int argc, char **argv)
     char file_name_sensor_stats[256];    
     int res;
     int displaytype;
+    long long int timeinterval;
 
-    if (argc!=3)
+    if (argc!=4)
 	{
-	fprintf(stdout, "Please specify the metric (i.e. availability) and display type (0=base display  1=csv format)\n");
-	fprintf(stdout, "Examples: ./display availability 0\n");
-	fprintf(stdout, "          ./display availability 1\n");
+	fprintf(stdout, "Please specify the metric (i.e. availability), display type (0=base display  1=csv format) and time interval (in seconds)\n");
+	fprintf(stdout, "Examples: ./display availability 0 300\n");
+	fprintf(stdout, "          ./display availability 1 300\n");
 	return 0;		
 	}
 
     displaytype=atoi(argv[2]);	
+    timeinterval=atoi(argv[3]);	
     if (displaytype!=1 && displaytype!=0) 
 	{
 	fprintf(stdout, "Please specify a valid value for display type (0=default, 1=csv format)\n");
-        fprintf(stdout, "Examples: ./display availability 0\n");
-        fprintf(stdout, "          ./display availability 1\n");
+        fprintf(stdout, "Examples: ./display availability 0 300\n");
+        fprintf(stdout, "          ./display availability 1 300\n");
 	return 0;
         }
 
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
     res=open_create_file(&binaryFile , file_name_sensor_stats,"r+");
     if (res==0)
 	{
-	display_file(binaryFile,start_time_struct.start_time, displaytype);
+	display_file(binaryFile,start_time_struct.start_time, displaytype,timeinterval);
     	close_file(binaryFile);
 	}
 	else
@@ -79,7 +81,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-int display_file(FILE* file, time_t start_time,int displaytype)
+int display_file(FILE* file, time_t start_time,int displaytype, long long int timeinterval)
 {
    struct stats_struct stats;
    time_t next_time; 
@@ -89,7 +91,7 @@ int display_file(FILE* file, time_t start_time,int displaytype)
    {
     if (!fread(&stats, sizeof(struct stats_struct), 1, file))
 	break;
-    next_time = start_time + stats.intervals*300;  
+    next_time = start_time + stats.intervals*timeinterval;  
     c_t_string = ctime(&(next_time));
     if (!displaytype)
     	fprintf(stdout,"Metric id: %lld Metric value: %4.2f Metric timestamp: %s",stats.intervals, stats.metrics,c_t_string);

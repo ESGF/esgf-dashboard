@@ -20,6 +20,7 @@ struct start_stats_struct
 
 struct sensor_struct 
 {
+    // todo: to be added both the current_time and num_interval che saranno specifici di ogni sensore 
     long long int time_interval;	
     int windows_number;
     int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
@@ -41,19 +42,18 @@ struct sensor_struct
 int main(void)
 {
    time_t current_time;
-   char* c_time_string;
-   int i;
-   int counter=3; // iterations		  
+   int counter=3; // iterations per sensor		  
    long long int num_interval;
-   struct stats_struct availability_struct,stats;	
-   //int time_interval=5;   // number of seconds (sleep time_interval)
-   //int windows_number=6;  // number of time_windows to be managed (initially 3, then 6)
+   struct stats_struct availability_struct; 
    struct sensor_struct sens_struct;
+   int number_sensors;
 
    //todo: read config file for all the sensors!!!
    
    // setup sensor struct 
-   setup_sens_struct_from_config_file(&sens_struct);
+   number_sensors = setup_sens_struct_from_config_file(&sens_struct);
+
+/*    start sensor-specific code */
 
    // initializing pointers
    reset_sensor_struct_and_raw_stats_file(&sens_struct);
@@ -72,10 +72,8 @@ int main(void)
    while (counter--) 
     {
     // next serial timestamp 
-    num_interval++;	
+    increment_num_interval(&num_interval);
 	
-    // first version is serial based on the num_interval %% sensor_timespan == 0 ; sleep is sleep(1) 
-
     compute_and_display_current_time_stamp(&current_time, sens_struct.time_interval);
 	
     produce_and_append_next_sample_to_raw_file(&availability_struct,num_interval,sens_struct.file_name_sensor_stats);
@@ -83,13 +81,26 @@ int main(void)
     shift_windows_set(&availability_struct,&sens_struct, num_interval); 
     //2_todo: store local metrics in the database cache table -- recuperare dall'hostname l'IDhost 
 
-    //3_todo: store external metrics in the database cache table	
+    //3_todo: conditional external metrics aggregation in the database cache table curl-based	
     sleep(sens_struct.time_interval);
     }
     
    display_windows_pointers(&sens_struct);
    close_windows_FILE_pointers(&sens_struct);
 
+/*    end sensor-specific code */
+
+   return 0;
+}
+
+int sensor_specific_thread()
+{
+   return 0;
+}
+
+int increment_num_interval(long long int *num_interval)
+{
+    *num_interval= (*num_interval) + 1;	
    return 0;
 }
 
@@ -323,6 +334,7 @@ CREATE TABLE service_instance (
 
 
 
+// todo: dovrebbe restituire il numero di sensori rilevati dal file di configurazione 
 int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
 {
     // TEST_
@@ -355,7 +367,7 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     sens_struct->windows_limits[3]=12*24*7;
     sens_struct->windows_limits[4]=12*24*30;
     sens_struct->windows_limits[5]=12*24*365;*/
-    return 0; 
+    return 0; // todo: dovrebbe restituire il numero di sensori 
 }
 
 
