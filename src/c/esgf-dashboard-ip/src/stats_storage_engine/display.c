@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FILE_NAME_STATS "raw_stats.dat"
+#define FILE_NAME_STATS "raw_%s_stats.dat"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 
 
@@ -24,18 +24,41 @@ struct start_stats_struct
  time_t start_time; // number of 5min intervals from the time0 (first run) 
 };
 
-int main(void)
+int main(int argc, char **argv)
 {
     FILE *binaryFile;
     char* c_time_string;
     struct start_stats_struct start_time_struct;
+    char file_name_sensor_stats[256];    
+    int res;
+    int displaytype;
+
+    if (argc!=3)
+	{
+	fprintf(stdout, "Please specify the metric (i.e. availability) and display type (0=base display  1=csv format)\n");
+	fprintf(stdout, "Examples: ./display availability 0\n");
+	fprintf(stdout, "          ./display availability 1\n");
+	return 0;		
+	}
+
+    displaytype=atoi(argv[2]);	
+    if (displaytype!=1 && displaytype!=0) 
+	{
+	fprintf(stdout, "Please specify a valid value for display type (0=default, 1=csv format)\n");
+        fprintf(stdout, "Examples: ./display availability 0\n");
+        fprintf(stdout, "          ./display availability 1\n");
+	return 0;
+        }
+
+    fprintf(stdout,"Display metric: %s\nDisplay type: %d\n", argv[1],displaytype);
+    snprintf(file_name_sensor_stats,sizeof(file_name_sensor_stats),FILE_NAME_STATS,argv[1]);
     
     if (!open_create_file(&binaryFile , FILE_NAME_START_STATS,"r")) 
 	{
     	read_start_from_file(binaryFile,&start_time_struct);
     	close_file(binaryFile);
     	c_time_string = ctime(&(start_time_struct.start_time));
-    	printf("Starting time for stats is: %s \n", c_time_string);
+    	printf("Starting time for stats is: %s\n",c_time_string);
 	}
 	else
 	{
@@ -43,16 +66,20 @@ int main(void)
 	return 0;
 	}
 
-    fprintf(stdout, "START - Displaying file content for %s\n",FILE_NAME_STATS);
-    open_create_file(&binaryFile , FILE_NAME_STATS,"r+"); 
-    display_file(binaryFile,start_time_struct.start_time);
-    close_file(binaryFile);
-    fprintf(stdout, "END   - Displaying file content for %s\n",FILE_NAME_STATS);
+    //fprintf(stdout, "START - Displaying file content for %s\n",file_name_sensor_stats);
+    res=open_create_file(&binaryFile , file_name_sensor_stats,"r+");
+    if (res==0)
+	{
+	display_file(binaryFile,start_time_struct.start_time, displaytype);
+    	close_file(binaryFile);
+	}
+	else
+    		fprintf(stdout, "Error opening file %s\n",file_name_sensor_stats);
 
     return 0;
 }
 
-int display_file(FILE* file, time_t start_time)
+int display_file(FILE* file, time_t start_time,int displaytype)
 {
    struct stats_struct stats;
    time_t next_time; 
@@ -64,7 +91,10 @@ int display_file(FILE* file, time_t start_time)
 	break;
     next_time = start_time + stats.intervals*300;  
     c_t_string = ctime(&(next_time));
-    fprintf(stdout,"Reading file %lld=%4.2f - %s",stats.intervals, stats.metrics,c_t_string);
+    if (!displaytype)
+    	fprintf(stdout,"Metric id: %lld Metric value: %4.2f Metric timestamp: %s",stats.intervals, stats.metrics,c_t_string);
+    else
+	fprintf(stdout,"%lld|%4.2f|%s",stats.intervals, stats.metrics,c_t_string);
    }
    return 0;
 }
