@@ -5,6 +5,10 @@
 
 #define FILE_NAME_STATS "raw_%s_stats.dat"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
+#define MAX_WINDOWS 10
+#define BUFCHAR_MAX 1024
+#define BUFCHAR_EXEC_MAX 1024
+#define THREAD_SENSOR_OPEN_MAX 10 
 
 
 struct stats_struct 
@@ -20,49 +24,55 @@ struct start_stats_struct
 
 struct sensor_struct 
 {
-    // todo: to be added both the current_time and num_interval che saranno specifici di ogni sensore 
+    // todo0: to be added both the current_time and num_interval che saranno specifici di ogni sensore 
     long long int time_interval;	
+    long long int num_interval;
+    time_t current_time;
     int windows_number;
     int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     int ext_sensor;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
     int aggregation;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
-    char sensor_name[240];		// entry among squared brackets in the config file
-    char file_name_sensor_stats[256];	// filename for the raw stats 
-    char sensor_executable[2048];	// executable for sensors
-    long long int windows_pointers[10]; // windows pointers for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    long long int windows_length[10];  // current windows length for 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    long long int windows_limits[10];  // time windows dimension for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    double aggregated_values[10]; 	// aggregated values last 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    double window_avg_values_p[10];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    double window_avg_values_o[10];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    FILE *windows_FILE_pointer[10];
-    struct stats_struct stats_array[10];	
+    char sensor_name[BUFCHAR_MAX];		// entry among squared brackets in the config file
+    char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 
+    char sensor_executable[BUFCHAR_EXEC_MAX];	// executable for sensors
+    long long int windows_pointers[MAX_WINDOWS]; // windows pointers for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    long long int windows_length[MAX_WINDOWS];  // current windows length for 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    long long int windows_limits[MAX_WINDOWS];  // time windows dimension for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    double aggregated_values[MAX_WINDOWS]; 	// aggregated values last 5m, 1h, 1d, 1w, 30days, 365days, ALL 
+    double window_avg_values_p[MAX_WINDOWS];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    double window_avg_values_o[MAX_WINDOWS];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
+    FILE *windows_FILE_pointer[MAX_WINDOWS];
+    struct stats_struct stats_array[MAX_WINDOWS];	
 };
 
 int main(void)
 {
-   time_t current_time;
-   int counter=3; // iterations per sensor		  
-   long long int num_interval;
-   struct stats_struct availability_struct; 
    struct sensor_struct sens_struct;
-   int number_sensors;
+   unsigned int num_sensors;
+   int i;
 
-   //todo: read config file for all the sensors!!!
-   
-   // setup sensor struct 
-   number_sensors = setup_sens_struct_from_config_file(&sens_struct);
+   num_sensors = setup_sens_struct_from_config_file(&sens_struct);
+   thread_manager (&sens_struct,num_sensors);
 
-/*    start sensor-specific code */
+   return 0;
+}
 
+void *
+thread_serve (void *arg)
+{
+   int counter=10; // iterations per sensor		  
+   struct stats_struct availability_struct; 
+   struct sensor_struct *sens_struct = (struct sensor_struct *) arg;
+   fprintf(stdout,"Calling thread server\n");
+   fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
    // initializing pointers
-   reset_sensor_struct_and_raw_stats_file(&sens_struct);
+   reset_sensor_struct_and_raw_stats_file(sens_struct);
 
    // setup start time and synchronize current_time 
-   setup_and_synchronize_start_time(&current_time, &num_interval, sens_struct.time_interval);
+   setup_and_synchronize_start_time(sens_struct);
 
    // setting up pointers	
-   setup_time_windows(num_interval, &sens_struct);
+   setup_time_windows(sens_struct);
 
    //1_todo: create database cache table -- table name= sensor_<metric>	
 	
@@ -72,25 +82,23 @@ int main(void)
    while (counter--) 
     {
     // next serial timestamp 
-    increment_num_interval(&num_interval);
+    increment_num_interval(sens_struct);
 	
-    compute_and_display_current_time_stamp(&current_time, sens_struct.time_interval);
+    compute_and_display_current_time_stamp(sens_struct);
 	
-    produce_and_append_next_sample_to_raw_file(&availability_struct,num_interval,sens_struct.file_name_sensor_stats);
+    produce_and_append_next_sample_to_raw_file(&availability_struct,sens_struct);
      
-    shift_windows_set(&availability_struct,&sens_struct, num_interval); 
+    shift_windows_set(&availability_struct,sens_struct); 
     //2_todo: store local metrics in the database cache table -- recuperare dall'hostname l'IDhost 
 
     //3_todo: conditional external metrics aggregation in the database cache table curl-based	
-    sleep(sens_struct.time_interval);
+    sleep(sens_struct->time_interval);
     }
     
-   display_windows_pointers(&sens_struct);
-   close_windows_FILE_pointers(&sens_struct);
+   display_windows_pointers(sens_struct);
+   close_windows_FILE_pointers(sens_struct);
 
-/*    end sensor-specific code */
-
-   return 0;
+ return 0;
 }
 
 int sensor_specific_thread()
@@ -98,18 +106,18 @@ int sensor_specific_thread()
    return 0;
 }
 
-int increment_num_interval(long long int *num_interval)
+int increment_num_interval(struct sensor_struct *sens_struct)
 {
-    *num_interval= (*num_interval) + 1;	
+    sens_struct->num_interval= sens_struct->num_interval + 1;	
    return 0;
 }
 
-int compute_and_display_current_time_stamp(time_t *current_time, long long int time_interval)
+int compute_and_display_current_time_stamp(struct sensor_struct *sens_struct)
 {
     char* c_time_string;
 
-    *current_time = *current_time + time_interval;
-    c_time_string = ctime(current_time);
+    sens_struct->current_time = sens_struct->current_time + sens_struct->time_interval;
+    c_time_string = ctime(&(sens_struct->current_time));
     fprintf(stdout, "***************************************************\n");
     fprintf(stdout, "Regular current time for stats is %s", c_time_string);
    return 0;
@@ -134,7 +142,8 @@ int display_windows_pointers(struct sensor_struct *sens_struct)
    return 0;
 }
 
-int shift_windows_set(struct stats_struct *availability_struct,struct sensor_struct *sens_struct, long long int num_interval)
+//int shift_windows_set(struct stats_struct *availability_struct,struct sensor_struct *sens_struct, long long int num_interval)
+int shift_windows_set(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
 {
     int i;
 
@@ -142,7 +151,7 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
     	if (!(sens_struct->windows_pointers[i])) // set pointer if undefined (this means it does not exist an older last5 min sample)
     		{
 		fread(&(sens_struct->stats_array[i]), sizeof(struct stats_struct), 1, sens_struct->windows_FILE_pointer[i]);
-		sens_struct->windows_pointers[i]=num_interval; // now the window exists!!!
+		sens_struct->windows_pointers[i]=sens_struct->num_interval; // now the window exists!!!
 		sens_struct->windows_length[i]++;
 		sens_struct->aggregated_values[i]+=(availability_struct->metrics);	
    		sens_struct->window_avg_values_p[i]=sens_struct->aggregated_values[i]/sens_struct->windows_limits[i];
@@ -151,7 +160,7 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
 		}
 		else 
     		{ 
-		 if (sens_struct->windows_length[i] == sens_struct->windows_limits[i] || ((num_interval-sens_struct->windows_pointers[i])==(sens_struct->windows_limits[i]))) 
+		 if (sens_struct->windows_length[i] == sens_struct->windows_limits[i] || ((sens_struct->num_interval-sens_struct->windows_pointers[i])==(sens_struct->windows_limits[i]))) 
     			{
 			sens_struct->aggregated_values[i]-=sens_struct->stats_array[i].metrics;
 			fread(&(sens_struct->stats_array[i]), sizeof(struct stats_struct), 1, sens_struct->windows_FILE_pointer[i]);
@@ -161,7 +170,7 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
 				fprintf(stdout, "Regular window\n");
 				}
 			else 
-				if ((num_interval-sens_struct->windows_pointers[i])==sens_struct->windows_limits[i])
+				if ((sens_struct->num_interval-sens_struct->windows_pointers[i])==sens_struct->windows_limits[i])
 					{
 					fprintf(stdout, "Non regular window!\n");	
 					sens_struct->windows_pointers[i]=sens_struct->stats_array[i].intervals;
@@ -210,7 +219,7 @@ int create_raw_file_if_not_existing(char* filename)
     return 0;
 }
 
-int setup_time_windows(long long int num_interval, struct sensor_struct *sens_struct)
+int setup_time_windows(struct sensor_struct *sens_struct)
 {
     FILE *binaryFile;
     long long int time_counter;
@@ -225,7 +234,7 @@ int setup_time_windows(long long int num_interval, struct sensor_struct *sens_st
 		break;
 	time_counter = stats.intervals;
     	for (i=0; i<sens_struct->windows_number; i++) 
-		if (time_counter<=(num_interval+1) &&  time_counter>=(num_interval+1-sens_struct->windows_limits[i]+1))
+		if (time_counter<=(sens_struct->num_interval+1) &&  time_counter>=(sens_struct->num_interval+1-sens_struct->windows_limits[i]+1))
     			{
     			//fprintf(stdout,"Last [%d] minutes event [%d]\n",i,time_counter);
 			if (!sens_struct->windows_pointers[i]) // set pointer if undefined
@@ -255,8 +264,7 @@ int setup_time_windows(long long int num_interval, struct sensor_struct *sens_st
     return 0;
 }
 
-
-int setup_and_synchronize_start_time(time_t *current_time, long long int *num_interval, long long int time_interval)
+int setup_and_synchronize_start_time(struct sensor_struct *sens_struct)
 {
     FILE *binaryFile;
     struct start_stats_struct start_time_struct;	
@@ -268,11 +276,11 @@ int setup_and_synchronize_start_time(time_t *current_time, long long int *num_in
     if (open_create_file(&binaryFile , FILE_NAME_START_STATS,"r")) // r  - open for reading 
     {
     	time(&(start_time_struct.start_time));
-    	time(current_time);
+    	time(&(sens_struct->current_time));
         open_create_file(&binaryFile , FILE_NAME_START_STATS,"w+");
     	write_start_time_to_file(binaryFile , &start_time_struct);
     	close_file(binaryFile);
-    	*num_interval = 0;
+    	sens_struct->num_interval = 0;
         diff_time = 0; // by default in this branch start_time=current_time 
     } 
     else
@@ -280,24 +288,24 @@ int setup_and_synchronize_start_time(time_t *current_time, long long int *num_in
       // starting time file already exists! Read the start time value
       read_start_from_file(binaryFile,&start_time_struct);
       close_file(binaryFile);
-      time(current_time);
-      *num_interval=(long long int) ((*current_time-start_time_struct.start_time)/time_interval);
-      diff_time = difftime(*current_time,start_time_struct.start_time);
+      time(&(sens_struct->current_time));
+      sens_struct->num_interval=(long long int) ((sens_struct->current_time-start_time_struct.start_time)/sens_struct->time_interval);
+      diff_time = difftime(sens_struct->current_time,start_time_struct.start_time);
     } 
     
     c_string = ctime(&(start_time_struct.start_time));
-    printf("Starting time for stats is: %s Number of past T[i] (time intervals) [%lld]\n", c_string,*num_interval);
-    *current_time = *current_time - time_interval;
-    c2_time_string = ctime(current_time);
+    printf("Starting time for stats is: %s Number of past T[i] (time intervals) [%lld]\n", c_string,sens_struct->num_interval);
+    sens_struct->current_time = sens_struct->current_time - sens_struct->time_interval;
+    c2_time_string = ctime(&(sens_struct->current_time));
     printf("Raw (current time -1) for stats is: %s\n", c2_time_string);
-    if ((int)diff_time % time_interval)
+    if ((int)diff_time % sens_struct->time_interval)
     {
 	// the line below will be commented ones the sleep one will be uncommented
-    	printf("Synchronize (%d) seconds\n", time_interval- ((int)diff_time % time_interval));	
-	sleep(time_interval- ((int)diff_time % time_interval));
-    	*current_time = *current_time + time_interval - ((int)diff_time % time_interval);
+    	printf("Synchronize (%d) seconds\n", sens_struct->time_interval- ((int)diff_time % sens_struct->time_interval));	
+	sleep(sens_struct->time_interval- ((int)diff_time % sens_struct->time_interval));
+    	sens_struct->current_time = sens_struct->current_time + sens_struct->time_interval - ((int)diff_time % sens_struct->time_interval);
     } 
-    c2_time_string = ctime(current_time);
+    c2_time_string = ctime(&(sens_struct->current_time));
     printf("Synchronized (current time -1) for stats is: %s\n", c2_time_string);
     // ***** END setup start time only at the beginning of the information provider ******
     return 0; 
@@ -332,15 +340,13 @@ CREATE TABLE service_instance (
     UNIQUE(port,idhost)
 );*/
 
-
-
 // todo: dovrebbe restituire il numero di sensori rilevati dal file di configurazione 
 int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
 {
     // TEST_
     //snprintf(query_memory_metric_insert,sizeof(query_memory_metric_insert),STORE_MEMORY_METRICS,fram,uram,fswap,uswap);
     snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
-    snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable"); 
+    snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable availability"); 
     snprintf(sens_struct->file_name_sensor_stats,sizeof(sens_struct->file_name_sensor_stats),FILE_NAME_STATS,sens_struct->sensor_name); 
 
     sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
@@ -367,7 +373,7 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     sens_struct->windows_limits[3]=12*24*7;
     sens_struct->windows_limits[4]=12*24*30;
     sens_struct->windows_limits[5]=12*24*365;*/
-    return 0; // todo: dovrebbe restituire il numero di sensori 
+    return 1; // todo: dovrebbe restituire il numero di sensori 
 }
 
 
@@ -436,20 +442,52 @@ int close_file(FILE* file)
 }
 
 
-int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,long long int num_interval, char* file_name_sensor_stats)
+int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
     {
     // append the metric in the raw file
     // todo: lock file to be added
         FILE *binaryF;
+    	
+	// todo: The generate metrics should be a function with a SWITCH based on the type of sensor. Core types: availability, search, exec	
     	// generate the metrics
-    	availability_struct->intervals=num_interval;
+    	availability_struct->intervals=sens_struct->num_interval;
     	//availability_struct.metrics= 1+(int) (10.0*rand()/(RAND_MAX+1.0)); 
-    	availability_struct->metrics= num_interval; 
+    	availability_struct->metrics= sens_struct->num_interval; 
 
     	fprintf(stdout, "Generated metrics [%lld] [%4.2f] \n", availability_struct->intervals, availability_struct->metrics);
 
-    	open_create_file(&binaryF,file_name_sensor_stats,"a+"); // a+ - open for reading and writing (append if file exists)
+    	open_create_file(&binaryF,sens_struct->file_name_sensor_stats,"a+"); // a+ - open for reading and writing (append if file exists)
     	write_stats_to_file(binaryF,availability_struct);
     	close_file(binaryF);
         return 0;
     }
+
+
+
+
+int
+thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
+{
+  const int MIN = num_sensors < THREAD_SENSOR_OPEN_MAX ? num_sensors : THREAD_SENSOR_OPEN_MAX;
+  pthread_t *threads = (pthread_t *) malloc (sizeof (pthread_t) * MIN);
+  unsigned h = 0;
+  int res;
+
+  while (h < num_sensors)
+    {
+      unsigned c;
+      for (c = 0; h < num_sensors && c < MIN; h++, c++)
+        pthread_create (threads + c, NULL, thread_serve, sens_struct);
+
+      for (c = 0; c <= (h - 1) % MIN; c++)
+        {
+          void *ptr = NULL;
+          res = pthread_join (threads[c], &ptr);
+	  fprintf(stdout,"After joining the thread - res vale [%d] \n",res);
+        }
+    }
+
+  free (threads);
+  return 0;
+}
+

@@ -4,7 +4,7 @@ all:	test display realtime
 
 
 test:
-	cc -o test test.c 
+	cc -o test test.c -lpthread 
 
 display:
 	cc -o display display.c
