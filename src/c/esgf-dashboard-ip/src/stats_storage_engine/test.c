@@ -51,6 +51,9 @@ int main(void)
    unsigned int num_sensors;
    int i;
 
+   read_sensors_list_from_file();
+   return 0;
+   
    num_sensors = setup_sens_struct_from_config_file(&sens_struct);
    thread_manager (&sens_struct,num_sensors);
 
@@ -343,6 +346,8 @@ CREATE TABLE service_instance (
 // todo: dovrebbe restituire il numero di sensori rilevati dal file di configurazione 
 int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
 {
+    
+
     // TEST_
     //snprintf(query_memory_metric_insert,sizeof(query_memory_metric_insert),STORE_MEMORY_METRICS,fram,uram,fswap,uswap);
     snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
@@ -462,9 +467,6 @@ int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability
         return 0;
     }
 
-
-
-
 int
 thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
 {
@@ -488,6 +490,52 @@ thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
     }
 
   free (threads);
+  return 0;
+}
+
+int read_sensors_list_from_file(void)
+{
+  char sensor_file[256] = { '\0' };
+  char *position;
+  int while_end;
+
+  snprintf (sensor_file,sizeof(sensor_file),"/esg/config/infoprovider.properties");
+
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", sensor_file);
+  fprintf(stdout,"[START] %s\n", sensor_file);
+  FILE *file = fopen (sensor_file, "r");
+
+  if (file == NULL)             // /esg/config/infoprovider.properties not found
+    return -1;
+
+  while_end = 1;
+  while (while_end)
+    {
+      char buffer[256] = { '\0' };
+      char value_buffer[256] = { '\0' };
+
+      if ((fscanf (file, "%s", buffer)) == EOF) // now reading ATTRIBUTE=VALUE
+        {
+	  fprintf(stdout,"end of file\n");
+	  while_end = 0;
+          fclose (file);
+	  break;	
+        }
+      //fprintf(stdout,"line = %s\n",buffer);
+
+      position = strchr (buffer, '=');
+      if (position != NULL)     // the '=' has been found, which means the line is properly written as attribute=value
+        {
+          strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE        
+          *position = '\0';     // now buffer stores the ATTRIBUTE       
+	  	
+          fprintf(stdout,"Attribute=%s Value=%s\n",buffer,value_buffer);
+          /*if (!(strcmp (buffer, "db.host")))
+            {
+            }*/
+         }
+    }
+
   return 0;
 }
 
