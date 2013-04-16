@@ -158,6 +158,11 @@
 #define REALTIME_CPU_5M_TEMP "realtime_cpu_5m.dat.temp"
 #define REALTIME_CPU_15M_TEMP "realtime_cpu_15m.dat.temp"
 
+#define REALTIME_MEM_RAM "realtime_mem_ram.dat"
+#define REALTIME_MEM_SWAP "realtime_mem_swap.dat"
+#define REALTIME_MEM_RAM_TEMP "realtime_mem_ram.dat.temp"
+#define REALTIME_MEM_SWAP_TEMP "realtime_mem_swap.dat.temp"
+
 // END MACROS FOR REALTIME MONITORING
 
 // --------------------------------------------------------

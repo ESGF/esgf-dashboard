@@ -57,7 +57,15 @@ generated/
 /src/c/esgf-dashboard-ip/src/esgf-dashboard-ip
 /src/c/esgf-dashboard-ip/src/esgf-iplookup
 /src/c/esgf-dashboard-ip/stamp-h1
-src/c/esgf-dashboard-ip/src/stats_storage_engine/
+#src/c/esgf-dashboard-ip/src/stats_storage_engine/
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/raw_stats.dat
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/raw_stats.dat.old
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/start_stats_time.dat
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/start_stats_time.dat.old
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/realtime
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/display
+/src/c/esgf-dashboard-ip/src/stats_storage_engine/test
+
 
 ################################
 #Generated from templated files
