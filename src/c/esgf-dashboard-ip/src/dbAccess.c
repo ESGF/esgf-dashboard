@@ -1354,9 +1354,11 @@ int realtime_mem_get_stats(void)
   fclose ( file );
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
-  snprintf(ramstr,sizeof(ramstr),"%s$%s",freeram,totram);
-  snprintf(swapstr,sizeof(swapstr),"%s$%s",freeswap,totswap);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram,fram,tswap,fswap);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram/1024,fram/1024,tswap/1024,fswap/1024);
+  //snprintf(ramstr,sizeof(ramstr),"%s$%s",freeram,totram);
+  //snprintf(swapstr,sizeof(swapstr),"%s$%s",freeswap,totswap);
+  snprintf(ramstr,sizeof(ramstr),"%ld$%ld",fram/1024,tram/1024);
+  snprintf(swapstr,sizeof(swapstr),"%ld$%ld",fswap/1024,tswap/1024);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics strings: RAM [%s] SWAP [%s] \n", ramstr,swapstr);
 
   rotate_realtime_stats(REALTIME_MEM_RAM, REALTIME_MEM_RAM_TEMP, ramstr);
