@@ -26,6 +26,7 @@ int retrieve_localhost_metrics()
    return 0;
 }
 
+
 int retrieve_localhost_memory_metrics()
 {
  // retrieving memory (swap/ram) metrics
@@ -40,7 +41,7 @@ int retrieve_localhost_memory_metrics()
   int ret_code;
   int i=0;
   int j=0;
-  char line [ 1024 ]; /* or other suitable maximum line size */
+  char line [ 1024 ];
 
   sprintf (esgf_nodetype_filename, "/proc/meminfo");
   FILE *file = fopen (esgf_nodetype_filename, "r");
@@ -48,11 +49,87 @@ int retrieve_localhost_memory_metrics()
   if (file == NULL)		
     return -1;
 
- while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+ while ( fgets ( line, sizeof line, file ) != NULL ) 
+       {
+        char value_buffer[256] = { '\0' };
+        char *position;
+        position = strchr (line, ':');
+        if (position != NULL)     // the ':' has been found
+        {
+          	strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE
+          	*position = '\0';     // now buffer stores the ATTRIBUTE
+	}
+
+  	char * pch= NULL;
+  	pch = strtok (value_buffer," ");
+	if (!strcmp(line,"MemTotal"))	
+           {
+    		snprintf(totram, sizeof(totram),"%s",pch);
+		tram=atol(totram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"MemFree"))	
+           {
+    		snprintf(freeram, sizeof(freeram),"%s",pch);
+		fram=atol(freeram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapTotal"))	
+           {
+    		snprintf(totswap, sizeof(totswap),"%s",pch);
+		tswap=atol(totswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapFree"))	
+           {
+ 		snprintf(freeswap, sizeof(freeswap),"%s",pch);
+		fswap=atol(freeswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+       }
+ fclose ( file );
+
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram,fram,tswap,fswap);
+
+ uram = tram-fram;
+ uswap= tswap-fswap;
+ pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", fram,uram,fswap,uswap);
+ snprintf(query_memory_metric_insert,sizeof(query_memory_metric_insert),STORE_MEMORY_METRICS,fram,uram,fswap,uswap);
+	
+  if (ret_code = transaction_based_query(query_memory_metric_insert,START_TRANSACTION_MEMORY_METRICS,END_TRANSACTION_MEMORY_METRICS))
+      pmesg(LOG_ERROR,__FILE__,__LINE__,"Error storing the memory metrics in the DB! [Code %d]\n",ret_code);
+
+  return 0;
+}
+
+/*int retrieve_localhost_memory_metrics()
+{
+ // retrieving memory (swap/ram) metrics
+
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_memory_metric_insert[2048] = { '\0' };
+  char freeram[256] = { '\0' };
+  char totram[256] = { '\0' };
+  char freeswap[256] = { '\0' };
+  char totswap[256] = { '\0' };
+  long int fram,tram,fswap,tswap,uram,uswap;
+  int ret_code;
+  int i=0;
+  int j=0;
+  char line [ 1024 ];
+
+  sprintf (esgf_nodetype_filename, "/proc/meminfo");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		
+    return -1;
+
+ while ( fgets ( line, sizeof line, file ) != NULL ) 
        {
         i++;
 	if (i==1 || i==2 || i==12 || i==13) {
-        	//fputs ( line, stdout ); /* write the line */
+        	//fputs ( line, stdout ); 
   		char * pch= NULL;
   		pch = strtok (line," ");
 		j=0;
@@ -99,7 +176,7 @@ int retrieve_localhost_memory_metrics()
       pmesg(LOG_ERROR,__FILE__,__LINE__,"Error storing the memory metrics in the DB! [Code %d]\n",ret_code);
 
   return 0;
-}
+}*/
 
 int retrieve_localhost_cpu_metrics()
 {
@@ -1314,11 +1391,49 @@ int realtime_mem_get_stats(void)
   if (file == NULL)		
     return -1;
 
- while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+ while ( fgets ( line, sizeof line, file ) != NULL ) 
+       {
+        char value_buffer[256] = { '\0' };
+        char *position;
+        position = strchr (line, ':');
+        if (position != NULL)     // the ':' has been found
+        {
+          	strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE
+          	*position = '\0';     // now buffer stores the ATTRIBUTE
+	}
+
+  	char * pch= NULL;
+  	pch = strtok (value_buffer," ");
+	if (!strcmp(line,"MemTotal"))	
+           {
+    		snprintf(totram, sizeof(totram),"%s",pch);
+		tram=atol(totram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"MemFree"))	
+           {
+    		snprintf(freeram, sizeof(freeram),"%s",pch);
+		fram=atol(freeram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapTotal"))	
+           {
+    		snprintf(totswap, sizeof(totswap),"%s",pch);
+		tswap=atol(totswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapFree"))	
+           {
+ 		snprintf(freeswap, sizeof(freeswap),"%s",pch);
+		fswap=atol(freeswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+       }
+
+ /*while ( fgets ( line, sizeof line, file ) != NULL ) 
        {
         i++;
 	if (i==1 || i==2 || i==12 || i==13) {
-        	//fputs ( line, stdout ); /* write the line */
   		char * pch= NULL;
   		pch = strtok (line," ");
 		j=0;
@@ -1350,7 +1465,7 @@ int realtime_mem_get_stats(void)
 			}
   		}
 	}
-       }
+       }*/
   fclose ( file );
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
