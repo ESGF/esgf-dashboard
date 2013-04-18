@@ -6,6 +6,7 @@
 #define FILE_NAME_STATS "raw_%s_stats.dat"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 #define MAX_WINDOWS 10
+#define MAX_SENSORS 10
 #define BUFCHAR_MAX 1024
 #define BUFCHAR_EXEC_MAX 1024
 #define THREAD_SENSOR_OPEN_MAX 10 
@@ -47,17 +48,39 @@ struct sensor_struct
 
 int main(void)
 {
-   struct sensor_struct sens_struct;
-   unsigned int num_sensors;
-   int i;
+   struct sensor_struct sens_struct[MAX_SENSORS];
+   pthread_t threads[MAX_SENSORS]; 
+   unsigned int num_sensors;  // real number of sensors in the config file
 
-   read_sensors_list_from_file();
-   return 0;
-   
-   num_sensors = setup_sens_struct_from_config_file(&sens_struct);
-   thread_manager (&sens_struct,num_sensors);
+   // at the beginning of the information provider	
+   num_sensors = read_sensors_list_from_file(&sens_struct[0]);
+   display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
+   thread_manager_start (&threads[0],&sens_struct,num_sensors);
+	
+   // information provider stuff
+   // information provider stuff
+
+   // at the end of the information provider	
+   thread_manager_stop (&threads[0],&sens_struct,num_sensors);
    return 0;
+}
+
+int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_struct)
+{
+   int i,j;
+   for (i=0; i<num_sensors;i++)
+	{
+	fprintf(stdout,"Sensor info index [%d] Sensor name [%s])\n",i,(sens_struct[i]).sensor_name);
+	fprintf(stdout,"File name [%s])\n",(sens_struct[i]).file_name_sensor_stats);
+	fprintf(stdout,"Reset on start [%d]\n",(sens_struct[i]).reset_onstart);
+	fprintf(stdout,"External sensor [%d]\n",(sens_struct[i]).ext_sensor);
+	fprintf(stdout,"Aggregation enabled [%d]\n",(sens_struct[i]).aggregation);
+	fprintf(stdout,"Time interval [%d]\n",(sens_struct[i]).time_interval);
+	fprintf(stdout,"Windows number [%d] \n",(sens_struct[i]).windows_number);
+   	for (j=0; j<(sens_struct[i]).windows_number;j++)
+		fprintf(stdout,"|-> window [%d] Limit [%d]\n",j,(sens_struct[i]).windows_limits[j]);
+	}	
 }
 
 void *
@@ -68,6 +91,8 @@ thread_serve (void *arg)
    struct sensor_struct *sens_struct = (struct sensor_struct *) arg;
    fprintf(stdout,"Calling thread server\n");
    fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
+    
+   return 0;
    // initializing pointers
    reset_sensor_struct_and_raw_stats_file(sens_struct);
 
@@ -81,7 +106,7 @@ thread_serve (void *arg)
 	
    //display_windows_metrics(&sens_struct);
 
-   // this part should the one in the thread cycle
+   //while (1) 
    while (counter--) 
     {
     // next serial timestamp 
@@ -350,10 +375,9 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
 
     // TEST_
     //snprintf(query_memory_metric_insert,sizeof(query_memory_metric_insert),STORE_MEMORY_METRICS,fram,uram,fswap,uswap);
-    snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
-    snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable availability"); 
+    //snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
+    //snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable availability"); 
     snprintf(sens_struct->file_name_sensor_stats,sizeof(sens_struct->file_name_sensor_stats),FILE_NAME_STATS,sens_struct->sensor_name); 
-
     sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     sens_struct->ext_sensor=0;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
     sens_struct->aggregation=0;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
@@ -378,7 +402,7 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     sens_struct->windows_limits[3]=12*24*7;
     sens_struct->windows_limits[4]=12*24*30;
     sens_struct->windows_limits[5]=12*24*365;*/
-    return 1; // todo: dovrebbe restituire il numero di sensori 
+    return 0; 
 }
 
 
@@ -447,6 +471,8 @@ int close_file(FILE* file)
 }
 
 
+
+
 int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
     {
     // append the metric in the raw file
@@ -465,9 +491,9 @@ int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability
     	write_stats_to_file(binaryF,availability_struct);
     	close_file(binaryF);
         return 0;
-    }
+   }
 
-int
+/*int
 thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
 {
   const int MIN = num_sensors < THREAD_SENSOR_OPEN_MAX ? num_sensors : THREAD_SENSOR_OPEN_MAX;
@@ -491,32 +517,74 @@ thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
 
   free (threads);
   return 0;
+}*/
+
+
+int
+thread_manager_start (pthread_t *threads, struct sensor_struct *sens_struct, const unsigned num_sensors)
+{
+//  pthread_t *threads = (pthread_t *) malloc (sizeof (pthread_t) * num_sensors);
+  unsigned c = 0;
+  //int res;
+
+  for (c = 0; c < num_sensors; c++)
+        pthread_create (threads + c, NULL, thread_serve, &sens_struct[c]);
+	
+/*  for (c = 0; c < num_sensors; c++)
+        {
+          void *ptr = NULL;
+          res = pthread_join (threads[c], &ptr);
+	  fprintf(stdout,"After joining the thread - res vale [%d] \n",res);
+        }*/
+
+//  free (threads);
+  return 0;
 }
 
-int read_sensors_list_from_file(void)
+int
+thread_manager_stop (pthread_t *threads, struct sensor_struct *sens_struct, const unsigned num_sensors)
+{
+  unsigned c = 0;
+  int res;
+
+  for (c = 0; c < num_sensors; c++)
+        {
+          void *ptr = NULL;
+          res = pthread_join (threads[c], &ptr);
+	  fprintf(stdout,"After joining the thread - res vale [%d] \n",res);
+        }
+//  free (threads);
+  return 0;
+}
+
+int read_sensors_list_from_file(struct sensor_struct *sens_struct)
 {
   char sensor_file[256] = { '\0' };
   char *position;
-  int while_end;
+  int while_end,found_sensor, curr_sensor;
 
   snprintf (sensor_file,sizeof(sensor_file),"/esg/config/infoprovider.properties");
 
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", sensor_file);
   fprintf(stdout,"[START] %s\n", sensor_file);
+ 
   FILE *file = fopen (sensor_file, "r");
 
   if (file == NULL)             // /esg/config/infoprovider.properties not found
     return -1;
 
   while_end = 1;
+  found_sensor=0;
+  curr_sensor=-1;
+
   while (while_end)
     {
       char buffer[256] = { '\0' };
       char value_buffer[256] = { '\0' };
 
-      if ((fscanf (file, "%s", buffer)) == EOF) // now reading ATTRIBUTE=VALUE
+      if (!(fgets (buffer,256,file))) // now reading ATTRIBUTE=VALUE
         {
-	  fprintf(stdout,"end of file\n");
+	  //fprintf(stdout,"end of file\n");
 	  while_end = 0;
           fclose (file);
 	  break;	
@@ -526,16 +594,27 @@ int read_sensors_list_from_file(void)
       position = strchr (buffer, '=');
       if (position != NULL)     // the '=' has been found, which means the line is properly written as attribute=value
         {
-          strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE        
-          *position = '\0';     // now buffer stores the ATTRIBUTE       
+          strcpy (value_buffer, position + 1);  
+          *position = '\0';    // now value_buffer stores the VALUE 
+          position = strchr(value_buffer,'\n');  
+	  *position = '\0';     // now buffer stores the ATTRIBUTE       
 	  	
-          fprintf(stdout,"Attribute=%s Value=%s\n",buffer,value_buffer);
-          /*if (!(strcmp (buffer, "db.host")))
+          //fprintf(stdout,"Attribute=[%s] Value=[%s]\n",buffer,value_buffer);
+          if (!(strcmp (buffer, "sensor")))
             {
-            }*/
+		curr_sensor++; // this index is the right one for this sensor
+		snprintf((sens_struct[curr_sensor]).sensor_name,sizeof((sens_struct[curr_sensor]).sensor_name),value_buffer);
+		fprintf(stdout,"Sensor info index [%d] Sensor name [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_name);
+   		setup_sens_struct_from_config_file(&sens_struct[curr_sensor]);
+            }
          }
-    }
+	else {
+	buffer[strlen(buffer)-1]='\0';
+	fprintf(stdout,"Skipping line [%s]\n",buffer);
+    	}
 
-  return 0;
+    }
+  curr_sensor++; // now curr_sensor states the number of sensors. 
+  return curr_sensor;
 }
 
