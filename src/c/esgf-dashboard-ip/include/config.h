@@ -25,6 +25,7 @@ int HISTORY_DAY;
 long int DATA_METRICS_SPAN; // hours
 int IDP_TYPE; // 0 external IDP use case ; 1 default, classical ESGF P2P IDP 
 int FEDERATED_STATS; // 0 disabled - 1 enabled ; 0 default
+int ENABLE_REALTIME; // 0 disabled - 1 enabled ; 1 default
 int NODE_TYPE;
 int REALTIME_SAMPLES;
 

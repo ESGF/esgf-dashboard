@@ -476,7 +476,9 @@ main (int argc, char **argv)
 
   // start thread 
   pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
-  pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  
+  if (ENABLE_REALTIME)
+  	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
@@ -531,10 +533,14 @@ main (int argc, char **argv)
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master!\n");
   // end thread
-  if (pthread_join (pth_realtime, NULL))
-  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
-  else
-  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
+  if (ENABLE_REALTIME)
+	{
+  	if (pthread_join (pth_realtime, NULL))
+  		pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
+  	else
+  		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
+    	}		
+	
   
   // freeing space
   fprintf(stderr,"***************************************************\n");
@@ -651,8 +657,9 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   FEDERATED_STATS = 0;		// federated stats enabled=1 or disabled=0. Default disabled! 
   DATA_METRICS_SPAN=24;		// default 24 hour   
   REALTIME_SAMPLES=10; 
+  ENABLE_REALTIME=1;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
-  *notfound = 19;		// number of total properties to be retrieved from the esgf.properties file
+  *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
@@ -757,6 +764,11 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "esgf.ip.realtimesamples")))
 	    {
 	      REALTIME_SAMPLES = atoi (value_buffer);
+	      (*notfound)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.ip.realtime_stats")))
+	    {
+	      ENABLE_REALTIME = atoi (value_buffer);
 	      (*notfound)--;
 	    }
 	  if (!(strcmp (buffer, "esgf.ip.federated_stats")))
