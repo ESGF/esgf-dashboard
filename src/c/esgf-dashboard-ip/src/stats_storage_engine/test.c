@@ -2,8 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <curl/curl.h>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
 
 #define FILE_NAME_STATS "raw_%s_stats.dat"
+#define TEMP_SEARCH_STATS_FILE "search.tmp.xml"
+#define SEARCH_URL "http://esg-datanode.jpl.nasa.gov/esg-search/search?replica=false&latest=true&project=CMIP5&facets=index_node&limit=0"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 #define MAX_WINDOWS 10
 #define MAX_SENSORS 10
@@ -51,6 +56,9 @@ int main(void)
    struct sensor_struct sens_struct[MAX_SENSORS];
    pthread_t threads[MAX_SENSORS]; 
    unsigned int num_sensors;  // real number of sensors in the config file
+
+   get_search_metrics();
+   return 0;
 
    // at the beginning of the information provider	
    num_sensors = read_sensors_list_from_file(&sens_struct[0]);
@@ -470,8 +478,86 @@ int close_file(FILE* file)
     return 0;
 }
 
+static void
+print_element_names(xmlNode * a_node)
+{
+    xmlNode *cur_node = NULL;
 
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE && !strcmp(cur_node->name,"result")) {
+            printf("node type: Element, name: %s\n", cur_node->name);
+        }
 
+        print_element_names(cur_node->children);
+    }
+}
+
+//int get_search_metrics(struct sensor_struct *sens_struct)
+int get_search_metrics(void)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char url_action[10024];
+  long int i;
+  int right_url;
+
+  snprintf (url_action, sizeof (url_action),SEARCH_URL);
+
+  // filename to be stats_<host>_<processed_id>.tmp
+
+  tmp=fopen(TEMP_SEARCH_STATS_FILE, "w");
+  if(tmp==NULL)
+        {
+         //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting [%s] or downloading stats\n",peername);
+        remove(TEMP_SEARCH_STATS_FILE);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+  doc = xmlReadFile(TEMP_SEARCH_STATS_FILE, NULL, 0);
+
+  if (doc == NULL) {
+        printf("error: could not parse file %s\n", TEMP_SEARCH_STATS_FILE);
+  }
+  /*Get the root element node */
+  root_element = xmlDocGetRootElement(doc);
+
+  print_element_names(root_element);
+
+  /*free the document */
+  xmlFreeDoc(doc);
+
+  /*
+   *Free the global variables that may
+   *have been allocated by the parser.
+   */
+  xmlCleanupParser();
+
+  //remove(TEMP_SEARCH_STATS_FILE);
+
+ return 0;
+}
 
 int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
     {
@@ -518,6 +604,8 @@ thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
   free (threads);
   return 0;
 }*/
+
+
 
 
 int

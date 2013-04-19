@@ -4,7 +4,7 @@ all:	test display realtime
 
 
 test:
-	cc -o test test.c -lpthread 
+	cc -o test -I/usr/include/libxml2 test.c -lpthread -lcurl -lxml2 -lz -lm 
 
 display:
 	cc -o display display.c
