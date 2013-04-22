@@ -1,6 +1,6 @@
 
 
-all:	test display realtime 
+all:	test display realtime iplookup 
 
 
 test:
@@ -12,5 +12,8 @@ display:
 realtime:
 	cc -o realtime realtime.c
 
+iplookup:
+	cc -o iplookup -I/root/Desktop/installLLNL/geoIP/include iplookup.c debug.c libiplookup.c -L/root/Desktop/installLLNL/geoIP/lib -lGeoIP
+
 clean:
-	rm test display realtime 
+	rm test display realtime iplookup 
