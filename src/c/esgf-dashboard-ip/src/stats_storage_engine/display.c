@@ -5,7 +5,6 @@
 
 #define FILE_NAME_STATS "raw_%s_stats.dat"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
-#define QUERY_PLANB_SUMMARY_DB_TMP "drop table if exists esgf_dashboard.finaldw_planb_tmp; create table esgf_dashboard.finaldw_planb_tmp as (SELECT EXTRACT (YEAR FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as year, EXTRACT (MONTH FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as month, count(*) as downloads, count(distinct url) as files, count(distinct user_id_hash) as users, sum(fixed_log.size)/1024/1024/1024 as gb FROM (SELECT file.url, log.user_id_hash, max(log.date_fetched) as date_fetched, max(file.size) as size FROM esgf_node_manager.access_logging as log join public.file_version as file on (log.url LIKE '%.nc' AND lower(regexp_replace(log.url, E'^.*/(cmip5/.*\\.nc)$', E'\\\\1')) = lower(regexp_replace(file.url, E'^.*/(cmip5/.*\\.nc)$', E'\\\\1'))) where log.success and log.duration > 1000 group by file.url,log.user_id_hash) as fixed_log group by year,month order by year,month);"
 
 struct stats_pointer
 {
@@ -33,10 +32,6 @@ int main(int argc, char **argv)
     int res;
     int displaytype;
     long long int timeinterval;
-
-    fprintf(stdout, "%s\n",QUERY_PLANB_SUMMARY_DB_TMP );
-
-    return 0;
 
     if (argc!=4)
 	{

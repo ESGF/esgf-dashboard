@@ -7,8 +7,8 @@
 #include <libxml/parser.h>
 
 #define FILE_NAME_STATS "raw_%s_stats.dat"
-#define TEMP_SEARCH_STATS_FILE "search.tmp.xml"
-#define SEARCH_URL "http://esg-datanode.jpl.nasa.gov/esg-search/search?replica=false&latest=true&project=CMIP5&facets=index_node&limit=0"
+#define TEMP_SEARCH_STATS_FILE "search_%s_xml"
+//#define SEARCH_URL "http://esg-datanode.jpl.nasa.gov/esg-search/search?replica=false&latest=true&project=CMIP5&facets=index_node&limit=0"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 #define MAX_WINDOWS 10
 #define MAX_SENSORS 10
@@ -38,9 +38,11 @@ struct sensor_struct
     int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     int ext_sensor;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
     int aggregation;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
+    char sensor_type[BUFCHAR_MAX];		// entry among squared brackets in the config file
     char sensor_name[BUFCHAR_MAX];		// entry among squared brackets in the config file
     char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 
     char sensor_executable[BUFCHAR_EXEC_MAX];	// executable for sensors
+    char sensor_args[BUFCHAR_MAX];	// args for executable for sensors
     long long int windows_pointers[MAX_WINDOWS]; // windows pointers for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
     long long int windows_length[MAX_WINDOWS];  // current windows length for 5m, 1h, 1d, 1w, 30days, 365days, ALL
     long long int windows_limits[MAX_WINDOWS];  // time windows dimension for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
@@ -57,9 +59,6 @@ int main(void)
    pthread_t threads[MAX_SENSORS]; 
    unsigned int num_sensors;  // real number of sensors in the config file
 
-   get_search_metrics();
-   return 0;
-
    // at the beginning of the information provider	
    num_sensors = read_sensors_list_from_file(&sens_struct[0]);
    display_sensor_structures_info(num_sensors,&sens_struct[0]);
@@ -71,6 +70,7 @@ int main(void)
 
    // at the end of the information provider	
    thread_manager_stop (&threads[0],&sens_struct,num_sensors);
+
    return 0;
 }
 
@@ -80,6 +80,9 @@ int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_s
    for (i=0; i<num_sensors;i++)
 	{
 	fprintf(stdout,"Sensor info index [%d] Sensor name [%s])\n",i,(sens_struct[i]).sensor_name);
+	fprintf(stdout,"Sensor info index [%d] Sensor type [%s])\n",i,(sens_struct[i]).sensor_type);
+	fprintf(stdout,"Sensor info index [%d] Sensor executable [%s])\n",i,(sens_struct[i]).sensor_executable);
+	fprintf(stdout,"Sensor info index [%d] Sensor args [%s])\n",i,(sens_struct[i]).sensor_args);
 	fprintf(stdout,"File name [%s])\n",(sens_struct[i]).file_name_sensor_stats);
 	fprintf(stdout,"Reset on start [%d]\n",(sens_struct[i]).reset_onstart);
 	fprintf(stdout,"External sensor [%d]\n",(sens_struct[i]).ext_sensor);
@@ -94,13 +97,12 @@ int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_s
 void *
 thread_serve (void *arg)
 {
-   int counter=10; // iterations per sensor		  
+   int counter=1; // iterations per sensor		  
    struct stats_struct availability_struct; 
    struct sensor_struct *sens_struct = (struct sensor_struct *) arg;
    fprintf(stdout,"Calling thread server\n");
    fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
     
-   return 0;
    // initializing pointers
    reset_sensor_struct_and_raw_stats_file(sens_struct);
 
@@ -114,7 +116,7 @@ thread_serve (void *arg)
 	
    //display_windows_metrics(&sens_struct);
 
-   //while (1) 
+   //while (1) TEST_ 
    while (counter--) 
     {
     // next serial timestamp 
@@ -172,7 +174,7 @@ int display_windows_pointers(struct sensor_struct *sens_struct)
    int i;
    for (i=0; i<sens_struct->windows_number; i++) 
     	fprintf(stdout,"|C-> [%d] Window pointer [%lld]\n",i,sens_struct->windows_pointers[i]);
-   fprintf(stdout,"|D-> sensor name [%s] sensor executable [%s] sensor filename [%s]\n",sens_struct->sensor_name,sens_struct->sensor_executable,sens_struct->file_name_sensor_stats);
+   fprintf(stdout,"|D-> sensor name [%s] sensor executable [%s] sensor type [%s] sensor filename [%s]\n",sens_struct->sensor_name,sens_struct->sensor_executable,sens_struct->sensor_type, sens_struct->file_name_sensor_stats);
    fprintf(stdout, "end process\n");
     
    return 0;
@@ -386,6 +388,9 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     //snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
     //snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable availability"); 
     snprintf(sens_struct->file_name_sensor_stats,sizeof(sens_struct->file_name_sensor_stats),FILE_NAME_STATS,sens_struct->sensor_name); 
+    snprintf(sens_struct->sensor_args,sizeof(sens_struct->sensor_args), ""); 
+    snprintf(sens_struct->sensor_type,sizeof(sens_struct->sensor_type), ""); 
+    snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable), ""); 
     sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     sens_struct->ext_sensor=0;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
     sens_struct->aggregation=0;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
@@ -478,22 +483,96 @@ int close_file(FILE* file)
     return 0;
 }
 
-static void
-print_element_names(xmlNode * a_node)
-{
+long long int print_element_names(xmlNode * a_node)
+{    
+    char *num_rec;
     xmlNode *cur_node = NULL;
+    long long int num_rec_d;
 
+    
     for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
-        if (cur_node->type == XML_ELEMENT_NODE && !strcmp(cur_node->name,"result")) {
-            printf("node type: Element, name: %s\n", cur_node->name);
+            //printf("node type: Element, name: %s\n", cur_node->name);
+	    if (cur_node->type == XML_ELEMENT_NODE && !strcmp(cur_node->name,"response")) 
+	    	cur_node= cur_node->children;
+	    if (cur_node->type == XML_ELEMENT_NODE && !strcmp(cur_node->name,"result")) 
+	     	num_rec = xmlGetProp (cur_node, "numFound");	
         }
+   	
+  num_rec_d=atoll(num_rec); 
+  free(num_rec);	
+  return num_rec_d; 
+}
+	
+long long int parse_xml_search_file(char* tmp_file)
+{
+  int while_end;
+  long long int num_rec_d;
+  char *position;
+  char *position2;
 
-        print_element_names(cur_node->children);
-    }
+  FILE *file = fopen (tmp_file, "r");
+
+  if (file == NULL)             // /esg/config/infoprovider.properties not found
+    return -1;
+
+  while_end = 1;
+
+  while (while_end)
+    {
+      char buffer[256] = { '\0' };
+      char value_buffer[256] = { '\0' };
+      int strlen_buf,j;
+
+      if (!(fgets (buffer,256, file))) // now reading ATTRIBUTE=VALUE
+        {
+	  //fprintf(stdout,"end of file\n");
+	  while_end = 0;
+          fclose (file);
+	  break;	
+        }
+      fprintf(stdout,"line = %s",buffer);
+      j=0;
+      strlen_buf = strlen(buffer);
+      while (j<strlen_buf)
+        {
+	  if (buffer[j]=='n')
+	    if (buffer[j+1]=='u')
+  	      if (buffer[j+2]=='m')
+  	      	if (buffer[j+3]=='F')
+  	      	   if (buffer[j+4]=='o')
+  	      	      if (buffer[j+5]=='u')
+  	      	      	if (buffer[j+6]=='n')
+  	      	      	   if (buffer[j+7]=='d')
+        			{
+          			 position = strchr(&(buffer[j+7]),'"');  
+          			 position2 = strchr(position+1,'"');  
+				 *position2='\0';
+				 fprintf(stdout,"trovato %s\n",position+1);
+				 while_end = 0; 	
+			     	 break; 
+        			}
+	  j++;	
+        }
+ 	
+
+      
+      /*if (position != NULL)     // the '=' has been found, which means the line is properly written as attribute=value
+        {
+          strcpy (value_buffer, position + 1);  
+          *position = '\0';    // now value_buffer stores the VALUE 
+          position = strchr(value_buffer,'\n');  
+	  *position = '\0';     // now buffer stores the ATTRIBUTE       
+          //fprintf(stdout,"Attribute=[%s] Value=[%s]\n",buffer,value_buffer);
+	}*/
+   }
+  //fclose (file);
+  num_rec_d=10; 
+  return num_rec_d; 
 }
 
+
 //int get_search_metrics(struct sensor_struct *sens_struct)
-int get_search_metrics(void)
+int get_search_metrics(char* name, char* query)
 {
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
@@ -506,14 +585,17 @@ int get_search_metrics(void)
   FILE *file;
   char buffer[10024];
   char url_action[10024];
+  char tmp_file[1024];
   long int i;
+  long long int num_rec;
   int right_url;
 
-  snprintf (url_action, sizeof (url_action),SEARCH_URL);
+  snprintf (url_action, sizeof (url_action),query);
+  snprintf (tmp_file, sizeof (tmp_file),TEMP_SEARCH_STATS_FILE,name);
 
   // filename to be stats_<host>_<processed_id>.tmp
 
-  tmp=fopen(TEMP_SEARCH_STATS_FILE, "w");
+  tmp=fopen(tmp_file, "w");
   if(tmp==NULL)
         {
          //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
@@ -528,35 +610,35 @@ int get_search_metrics(void)
   if(curl_res)
         {
         //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting [%s] or downloading stats\n",peername);
-        remove(TEMP_SEARCH_STATS_FILE);
+        remove(tmp_file);
         fclose(tmp);
         curl_easy_cleanup(curl);
         return -1;
         }
   fclose(tmp);
   curl_easy_cleanup(curl);
-  doc = xmlReadFile(TEMP_SEARCH_STATS_FILE, NULL, 0);
+
+  num_rec = parse_xml_search_file(tmp_file);
+
+  // scrivere io una API diversa per fare il parsing del doc XML
+  /*doc = xmlReadFile(tmp_file, NULL, 0);
 
   if (doc == NULL) {
-        printf("error: could not parse file %s\n", TEMP_SEARCH_STATS_FILE);
+        fprintf(stdout, "error: could not parse file %s\n", tmp_file);
+  	//xmlCleanupParser();
+	return 0;
   }
-  /*Get the root element node */
+
   root_element = xmlDocGetRootElement(doc);
 
-  print_element_names(root_element);
+  num_rec = print_element_names(root_element);
+  fprintf(stdout, "Number of records %lld\n",num_rec); 	
 
-  /*free the document */
-  xmlFreeDoc(doc);
+  xmlFreeDoc(doc);*/
 
-  /*
-   *Free the global variables that may
-   *have been allocated by the parser.
-   */
-  xmlCleanupParser();
+  //remove(tmp_file);
 
-  //remove(TEMP_SEARCH_STATS_FILE);
-
- return 0;
+ return(num_rec);
 }
 
 int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
@@ -567,11 +649,14 @@ int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability
     	
 	// todo: The generate metrics should be a function with a SWITCH based on the type of sensor. Core types: availability, search, exec	
     	// generate the metrics
+	
     	availability_struct->intervals=sens_struct->num_interval;
-    	//availability_struct.metrics= 1+(int) (10.0*rand()/(RAND_MAX+1.0)); 
-    	availability_struct->metrics= sens_struct->num_interval; 
+	if (!(strcmp(sens_struct->sensor_type,"search")))	
+		availability_struct->metrics= (double) get_search_metrics(sens_struct->sensor_name, sens_struct->sensor_executable);
+	if (!(strcmp(sens_struct->sensor_type,"availability")))	
+    		availability_struct->metrics= sens_struct->num_interval; 
 
-    	fprintf(stdout, "Generated metrics [%lld] [%4.2f] \n", availability_struct->intervals, availability_struct->metrics);
+    	fprintf(stdout, "Generated metrics sensor [%s] [%lld]-[%4.2f] \n", sens_struct->sensor_name,availability_struct->intervals, availability_struct->metrics);
 
     	open_create_file(&binaryF,sens_struct->file_name_sensor_stats,"a+"); // a+ - open for reading and writing (append if file exists)
     	write_stats_to_file(binaryF,availability_struct);
@@ -694,6 +779,22 @@ int read_sensors_list_from_file(struct sensor_struct *sens_struct)
 		snprintf((sens_struct[curr_sensor]).sensor_name,sizeof((sens_struct[curr_sensor]).sensor_name),value_buffer);
 		fprintf(stdout,"Sensor info index [%d] Sensor name [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_name);
    		setup_sens_struct_from_config_file(&sens_struct[curr_sensor]);
+
+            }
+          if (!(strcmp (buffer, "type")))
+            {
+		snprintf((sens_struct[curr_sensor]).sensor_type,sizeof((sens_struct[curr_sensor]).sensor_type),value_buffer);
+		fprintf(stdout,"Sensor info index [%d] Sensor type [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_type);
+            }
+          if (!(strcmp (buffer, "exec")))
+            {
+		snprintf((sens_struct[curr_sensor]).sensor_executable,sizeof((sens_struct[curr_sensor]).sensor_executable),value_buffer);
+		fprintf(stdout,"Sensor info index [%d] Sensor executable [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_executable);
+            }
+          if (!(strcmp (buffer, "args")))
+            {
+		snprintf((sens_struct[curr_sensor]).sensor_args,sizeof((sens_struct[curr_sensor]).sensor_args),value_buffer);
+		fprintf(stdout,"Sensor info index [%d] Sensor args [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_args);
             }
          }
 	else {
