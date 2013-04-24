@@ -35,9 +35,7 @@ int main(int argc, char **argv)
 
     if (argc!=4)
 	{
-	fprintf(stdout, "Please specify the metric (i.e. availability), display type (0=base display  1=csv format) and time interval (in seconds)\n");
-	fprintf(stdout, "Examples: ./display availability 0 300\n");
-	fprintf(stdout, "          ./display availability 1 300\n");
+	fprintf(stdout, "Please specify the sensor type_sensor name, display type (0=base display  1=csv format) and time interval (in seconds)\n");
 	return 0;		
 	}
 
@@ -46,8 +44,6 @@ int main(int argc, char **argv)
     if (displaytype!=1 && displaytype!=0) 
 	{
 	fprintf(stdout, "Please specify a valid value for display type (0=default, 1=csv format)\n");
-        fprintf(stdout, "Examples: ./display availability 0 300\n");
-        fprintf(stdout, "          ./display availability 1 300\n");
 	return 0;
         }
 
