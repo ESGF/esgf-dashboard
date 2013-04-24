@@ -7,7 +7,7 @@
 #include <libxml/parser.h>
 
 #define FILE_NAME_STATS "raw_%s_stats.dat"
-#define TEMP_SEARCH_STATS_FILE "search_%s_xml"
+#define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
 //#define SEARCH_URL "http://esg-datanode.jpl.nasa.gov/esg-search/search?replica=false&latest=true&project=CMIP5&facets=index_node&limit=0"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 #define MAX_WINDOWS 10
@@ -506,7 +506,7 @@ long long int print_element_names(xmlNode * a_node)
 long long int parse_xml_search_file(char* tmp_file)
 {
   int while_end;
-  long long int num_rec_d;
+  long long int num_rec_d=0;
   char *position;
   char *position2;
 
@@ -547,7 +547,8 @@ long long int parse_xml_search_file(char* tmp_file)
           			 position = strchr(&(buffer[j+7]),'"');  
           			 position2 = strchr(position+1,'"');  
 				 *position2='\0';
-				 fprintf(stdout,"trovato %s\n",position+1);
+				 //fprintf(stdout,"trovato %s\n",position+1);
+  				 num_rec_d=atoll(position+1); 
 				 while_end = 0; 	
 			     	 break; 
         			}
@@ -566,7 +567,6 @@ long long int parse_xml_search_file(char* tmp_file)
 	}*/
    }
   //fclose (file);
-  num_rec_d=10; 
   return num_rec_d; 
 }
 
