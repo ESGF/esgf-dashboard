@@ -167,7 +167,7 @@ public class HostPositionAction extends ActionSupport {
 		try {
 			
 			conn = Constants.DATASOURCE.getConnection();
-			PreparedStatement stmt = conn.prepareStatement(SqlQuery.PROJECT_HOSTS_POSITION_REG_USERS.getSql());
+			PreparedStatement stmt = conn.prepareStatement(SqlQuery.PROJECT_HOSTS_POSITION_REG_USERS2.getSql());
 			stmt.setInt(1, idProjects.get(0));
 			System.out.println("PROJECT_HOST_POSITION(0) ="+ stmt.toString());
 			
