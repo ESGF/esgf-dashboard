@@ -1,6 +1,6 @@
-#define FILE_NAME_STATS "raw_%s_%s_stats.dat"
+#define FILE_NAME_STATS "%s/raw_%s_%s_stats.dat"
 #define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
-#define FILE_NAME_START_STATS "start_stats_time.dat"
+#define FILE_NAME_START_STATS "%s/start_stats_time.dat"
 #define MAX_WINDOWS 10
 #define MAX_SENSORS 10
 #define BUFCHAR_MAX 1024

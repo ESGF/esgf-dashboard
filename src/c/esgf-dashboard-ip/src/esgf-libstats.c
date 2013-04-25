@@ -8,6 +8,7 @@
 
 #include "../include/stats.h"
 #include "../include/debug.h"
+#include "../include/config.h"
 
 /*#define FILE_NAME_STATS "raw_%s_%s_stats.dat"
 #define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
@@ -313,13 +314,16 @@ int setup_and_synchronize_start_time(struct sensor_struct *sens_struct)
     double diff_time;
     char* c_string;
     char* c2_time_string;
+    char file_name_start_stats[1024];
 
     // ***** START setup start time only at the beginning of the information provider ******
-    if (open_create_file(&binaryFile , FILE_NAME_START_STATS,"r")) // r  - open for reading 
+    snprintf(file_name_start_stats,sizeof(file_name_start_stats),FILE_NAME_START_STATS,DASHBOARD_SERVICE_PATH); 
+    
+    if (open_create_file(&binaryFile , file_name_start_stats,"r")) // r  - open for reading 
     {
     	time(&(start_time_struct.start_time));
     	time(&(sens_struct->current_time));
-        open_create_file(&binaryFile , FILE_NAME_START_STATS,"w+");
+        open_create_file(&binaryFile , file_name_start_stats,"w+");
     	write_start_time_to_file(binaryFile , &start_time_struct);
     	close_file(binaryFile);
     	sens_struct->num_interval = 0;
@@ -772,7 +776,7 @@ int read_sensors_list_from_file(struct sensor_struct *sens_struct)
             {
 		snprintf((sens_struct[curr_sensor]).sensor_type,sizeof((sens_struct[curr_sensor]).sensor_type),value_buffer);
 		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor type [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_type);
-    		snprintf((sens_struct[curr_sensor]).file_name_sensor_stats,sizeof((sens_struct[curr_sensor]).file_name_sensor_stats),FILE_NAME_STATS,sens_struct[curr_sensor].sensor_type,sens_struct[curr_sensor].sensor_name); 
+    		snprintf((sens_struct[curr_sensor]).file_name_sensor_stats,sizeof((sens_struct[curr_sensor]).file_name_sensor_stats),FILE_NAME_STATS,DASHBOARD_SERVICE_PATH,sens_struct[curr_sensor].sensor_type,sens_struct[curr_sensor].sensor_name); 
             }
           if (!(strcmp (buffer, "reset")))
             {
