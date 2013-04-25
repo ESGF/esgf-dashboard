@@ -8,7 +8,6 @@
 
 #define FILE_NAME_STATS "raw_%s_%s_stats.dat"
 #define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
-//#define SEARCH_URL "http://esg-datanode.jpl.nasa.gov/esg-search/search?replica=false&latest=true&project=CMIP5&facets=index_node&limit=0"
 #define FILE_NAME_START_STATS "start_stats_time.dat"
 #define MAX_WINDOWS 10
 #define MAX_SENSORS 10
@@ -97,11 +96,14 @@ int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_s
 void *
 thread_serve (void *arg)
 {
-   int counter=1; // iterations per sensor		  
+   int counter=3; // iterations per sensor		  
    struct stats_struct availability_struct; 
    struct sensor_struct *sens_struct = (struct sensor_struct *) arg;
-   fprintf(stdout,"Calling thread server\n");
-   fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
+   //fprintf(stdout,"Calling thread server\n");
+   //fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
+   
+   if (sens_struct->reset_onstart)
+	remove(sens_struct->file_name_sensor_stats);
     
    // initializing pointers
    reset_sensor_struct_and_raw_stats_file(sens_struct);
@@ -770,10 +772,15 @@ int read_sensors_list_from_file(struct sensor_struct *sens_struct)
 		fprintf(stdout,"Sensor info index [%d] Sensor type [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_type);
     		snprintf((sens_struct[curr_sensor]).file_name_sensor_stats,sizeof((sens_struct[curr_sensor]).file_name_sensor_stats),FILE_NAME_STATS,sens_struct[curr_sensor].sensor_type,sens_struct[curr_sensor].sensor_name); 
             }
+          if (!(strcmp (buffer, "reset")))
+            {
+		sens_struct[curr_sensor].reset_onstart=atoi(value_buffer);
+		fprintf(stdout,"Sensor info index [%d] Sensor reset_onstart [%d])\n",curr_sensor,(sens_struct[curr_sensor]).reset_onstart);
+            }
           if (!(strcmp (buffer, "interval")))
             {
 		sens_struct[curr_sensor].time_interval=atoll(value_buffer);
-		fprintf(stdout,"Sensor info index [%d] Sensor args [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_args);
+		fprintf(stdout,"Sensor info index [%d] Sensor time_interval [%lld])\n",curr_sensor,(sens_struct[curr_sensor]).time_interval);
             }
           if (!(strcmp (buffer, "exec")))
             {
