@@ -21,8 +21,6 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
-#define MAX_SENSORS 10
-
 int msglevel; // global variable for log purposes 
 
 static struct option long_options[] = {
@@ -69,8 +67,6 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"NODE_TYPE = [%d]\n",NODE_TYPE);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTNAME = [%s]\n",ESGF_HOSTNAME);
 }
-
-
 
 /* Allow for 1024 simultanious events */
 /* #define BUFF_SIZE ((sizeof(struct inotify_event)+FILENAME_MAX)*1024)
@@ -324,18 +320,6 @@ int realtime_monitoring_setup(void)
     return 0;
 }
 
-/*int main(void)
-{
-
-
-	
-   // information provider stuff
-   // information provider stuff
-
-   // at the end of the information provider	
-
-   return 0;
-}*/
 
 int
 main (int argc, char **argv)

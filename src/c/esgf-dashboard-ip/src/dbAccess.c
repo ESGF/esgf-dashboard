@@ -1308,7 +1308,7 @@ int rotate_realtime_stats(char* filestats, char* filestats_tmp, char* metric)
    //snprintf(last_value,sizeof(last_value),"%s&%s\n",metric,c2_time_string);
    snprintf(last_value,sizeof(last_value),"%s&%s\n",metric,(c2_copy+11));
    if (fputs(last_value,toFile)==EOF)
-        fprintf(stdout,"Error writing the file\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Error writing the file\n");
 
   // now copy the remaining ones from the prod file
   snprintf (metrics_filename,sizeof (metrics_filename),"%s/%s",DASHBOARD_SERVICE_PATH,filestats);
@@ -1354,7 +1354,7 @@ int open_create_file(FILE** file , char* filename, char* mode)
     *file = fopen(filename,mode);
     if ((*file) == NULL)
         {
-         fprintf(stdout,"Can't open binary file [%s] in [%s] mode\n",filename,mode);
+         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Can't open binary file [%s] in [%s] mode\n",filename,mode);
          return -1;
         }
     return 0;
