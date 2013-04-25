@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         }
 
     fprintf(stdout,"Display metric: %s\nDisplay type: %d\n", argv[1],displaytype);
-    snprintf(file_name_sensor_stats,sizeof(file_name_sensor_stats),FILE_NAME_STATS,argv[1]);
+    snprintf(file_name_sensor_stats,sizeof(file_name_sensor_stats),argv[1]);
     
     if (!open_create_file(&binaryFile , FILE_NAME_START_STATS,"r")) 
 	{
