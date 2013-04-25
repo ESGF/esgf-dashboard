@@ -1,4 +1,4 @@
-bin_PROGRAMS = esgf-dashboard-ip esgf-iplookup 
+bin_PROGRAMS = esgf-dashboard-ip esgf-iplookup esgf-getrawstats 
 
 AM_CFLAGS = $(OPT) -I../include -Wall
 
@@ -9,6 +9,10 @@ esgf_dashboard_ip_LDFLAGS=-O2 $(pq_LDFLAGS) -L/usr/local/curl-no-ssl/lib -lcurl 
 esgf_iplookup_SOURCES=esgf-iplookup.c esgf-libiplookup.c debug.c 
 esgf_iplookup_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
 esgf_iplookup_LDFLAGS=-O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
+
+esgf_getrawstats_SOURCES= esgf-getrawstats.c
+esgf_getrawstats_CFLAGS=-O2 $(CFLAGS) -I. -I../include  
+esgf_getrawstats_LDFLAGS=-O2
 
 #libgrelcpostgres_la_LDFLAGS = -module -avoid-version -no-undefined
 # gcc -o geoiplookup2 -I. -I/export/fiore2/install/GeoIP3/include -L/export/fiore2/install/GeoIP3/lib -lGeoIP geoiplookup2.c

@@ -56,6 +56,7 @@ generated/
 /src/c/esgf-dashboard-ip/src/Makefile
 /src/c/esgf-dashboard-ip/src/esgf-dashboard-ip
 /src/c/esgf-dashboard-ip/src/esgf-iplookup
+/src/c/esgf-dashboard-ip/src/esgf-getrawstats
 /src/c/esgf-dashboard-ip/stamp-h1
 #src/c/esgf-dashboard-ip/src/stats_storage_engine/
 /src/c/esgf-dashboard-ip/src/stats_storage_engine/raw_stats.dat
