@@ -17,7 +17,11 @@
 #include "../include/debug.h"
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
+// todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
 #define TEMP_STATS_FILE ".stats.tmp"
+// todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
+#define TOP_FILE ".top.txt"
+#define TOP_COMMAND "/usr/bin/top -b -n 1 i "
 
 int retrieve_localhost_metrics()
 {
@@ -1237,6 +1241,27 @@ int remove_stats_from_federation_level_dw(PGconn *conn, char *submitted_query, c
   return 0;
 }
 
+int realtime_processes_get_stats(void)
+{
+ char top_command[1024] = { '\0' };
+ char top_file_command[1024] = { '\0' };
+ FILE *file;
+
+ snprintf (top_file_command,sizeof (top_file_command),"%s/%s",DASHBOARD_SERVICE_PATH,TOP_FILE);
+ snprintf (top_command,sizeof (top_command),"%s > %s",TOP_COMMAND,top_file_command);
+ system(top_command);
+ file = fopen (top_file_command, "r");
+ if (file == NULL)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Open top file failed\n");
+    return -1;
+  }
+ // to be added the parsing of the .top.txt file
+
+ return 0;
+}
+
+
 // realtime cpu monitoring
 
 int realtime_cpu_get_stats(void)
@@ -1430,42 +1455,6 @@ int realtime_mem_get_stats(void)
 	   }
        }
 
- /*while ( fgets ( line, sizeof line, file ) != NULL ) 
-       {
-        i++;
-	if (i==1 || i==2 || i==12 || i==13) {
-  		char * pch= NULL;
-  		pch = strtok (line," ");
-		j=0;
-  		while (pch != NULL)
-  		{
-			j++;
-    			pch = strtok (NULL, " ");
-			if (j==1) {
-				switch (i) {
-				case 1:
-    					snprintf(totram, sizeof(totram),"%s",pch);
-					tram=atol(totram);
-					break;
-				case 2:
-    					snprintf(freeram, sizeof(freeram),"%s",pch);
-					fram=atol(freeram);
-					break;
-				case 12:
-    					snprintf(totswap, sizeof(totswap),"%s",pch);
-					tswap=atol(totswap);
-					break;
-				case 13:
-    					snprintf(freeswap, sizeof(freeswap),"%s",pch);
-					fswap=atol(freeswap);
-					break;
-				default:
-					break;
-				}
-			}
-  		}
-	}
-       }*/
   fclose ( file );
 
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
