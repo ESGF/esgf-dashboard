@@ -16,9 +16,12 @@
 #include <sys/inotify.h>
 
 #include "../include/ping.h"
+#include "../include/stats.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/debug.h"
+
+#define MAX_SENSORS 10
 
 int msglevel; // global variable for log purposes 
 
@@ -203,7 +206,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (0) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		realtime_monitoring_setup();
@@ -221,7 +224,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (0) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -321,6 +324,18 @@ int realtime_monitoring_setup(void)
     return 0;
 }
 
+/*int main(void)
+{
+
+
+	
+   // information provider stuff
+   // information provider stuff
+
+   // at the end of the information provider	
+
+   return 0;
+}*/
 
 int
 main (int argc, char **argv)
@@ -336,7 +351,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 1;  // TEST_   PRODUCTION_ 1 
+  int iterator = 0;  // TEST_   PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
@@ -344,6 +359,9 @@ main (int argc, char **argv)
   char query_remove_old_service_metrics[2048] = { '\0' };
   char query_remove_old_local_cpu_metrics[2048] = { '\0' };
   char query_remove_old_local_memory_metrics[2048] = { '\0' };
+  struct sensor_struct sens_struct[MAX_SENSORS];
+  pthread_t threads[MAX_SENSORS]; 
+  unsigned int num_sensors;  // real number of sensors in the config file
  
   // setting log level to the lowest one (DEBUG) 
   msglevel=2; //default = WARNING 
@@ -466,6 +484,9 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
+  // at the beginning of the information provider	
+  num_sensors = read_sensors_list_from_file(&sens_struct[0]);
+  display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
@@ -479,6 +500,9 @@ main (int argc, char **argv)
   
   if (ENABLE_REALTIME)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+
+  // enabling threads pool for sensors 
+  thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
@@ -540,7 +564,9 @@ main (int argc, char **argv)
   	else
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
-	
+
+  // end of thread pool for sensors	
+  thread_manager_stop (&threads[0],&sens_struct,num_sensors);
   
   // freeing space
   fprintf(stderr,"***************************************************\n");

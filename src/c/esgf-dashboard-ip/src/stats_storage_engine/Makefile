@@ -4,7 +4,7 @@ all:	test display realtime iplookup
 
 
 test:
-	cc -o test -I/usr/include/libxml2 test.c -lpthread -lxml2 -lz -lm -L/root/Desktop/installLLNL/cUrl/lib -lcurl 
+	cc -o test -I/usr/local/curl-no-ssl/include -I/usr/include/libxml2 test.c -lpthread -lxml2 -lz -lm -L/usr/local/curl-no-ssl/lib -lcurl 
 
 display:
 	cc -o display display.c

@@ -55,7 +55,8 @@ am_esgf_dashboard_ip_OBJECTS =  \
 	esgf_dashboard_ip-esgf-dashboard-parser.$(OBJEXT) \
 	esgf_dashboard_ip-esgf-libiplookup.$(OBJEXT) \
 	esgf_dashboard_ip-hashtbl.$(OBJEXT) \
-	esgf_dashboard_ip-debug.$(OBJEXT)
+	esgf_dashboard_ip-debug.$(OBJEXT) \
+	esgf_dashboard_ip-esgf-libstats.$(OBJEXT)
 esgf_dashboard_ip_OBJECTS = $(am_esgf_dashboard_ip_OBJECTS)
 esgf_dashboard_ip_LDADD = $(LDADD)
 am_esgf_iplookup_OBJECTS = esgf_iplookup-esgf-iplookup.$(OBJEXT) \
@@ -153,9 +154,9 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CFLAGS = $(OPT) -I../include -Wall
-esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c
+esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c esgf-libstats.c
 esgf_dashboard_ip_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
-esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP -lcurl 
+esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -L/usr/local/curl-no-ssl/lib -lcurl -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
 esgf_iplookup_SOURCES = esgf-iplookup.c esgf-libiplookup.c debug.c 
 esgf_iplookup_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
 esgf_iplookup_LDFLAGS = -O2 $(pq_LDFLAGS) -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
@@ -233,6 +234,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-ip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-libiplookup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-hashtbl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_dashboard_ip-ping.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/esgf_iplookup-debug.Po@am__quote@
@@ -350,6 +352,20 @@ esgf_dashboard_ip-debug.obj: debug.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='debug.c' object='esgf_dashboard_ip-debug.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-debug.obj `if test -f 'debug.c'; then $(CYGPATH_W) 'debug.c'; else $(CYGPATH_W) '$(srcdir)/debug.c'; fi`
+
+esgf_dashboard_ip-esgf-libstats.o: esgf-libstats.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-libstats.o -MD -MP -MF "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo" -c -o esgf_dashboard_ip-esgf-libstats.o `test -f 'esgf-libstats.c' || echo '$(srcdir)/'`esgf-libstats.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo" "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Po"; else rm -f "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libstats.c' object='esgf_dashboard_ip-esgf-libstats.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-libstats.o `test -f 'esgf-libstats.c' || echo '$(srcdir)/'`esgf-libstats.c
+
+esgf_dashboard_ip-esgf-libstats.obj: esgf-libstats.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-libstats.obj -MD -MP -MF "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo" -c -o esgf_dashboard_ip-esgf-libstats.obj `if test -f 'esgf-libstats.c'; then $(CYGPATH_W) 'esgf-libstats.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libstats.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo" "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Po"; else rm -f "$(DEPDIR)/esgf_dashboard_ip-esgf-libstats.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='esgf-libstats.c' object='esgf_dashboard_ip-esgf-libstats.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-libstats.obj `if test -f 'esgf-libstats.c'; then $(CYGPATH_W) 'esgf-libstats.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libstats.c'; fi`
 
 esgf_iplookup-esgf-iplookup.o: esgf-iplookup.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_iplookup_CFLAGS) $(CFLAGS) -MT esgf_iplookup-esgf-iplookup.o -MD -MP -MF "$(DEPDIR)/esgf_iplookup-esgf-iplookup.Tpo" -c -o esgf_iplookup-esgf-iplookup.o `test -f 'esgf-iplookup.c' || echo '$(srcdir)/'`esgf-iplookup.c; \
