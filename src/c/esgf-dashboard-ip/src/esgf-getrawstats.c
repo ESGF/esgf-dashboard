@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
     if (argc!=5)
 	{
-	fprintf(stdout, "Please specify the full path of the raw stats, the full path of the starting time, the display type (0=base display  1=csv format) and the time interval (in seconds)\n");
+	fprintf(stdout, "Please specify:\n-the full path of the raw stats\n-the full path of the starting time\n-the display type (0=base display  1=csv format)\n-the time interval (in seconds)\n");
 	return 0;		
 	}
 
@@ -47,10 +47,10 @@ int main(int argc, char **argv)
 	return 0;
         }
 
-    fprintf(stdout,"Display metric: %s\nDisplay type: %d\n", argv[2],displaytype);
-    snprintf(file_name_sensor_stats,sizeof(file_name_sensor_stats),argv[2]);
+    fprintf(stdout,"Display metric: %s\nDisplay type: %d\n", argv[1],displaytype);
+    snprintf(file_name_sensor_stats,sizeof(file_name_sensor_stats),argv[1]);
     
-    if (!open_create_file(&binaryFile , argv[1],"r")) 
+    if (!open_create_file(&binaryFile , argv[2],"r")) 
 	{
     	read_start_from_file(binaryFile,&start_time_struct);
     	close_file(binaryFile);

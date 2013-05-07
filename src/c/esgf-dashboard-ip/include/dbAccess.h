@@ -115,6 +115,7 @@
 
 #define URL_STATS "http://%s/esgf-desktop/olapJson/GetStats?al_id=%ld&delta=%ld"
 #define URL_STATS_PLANB "http://%s/esgf-desktop/olapJson/GetStatsB"
+#define URL_AGGREGATED_STATS "http://%s/esgf-desktop/olapJson/GetMetrics?sensor=%s&hostname=%s"
 //#define URL_STATS "http://%s:8080/ESGFNodeDesktop/gridJson/GetStats?al_id=%ld&delta=%ld"
 
 #define QUERY_INSERT_DATA_DOWNLOAD_METRICS_FINALDW "insert into esgf_dashboard.finaldw(%s,peername) values(%s,'%s');"
@@ -137,6 +138,7 @@
 
 #define INSERT_REMOTE_STAT "insert into esgf_dashboard.federationdw(al_id, datasetid,file_id,project,model,experiment, url,mv, var, realm, user_id_hash, user_idp, year, month, day, hour , service_type, remote_addr , datasetname ,time_frequency , institute , product ,ensemble ,cmor_table , size ,success , duration , peername) values%s" 
 #define INSERT_REMOTE_STAT_PLANB "insert into esgf_dashboard.federationdw_planb(year, month, downloads,files,users,gb,host) values%s" 
+#define INSERT_AGGREGATED_STATS "insert into esgf_dashboard.sensor_table_%s_tmp(host_name,last5m_o, last1h_o, last1d_o, last1w_o, last1m_o, last1y_o, last5m_p, last1h_p, last1d_p, last1w_p, last1m_p, last1y_p) values%s" 
 
 #define QUERY_GET_LAST_PROCESSED_ID_FED  "select max(al_id) from esgf_dashboard.federationdw where peername='%s';"
 #define QUERY_UPDATE_PEER_LAST_ID "update esgf_dashboard.aggregation_process set lastprocessed_id=%ld where hostname='%s';"
@@ -165,6 +167,20 @@
 #define REALTIME_MEM_SWAP_TEMP "realtime_mem_swap.dat.temp"
 
 // END MACROS FOR REALTIME MONITORING
+
+// START QUERIES FOR NEW STATS ENGINE
+//#define QUERY_CREATE_METRIC_TABLE "drop table if exists esgf_dashboard.sensor_table_%s_tmp; create table esgf_dashboard.sensor_table_%s_tmp (host_name character varying(1024),last5m_o double precision, last1h_o double precision, last1d_o double precision, last1w_o double precision, last1m_o double precision, last1y_o double precision, last5m_p double precision, last1h_p double precision, last1d_p double precision, last1w_p double precision, last1m_p double precision, last1y_p double precision, time_stamp timestamp without time zone DEFAULT now() NOT NULL);"
+#define QUERY_CREATE_METRIC_TABLE "create table esgf_dashboard.sensor_table_%s (host_name character varying(1024),sensor_name character varying(1024), last5m_o double precision, last1h_o double precision, last1d_o double precision, last1w_o double precision, last1m_o double precision, last1y_o double precision, last5m_p double precision, last1h_p double precision, last1d_p double precision, last1w_p double precision, last1m_p double precision, last1y_p double precision, time_stamp timestamp without time zone DEFAULT now() NOT NULL, UNIQUE(host_name,sensor_name));"
+
+#define QUERY_INSERT_METRIC_TABLE "insert into esgf_dashboard.sensor_table_%s (host_name,sensor_name,last5m_o, last1h_o, last1d_o, last1w_o, last1m_o, last1y_o, last5m_p, last1h_p, last1d_p, last1w_p, last1m_p, last1y_p) values('%s','%s',%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f);"
+
+#define QUERY_UPDATE_METRIC_TABLE "update esgf_dashboard.sensor_table_%s set last5m_o=%4.2f, last1h_o=%4.2f, last1d_o=%4.2f, last1w_o=%4.2f, last1m_o=%4.2f, last1y_o=%4.2f, last5m_p=%4.2f, last1h_p=%4.2f, last1d_p=%4.2f, last1w_p=%4.2f, last1m_p=%4.2f, last1y_p=%4.2f, time_stamp=now() where host_name='%s' and sensor_name='%s';"
+
+#define QUERY_RENAME_METRIC_TABLE "drop table if exists esgf_dashboard.sensor_table_%s; alter table esgf_dashboard.sensor_table_%s_tmp rename to sensor_table_%s;"
+
+#define QUERY_LIST_ACTIVE_HOSTS "SELECT h.name, h.ip FROM esgf_dashboard.host h INNER JOIN esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN esgf_dashboard.uses u ON u.idServiceInstance=s.id INNER JOIN esgf_dashboard.project_dash p ON p.id=u.idProject WHERE u.endDate IS NULL AND p.endDate IS NULL GROUP BY h.ip, h.name ORDER BY h.ip;"
+
+// END QUERIES FOR NEW STATS ENGINE
 
 // --------------------------------------------------------
 

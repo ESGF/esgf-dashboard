@@ -5,76 +5,14 @@
 #include <curl/curl.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
+#include "libpq-fe.h"
 
 #include "../include/stats.h"
+#include "../include/dbAccess.h"
 #include "../include/debug.h"
 #include "../include/config.h"
 
-/*#define FILE_NAME_STATS "raw_%s_%s_stats.dat"
-#define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
-#define FILE_NAME_START_STATS "start_stats_time.dat"
-#define MAX_WINDOWS 10
-#define BUFCHAR_MAX 1024
-#define BUFCHAR_EXEC_MAX 1024
-#define THREAD_SENSOR_OPEN_MAX 10 
-
-
-struct stats_struct 
-{
- long long int intervals; // number of 5min intervals from the time0 (first run) 
- double metrics; // metrics value to be stored 
-};
-
-struct start_stats_struct 
-{
- time_t start_time; // number of 5min intervals from the time0 (first run) 
-};
-
-struct sensor_struct 
-{
-    // todo0: to be added both the current_time and num_interval che saranno specifici di ogni sensore 
-    long long int time_interval;	
-    long long int num_interval;
-    time_t current_time;
-    int windows_number;
-    int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
-    int ext_sensor;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
-    int aggregation;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
-    char sensor_type[BUFCHAR_MAX];		// entry among squared brackets in the config file
-    char sensor_name[BUFCHAR_MAX];		// entry among squared brackets in the config file
-    char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 
-    char sensor_executable[BUFCHAR_EXEC_MAX];	// executable for sensors
-    char sensor_args[BUFCHAR_MAX];	// args for executable for sensors
-    long long int windows_pointers[MAX_WINDOWS]; // windows pointers for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    long long int windows_length[MAX_WINDOWS];  // current windows length for 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    long long int windows_limits[MAX_WINDOWS];  // time windows dimension for 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    double aggregated_values[MAX_WINDOWS]; 	// aggregated values last 5m, 1h, 1d, 1w, 30days, 365days, ALL 
-    double window_avg_values_p[MAX_WINDOWS];  // pessimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    double window_avg_values_o[MAX_WINDOWS];  // optimistic last 5m, 1h, 1d, 1w, 30days, 365days, ALL
-    FILE *windows_FILE_pointer[MAX_WINDOWS];
-    struct stats_struct stats_array[MAX_WINDOWS];	
-};*/
-
-/*int main(void)
-{
-   struct sensor_struct sens_struct[MAX_SENSORS];
-   pthread_t threads[MAX_SENSORS]; 
-   unsigned int num_sensors;  // real number of sensors in the config file
-
-   // at the beginning of the information provider	
-   num_sensors = read_sensors_list_from_file(&sens_struct[0]);
-   display_sensor_structures_info(num_sensors,&sens_struct[0]);
-
-   thread_manager_start (&threads[0],&sens_struct,num_sensors);
-	
-   // information provider stuff
-   // information provider stuff
-
-   // at the end of the information provider	
-   thread_manager_stop (&threads[0],&sens_struct,num_sensors);
-
-   return 0;
-}*/
+#define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 
 int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_struct)
 {
@@ -88,7 +26,7 @@ int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_s
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"File name [%s])\n",(sens_struct[i]).file_name_sensor_stats);
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reset on start [%d]\n",(sens_struct[i]).reset_onstart);
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"External sensor [%d]\n",(sens_struct[i]).ext_sensor);
-	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Aggregation enabled [%d]\n",(sens_struct[i]).aggregation);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Aggregation enabled [%d]\n",(sens_struct[i]).federation);
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Time interval [%d]\n",(sens_struct[i]).time_interval);
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Windows number [%d] \n",(sens_struct[i]).windows_number);
    	for (j=0; j<(sens_struct[i]).windows_number;j++)
@@ -99,32 +37,24 @@ int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_s
 void *
 thread_serve (void *arg)
 {
-   int counter=1; // iterations per sensor		  
+   int counter=3; // iterations per sensor		  
    struct stats_struct availability_struct; 
    struct sensor_struct *sens_struct = (struct sensor_struct *) arg;
-   //fprintf(stdout,"Calling thread server\n");
-   //fprintf(stdout,"Parameter %s\n",sens_struct->file_name_sensor_stats);
    
    if (sens_struct->reset_onstart)
 	remove(sens_struct->file_name_sensor_stats);
     
-   // initializing pointers
    reset_sensor_struct_and_raw_stats_file(sens_struct);
 
-   // setup start time and synchronize current_time 
    setup_and_synchronize_start_time(sens_struct);
 
-   // setting up pointers	
    setup_time_windows(sens_struct);
 
-   //1_todo: create database cache table -- table name= sensor_<metric>	
-	
-   //display_windows_metrics(&sens_struct);
+   create_metric_stat_table(sens_struct);
 
    //while (1) TEST_ 
    while (counter--) 
     {
-    // next serial timestamp 
     increment_num_interval(sens_struct);
 	
     compute_and_display_current_time_stamp(sens_struct);
@@ -132,9 +62,14 @@ thread_serve (void *arg)
     produce_and_append_next_sample_to_raw_file(&availability_struct,sens_struct);
      
     shift_windows_set(&availability_struct,sens_struct); 
-    //2_todo: store local metrics in the database cache table -- recuperare dall'hostname l'IDhost 
 
-    //3_todo: conditional external metrics aggregation in the database cache table curl-based	
+    store_metrics_into_tmp_stats_table(sens_struct);
+
+    if (sens_struct->federation)
+    	federating_aggregated_sensor_stats(sens_struct);
+     
+    //rename_tmp_stats_table_into_final_table(sens_struct); 
+    	  
     sleep(sens_struct->time_interval);
     }
     
@@ -151,7 +86,19 @@ int sensor_specific_thread()
 
 int increment_num_interval(struct sensor_struct *sens_struct)
 {
+    // next serial timestamp 
     sens_struct->num_interval= sens_struct->num_interval + 1;	
+   return 0;
+}
+
+int create_metric_stat_table(struct sensor_struct *sens_struct)
+{
+   char query_create_table[2048];
+   snprintf(query_create_table,sizeof(query_create_table),QUERY_CREATE_METRIC_TABLE,sens_struct->sensor_name,sens_struct->sensor_name); 
+   if (transaction_based_query(query_create_table, QUERY8, QUERY4))
+   	pmesg(LOG_WARNING,__FILE__,__LINE__,"Table for sensor %s already existing\n",sens_struct->sensor_name);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"New table for sensor %s ok!\n",sens_struct->sensor_name);
+   //display_windows_metrics(&sens_struct);
    return 0;
 }
 
@@ -185,9 +132,9 @@ int display_windows_pointers(struct sensor_struct *sens_struct)
    return 0;
 }
 
-//int shift_windows_set(struct stats_struct *availability_struct,struct sensor_struct *sens_struct, long long int num_interval)
 int shift_windows_set(struct stats_struct *availability_struct,struct sensor_struct *sens_struct)
 {
+    char query_stats[1024];
     int i;
 
     for (i=0 ; i<sens_struct->windows_number; i++)
@@ -234,7 +181,42 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
     		pmesg(LOG_DEBUG,__FILE__,__LINE__,"|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,sens_struct->windows_pointers[i],availability_struct->metrics,sens_struct->aggregated_values[i],sens_struct->windows_length[i], sens_struct->window_avg_values_o[i],sens_struct->window_avg_values_p[i]);
 
    		}
+
+
     return 0;
+}
+
+int rename_tmp_stats_table_into_final_table(struct sensor_struct *sens_struct)
+{
+    char query_stats[1024];
+
+    snprintf(query_stats,sizeof(query_stats),QUERY_RENAME_METRIC_TABLE,sens_struct->sensor_name,sens_struct->sensor_name,sens_struct->sensor_name); 
+    if (transaction_based_query(query_stats, QUERY8, QUERY4))
+   	pmesg(LOG_ERROR,__FILE__,__LINE__,"Error renaming the new stats table for sensor [%s] - query [%s]\n",sens_struct->sensor_name, query_stats);
+    pmesg(LOG_DEBUG,__FILE__,__LINE__,"New stats table successfully renamed for sensor %s!\n",sens_struct->sensor_name);
+    return 0;
+}
+
+int store_metrics_into_tmp_stats_table(struct sensor_struct *sens_struct)
+{
+    char query_insert_stats[1024];
+    char query_update_stats[1024];
+
+    snprintf(query_insert_stats,sizeof(query_insert_stats),QUERY_INSERT_METRIC_TABLE,sens_struct->sensor_name,ESGF_HOSTNAME,sens_struct->sensor_name,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5]); 
+
+   if (transaction_based_query(query_insert_stats, QUERY8, QUERY4))
+	{
+   	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Error inserting the new stats (o,p) for sensor %s  - query [%s]\n",sens_struct->sensor_name, query_insert_stats);
+    	snprintf(query_update_stats,sizeof(query_update_stats),QUERY_UPDATE_METRIC_TABLE,sens_struct->sensor_name,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5],ESGF_HOSTNAME,sens_struct->sensor_name); 
+   	if (transaction_based_query(query_update_stats, QUERY8, QUERY4))
+   		pmesg(LOG_ERROR,__FILE__,__LINE__,"Error adding & updating the new stats (o,p) for sensor %s  - query [%s]\n",sens_struct->sensor_name, query_update_stats);
+	else
+   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"New stats (o,p) for sensor %s successfully updated!\n",sens_struct->sensor_name);
+	} 
+	else
+   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"New stats (o,p) for sensor %s successfully added!\n",sens_struct->sensor_name);
+
+   return 0;
 }
 
 int display_windows_metrics(struct sensor_struct *sens_struct)
@@ -262,6 +244,7 @@ int create_raw_file_if_not_existing(char* filename)
     return 0;
 }
 
+// setting up pointers	
 int setup_time_windows(struct sensor_struct *sens_struct)
 {
     FILE *binaryFile;
@@ -307,6 +290,7 @@ int setup_time_windows(struct sensor_struct *sens_struct)
     return 0;
 }
 
+// setup start time and synchronize current_time 
 int setup_and_synchronize_start_time(struct sensor_struct *sens_struct)
 {
     FILE *binaryFile;
@@ -357,6 +341,7 @@ int setup_and_synchronize_start_time(struct sensor_struct *sens_struct)
     return 0; 
 } 
 
+// initializing pointers
 int reset_sensor_struct_and_raw_stats_file(struct sensor_struct *sens_struct)
 {
     int i;
@@ -375,17 +360,6 @@ int reset_sensor_struct_and_raw_stats_file(struct sensor_struct *sens_struct)
     return 0; 
 } 
 
-/*int setup_host_based_aggregation_table
-CREATE TABLE service_instance (
-    id integer NOT NULL,
-    port bigint NOT NULL,
-    name character varying(255),
-    institution character varying(255),
-    mail_admin character varying(255),
-    idhost bigint NOT NULL,
-    UNIQUE(port,idhost)
-);*/
-
 // todo: dovrebbe restituire il numero di sensori rilevati dal file di configurazione 
 int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
 {
@@ -401,22 +375,17 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable), ""); 
     sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     sens_struct->ext_sensor=0;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
-    sens_struct->aggregation=0;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
+    sens_struct->federation=0;  			// it relates to the federation mechanism. Default 0=no, 1=yes 
     sens_struct->time_interval=300;			// default 5 minutes	
-    sens_struct->windows_number=6;  	// number of time_windows to be managed 
-    sens_struct->windows_limits[0]=1;
-    sens_struct->windows_limits[1]=2;
-    sens_struct->windows_limits[2]=4;
-    sens_struct->windows_limits[3]=8;
-    sens_struct->windows_limits[4]=16;
-    sens_struct->windows_limits[5]=32;
+    sens_struct->windows_number=6;  	// PRODUCTION_ number of time_windows to be managed 
+    sens_struct->windows_limits[0]=1;   // TEST_
+    sens_struct->windows_limits[1]=2;   // TEST_
+    sens_struct->windows_limits[2]=4;   // TEST_
+    sens_struct->windows_limits[3]=8;   // TEST_
+    sens_struct->windows_limits[4]=16;  // TEST_
+    sens_struct->windows_limits[5]=32;  // TEST_ 
 	// PRODUCTION_
     /*
-    sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
-    sens_struct->ext_sensor=0;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
-    sens_struct->aggregation=0;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
-    sens_struct->time_interval=300;			// 5 minutes
-    sens_struct->windows_number=6;  			// number of time_windows to be managed 
     sens_struct->windows_limits[0]=1;
     sens_struct->windows_limits[1]=12;
     sens_struct->windows_limits[2]=12*24;
@@ -452,7 +421,6 @@ int display_file(FILE* file)
 
 int read_stats_from_file(FILE* file , struct stats_struct *stats_data)
 {
-    // todo check on return value of fread
     if (!fread(stats_data, sizeof(struct stats_struct), 1, file))
 	return -1;	
     return 0;
@@ -460,8 +428,8 @@ int read_stats_from_file(FILE* file , struct stats_struct *stats_data)
 
 int read_start_from_file(FILE* file , struct start_stats_struct *stats_data)
 {
-    // todo check on return value of fread
-    fread(stats_data, sizeof(struct start_stats_struct), 1, file);
+    if (!fread(stats_data, sizeof(struct start_stats_struct), 1, file))
+	return -1;
     return 0;
 }
 
@@ -577,8 +545,160 @@ long long int parse_xml_search_file(char* tmp_file)
   return num_rec_d; 
 }
 
+int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
+{
+	PGconn *conn;
+	PGresult *res;
+	char conninfo[1024] = {'\0'};
+	long int numTuples;
+	long long int t,w; // w is the action
+	int ret_code, nFields;
+  	char peername[512] = { '\0' };
 
-//int get_search_metrics(struct sensor_struct *sens_struct)
+	// OPEN CONNECTION  
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federating aggregated sensor stats process START\n");
+
+        snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+	conn = PQconnectdb ((const char *) conninfo);
+
+	if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Federating aggregated sensor stats: Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -1;
+        }
+
+	// SELECT START 
+
+	res = PQexec(conn,QUERY_LIST_ACTIVE_HOSTS);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"Federating aggregated sensor stats: SELECT host list FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of fields/entries for the federation stats process to be contacted [%ld,%d] \n",nFields,numTuples);
+
+	for(t = 0; t < numTuples; t ++) 
+		{
+		 char remove_stats_feddw[1024] = { '\0' };
+  		 char update_query_timestamp_counter_aggr[1024] = { '\0' };
+  		 char get_last_id_query[1024] = { '\0' };
+		 long int last_id_feddw;
+
+  		 last_id_feddw = 0;
+		 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
+ 		 //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing sensor [%s] for entry [%s]\n",sens_struct->sensor_name, peername);
+		 harvest_aggregated_stats(conn,sens_struct->sensor_name, peername);
+		 /*if (w==-1) {
+ 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw\n",peername);
+		remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
+			}
+		 if (w==0) {
+ 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch (non-transact)\n",peername);
+		remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
+		harvest_stats_planB(conn,peername);
+			}
+		 if (w==1) {
+ 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = skipping node\n",peername);
+			}
+		*/
+		}
+
+	// CLOSE CONNECTION  
+	PQclear(res);
+    	PQfinish(conn);
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federating aggregated sensor stats process END\n");
+
+  return 0;
+}
+
+int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername)
+{
+  CURL *curl;
+  PGresult *res;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;  
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char url_action[10024];
+  char file_stats[1024];
+  long int i;
+  int right_url;  
+
+  snprintf (url_action, sizeof (url_action),URL_AGGREGATED_STATS,peername, sensor_name,peername);
+  snprintf (file_stats, sizeof (file_stats),".stats_%s_%s",sensor_name,peername);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Contacting [sensor=%s;hostname=%s;filestats=%s]\n",sensor_name,peername,file_stats);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Contacting [sensor=%s;hostname=%s;urlaction=%s]\n",sensor_name,peername,url_action);
+
+  tmp=fopen(file_stats, "w");
+  if(tmp==NULL) 
+	{
+    	 pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file .stats_<sensor_name><peername>\n");
+    	 return -2; 
+  	}
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+  if(curl_res) 
+   	{
+    	pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting [%s] or downloading stats\n",peername);
+  	remove(file_stats);
+    	fclose(tmp);
+    	curl_easy_cleanup(curl);
+    	return -1;
+   	}	
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  file=fopen(file_stats, "r");
+
+  if (file == NULL)    
+       	{
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Error opening file\n");
+    	return -1;
+     	} 
+  i=0;
+  right_url = 1; 
+  char line [ 1024 ];
+
+  while ( (fgets ( line, sizeof line, file ) != NULL) && (right_url) ) 
+       	{
+  		char insert_remote_stat[10024] = { '\0' };
+		i++;
+		if (i==1)
+        	{
+		   if (strcmp(line,"METRICSSTATS\n"))
+			right_url=0;	
+		   continue;
+        	} 
+    		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_AGGREGATED_STATS,sensor_name,line);
+	
+  		res = PQexec(conn, insert_remote_stat);
+
+  		if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+                	pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert in federated aggregated stats failed [%s]\n",insert_remote_stat);
+
+  		PQclear(res);
+       	} 
+  
+  fclose ( file );
+  remove(file_stats);
+  
+ return 0;
+}
+
 int get_search_metrics(char* name, char* query)
 {
   xmlDoc *doc = NULL;

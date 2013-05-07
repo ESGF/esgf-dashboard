@@ -15,7 +15,7 @@ struct stats_struct
 
 struct start_stats_struct 
 {
- time_t start_time; // number of 5min intervals from the time0 (first run) 
+ time_t start_time; 
 };
 
 struct sensor_struct 
@@ -27,7 +27,7 @@ struct sensor_struct
     int windows_number;
     int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     int ext_sensor;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
-    int aggregation;  			// it relates to the aggregation mechanism. Default 0=no, 1=yes 
+    int federation;  			// it relates to the federation mechanism. Default 0=no, 1=yes 
     char sensor_type[BUFCHAR_MAX];		// entry among squared brackets in the config file
     char sensor_name[BUFCHAR_MAX];		// entry among squared brackets in the config file
     char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 

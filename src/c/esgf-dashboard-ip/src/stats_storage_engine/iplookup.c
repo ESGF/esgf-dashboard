@@ -58,7 +58,7 @@ main (int argc, char *argv[])
   char sensor_file[256] = { '\0' };
   char buffer[256] = { '\0' };
 
-  snprintf (sensor_file,sizeof(sensor_file),"ip.txt");
+  snprintf (sensor_file,sizeof(sensor_file),"/root/Desktop/ip.txt");
 
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", sensor_file);
   fprintf(stdout,"[START] %s\n", sensor_file);
@@ -77,7 +77,8 @@ main (int argc, char *argv[])
      		fprintf (stdout, "Exit code for esgf-lookup [%d]\n", code);
         else 	
         {
-  /*if (geo_outputmask & OUTPUT_COUNTRY_CODE)
+  /*
+  if (geo_outputmask & OUTPUT_COUNTRY_CODE)
     fprintf (stdout, "%s |", geo_output.country_code);
   if (geo_outputmask & OUTPUT_REGION)
     fprintf (stdout, "%s |", geo_output.region);
@@ -88,7 +89,9 @@ main (int argc, char *argv[])
   if (geo_outputmask & OUTPUT_LATITUDE)
     fprintf (stdout, "%f ", geo_output.latitude);
   if (geo_outputmask & OUTPUT_LONGITUDE)
-    fprintf (stdout, "%f\n", geo_output.longitude);
+    fprintf (stdout, "%f ", geo_output.longitude);
+  if (geo_outputmask & OUTPUT_COUNTRY_CODE)
+    fprintf (stdout, "%s \n", geo_output.country_code);
  /* if (geo_outputmask & OUTPUT_METROCODE)
     fprintf (stdout, "%d |", geo_output.metro_code);
   if (geo_outputmask & OUTPUT_AREACODE)
