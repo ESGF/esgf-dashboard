@@ -226,6 +226,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	    if (i>0) {  
 	    	reconciliation_process_planB();
 		compute_aggregate_data_user_metrics();	
+  		compute_remote_clients_data_mart();
 		if (FEDERATED_STATS) 
 			federation_level_aggregation_metrics_planB();
 		}
@@ -236,6 +237,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 
 	return NULL;
 }
+
+
 
 int compute_aggregate_data_user_metrics()
 {
@@ -474,6 +477,7 @@ main (int argc, char **argv)
 
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
+  compute_remote_clients_data_mart();
   if (FEDERATED_STATS)
 	federation_level_aggregation_metrics_planB();
 

@@ -27,9 +27,10 @@ struct sensor_struct
     int windows_number;
     int reset_onstart;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     int ext_sensor;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
-    int federation;  			// it relates to the federation mechanism. Default 0=no, 1=yes 
-    char sensor_type[BUFCHAR_MAX];		// entry among squared brackets in the config file
-    char sensor_name[BUFCHAR_MAX];		// entry among squared brackets in the config file
+    int federation;  			// it relates to the federation mechanism. Default 0=no, 1=point to point (1 row per host), 2 single point (all row from single host) 
+    char sensor_type[BUFCHAR_MAX];		// type of the sensor (cpu, memory, availability) 
+    char sensor_name[BUFCHAR_MAX];		// name of the sensor (it is the key in the info properties file)
+    char sensor_table[BUFCHAR_MAX];		// table name in the database for the sensor information 
     char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 
     char sensor_executable[BUFCHAR_EXEC_MAX];	// executable for sensors
     char sensor_args[BUFCHAR_MAX];	// args for executable for sensors

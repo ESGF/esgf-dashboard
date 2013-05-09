@@ -63,13 +63,11 @@ thread_serve (void *arg)
      
     shift_windows_set(&availability_struct,sens_struct); 
 
-    store_metrics_into_tmp_stats_table(sens_struct);
+    store_metrics_into_stats_table(sens_struct);
 
     if (sens_struct->federation)
     	federating_aggregated_sensor_stats(sens_struct);
      
-    //rename_tmp_stats_table_into_final_table(sens_struct); 
-    	  
     sleep(sens_struct->time_interval);
     }
     
@@ -94,10 +92,10 @@ int increment_num_interval(struct sensor_struct *sens_struct)
 int create_metric_stat_table(struct sensor_struct *sens_struct)
 {
    char query_create_table[2048];
-   snprintf(query_create_table,sizeof(query_create_table),QUERY_CREATE_METRIC_TABLE,sens_struct->sensor_name,sens_struct->sensor_name); 
+   snprintf(query_create_table,sizeof(query_create_table),QUERY_CREATE_METRIC_TABLE,sens_struct->sensor_table,sens_struct->sensor_name); 
    if (transaction_based_query(query_create_table, QUERY8, QUERY4))
    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Table for sensor %s already existing\n",sens_struct->sensor_name);
-   pmesg(LOG_DEBUG,__FILE__,__LINE__,"New table for sensor %s ok!\n",sens_struct->sensor_name);
+   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Table setup for sensor %s ok!\n",sens_struct->sensor_name);
    //display_windows_metrics(&sens_struct);
    return 0;
 }
@@ -186,7 +184,8 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
     return 0;
 }
 
-int rename_tmp_stats_table_into_final_table(struct sensor_struct *sens_struct)
+// no longer used in the thread activity
+/*int rename_tmp_stats_table_into_final_table(struct sensor_struct *sens_struct)
 {
     char query_stats[1024];
 
@@ -195,19 +194,19 @@ int rename_tmp_stats_table_into_final_table(struct sensor_struct *sens_struct)
    	pmesg(LOG_ERROR,__FILE__,__LINE__,"Error renaming the new stats table for sensor [%s] - query [%s]\n",sens_struct->sensor_name, query_stats);
     pmesg(LOG_DEBUG,__FILE__,__LINE__,"New stats table successfully renamed for sensor %s!\n",sens_struct->sensor_name);
     return 0;
-}
+}*/
 
-int store_metrics_into_tmp_stats_table(struct sensor_struct *sens_struct)
+int store_metrics_into_stats_table(struct sensor_struct *sens_struct)
 {
     char query_insert_stats[1024];
     char query_update_stats[1024];
 
-    snprintf(query_insert_stats,sizeof(query_insert_stats),QUERY_INSERT_METRIC_TABLE,sens_struct->sensor_name,ESGF_HOSTNAME,sens_struct->sensor_name,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5]); 
+    snprintf(query_insert_stats,sizeof(query_insert_stats),QUERY_INSERT_METRIC_TABLE,sens_struct->sensor_table,ESGF_HOSTNAME,sens_struct->sensor_name,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5]); 
 
    if (transaction_based_query(query_insert_stats, QUERY8, QUERY4))
 	{
    	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Error inserting the new stats (o,p) for sensor %s  - query [%s]\n",sens_struct->sensor_name, query_insert_stats);
-    	snprintf(query_update_stats,sizeof(query_update_stats),QUERY_UPDATE_METRIC_TABLE,sens_struct->sensor_name,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5],ESGF_HOSTNAME,sens_struct->sensor_name); 
+    	snprintf(query_update_stats,sizeof(query_update_stats),QUERY_UPDATE_METRIC_TABLE,sens_struct->sensor_table,sens_struct->window_avg_values_o[0],sens_struct->window_avg_values_o[1],sens_struct->window_avg_values_o[2],sens_struct->window_avg_values_o[3],sens_struct->window_avg_values_o[4],sens_struct->window_avg_values_o[5],sens_struct->window_avg_values_p[0],sens_struct->window_avg_values_p[1],sens_struct->window_avg_values_p[2],sens_struct->window_avg_values_p[3],sens_struct->window_avg_values_p[4],sens_struct->window_avg_values_p[5],ESGF_HOSTNAME,sens_struct->sensor_name); 
    	if (transaction_based_query(query_update_stats, QUERY8, QUERY4))
    		pmesg(LOG_ERROR,__FILE__,__LINE__,"Error adding & updating the new stats (o,p) for sensor %s  - query [%s]\n",sens_struct->sensor_name, query_update_stats);
 	else
@@ -370,6 +369,7 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     //snprintf(sens_struct->sensor_name,sizeof(sens_struct->sensor_name),"availability"); 
     //snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable),"executable availability"); 
     //snprintf(sens_struct->file_name_sensor_stats,sizeof(sens_struct->file_name_sensor_stats),FILE_NAME_STATS,sens_struct->sensor_name); 
+    snprintf(sens_struct->sensor_table,sizeof(sens_struct->sensor_table), sens_struct->sensor_name); 
     snprintf(sens_struct->sensor_args,sizeof(sens_struct->sensor_args), ""); 
     snprintf(sens_struct->sensor_type,sizeof(sens_struct->sensor_type), ""); 
     snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable), ""); 
@@ -586,28 +586,9 @@ int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
 
 	for(t = 0; t < numTuples; t ++) 
 		{
-		 char remove_stats_feddw[1024] = { '\0' };
-  		 char update_query_timestamp_counter_aggr[1024] = { '\0' };
-  		 char get_last_id_query[1024] = { '\0' };
-		 long int last_id_feddw;
-
-  		 last_id_feddw = 0;
 		 snprintf (peername,sizeof (peername),"%s",PQgetvalue(res, t, 0));
  		 //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing sensor [%s] for entry [%s]\n",sens_struct->sensor_name, peername);
-		 harvest_aggregated_stats(conn,sens_struct->sensor_name, peername);
-		 /*if (w==-1) {
- 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw\n",peername);
-		remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
-			}
-		 if (w==0) {
- 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch (non-transact)\n",peername);
-		remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
-		harvest_stats_planB(conn,peername);
-			}
-		 if (w==1) {
- 	 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = skipping node\n",peername);
-			}
-		*/
+		 harvest_aggregated_stats(conn,sens_struct->sensor_name, peername, sens_struct->sensor_table);
 		}
 
 	// CLOSE CONNECTION  
@@ -619,7 +600,7 @@ int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
   return 0;
 }
 
-int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername)
+int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername, char* table_name)
 {
   CURL *curl;
   PGresult *res;
@@ -683,7 +664,7 @@ int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername)
 			right_url=0;	
 		   continue;
         	} 
-    		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_AGGREGATED_STATS,sensor_name,line);
+    		snprintf (insert_remote_stat, sizeof (insert_remote_stat),INSERT_AGGREGATED_STATS,table_name,line);
 	
   		res = PQexec(conn, insert_remote_stat);
 
@@ -698,6 +679,141 @@ int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername)
   
  return 0;
 }
+
+double get_cpu_metrics(char* sensor_args)
+{
+ // retrieving CPU load average metrics
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_cpu_metric_insert[2048] = { '\0' };
+  char loadavg1[256] = { '\0' };
+  char loadavg5[256] = { '\0' };
+  char loadavg15[256] = { '\0' };
+  int ret_code;
+
+  sprintf (esgf_nodetype_filename, "/proc/loadavg");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Open /proc/loadavg failed\n");
+    return -1;
+  }
+
+  if ((fscanf (file, "%s", loadavg1)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg1 failed\n");
+    return -1;
+  }
+  if ((fscanf (file, "%s", loadavg5)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg5 failed\n");
+    return -1;
+  }
+  if ((fscanf (file, "%s", loadavg15)) == EOF)
+  {
+    pmesg(LOG_ERROR,__FILE__,__LINE__,"Read /proc/loadavg loadavg15 failed\n");
+    return -1;
+  }
+
+  fclose (file);
+  if (!strcmp(sensor_args,"last1min")) 
+	return atof(loadavg1);
+  if (!strcmp(sensor_args,"last5min")) 
+	return atof(loadavg5);
+  if (!strcmp(sensor_args,"last15min")) 
+	return atof(loadavg15);
+}
+
+int get_memory_metrics(char* sensor_args)
+{
+ // retrieving memory (swap/ram) metrics
+
+  char esgf_nodetype_filename[256] = { '\0' };
+  char query_memory_metric_insert[2048] = { '\0' };
+  char freeram[256] = { '\0' };
+  char totram[256] = { '\0' };
+  char freeswap[256] = { '\0' };
+  char totswap[256] = { '\0' };
+  long int fram,tram,fswap,tswap,uram,uswap;
+  int ret_code;
+  int i=0;
+  int j=0;
+  char line [ 1024 ];
+
+  sprintf (esgf_nodetype_filename, "/proc/meminfo");
+  FILE *file = fopen (esgf_nodetype_filename, "r");
+
+  if (file == NULL)		
+    return -1;
+
+ while ( fgets ( line, sizeof line, file ) != NULL ) 
+       {
+        char value_buffer[256] = { '\0' };
+        char *position;
+        position = strchr (line, ':');
+        if (position != NULL)     // the ':' has been found
+        {
+          	strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE
+          	*position = '\0';     // now buffer stores the ATTRIBUTE
+	}
+
+  	char * pch= NULL;
+  	pch = strtok (value_buffer," ");
+	if (!strcmp(line,"MemTotal"))	
+           {
+    		snprintf(totram, sizeof(totram),"%s",pch);
+		tram=atol(totram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"MemFree"))	
+           {
+    		snprintf(freeram, sizeof(freeram),"%s",pch);
+		fram=atol(freeram);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapTotal"))	
+           {
+    		snprintf(totswap, sizeof(totswap),"%s",pch);
+		tswap=atol(totswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+	if (!strcmp(line,"SwapFree"))	
+           {
+ 		snprintf(freeswap, sizeof(freeswap),"%s",pch);
+		fswap=atol(freeswap);
+		//fprintf(stdout,"valori memoria [%s] [%s] [%s]\n",line, value_buffer,pch);
+	   }
+       }
+ fclose ( file );
+
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%s] [%s] SWAP [%s] [%s]\n", totram,freeram,totswap, freeswap);
+ //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Memory metrics RAM [%ld] [%ld] SWAP [%ld] [%ld]\n", tram,fram,tswap,fswap);
+
+ uram = tram-fram;
+ uswap= tswap-fswap;
+ if (!strcmp(sensor_args,"freeram")) 
+	return atof(freeram);
+ if (!strcmp(sensor_args,"freeswap")) 
+	return atof(freeswap);
+ if (!strcmp(sensor_args,"totram")) 
+	return atof(totram);
+ if (!strcmp(sensor_args,"totswap")) 
+	return atof(totswap);
+ if (!strcmp(sensor_args,"usedram")) 
+	return ((double) uram);
+ if (!strcmp(sensor_args,"usedswap")) 
+	return ((double) uswap);
+ if (!strcmp(sensor_args,"freeram%")) 
+	return ((double) (fram/tram));
+ if (!strcmp(sensor_args,"freeswap%")) 
+	return ((double) (fswap/tswap));
+ if (!strcmp(sensor_args,"usedram%")) 
+	return ((double) (uram/tram));
+ if (!strcmp(sensor_args,"usedswap%")) 
+	return ((double) (uswap/tswap));
+ return 0;
+}
+
 
 int get_search_metrics(char* name, char* query)
 {
@@ -764,6 +880,10 @@ int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability
     	availability_struct->intervals=sens_struct->num_interval;
 	if (!(strcmp(sens_struct->sensor_type,"search")))	
 		availability_struct->metrics= (double) get_search_metrics(sens_struct->sensor_name, sens_struct->sensor_executable);
+	if (!(strcmp(sens_struct->sensor_type,"cpu")))	
+		availability_struct->metrics= (double) get_cpu_metrics(sens_struct->sensor_args);
+	if (!(strcmp(sens_struct->sensor_type,"memory")))	
+		availability_struct->metrics= (double) get_memory_metrics(sens_struct->sensor_args);
 	if (!(strcmp(sens_struct->sensor_type,"availability")))	
     		availability_struct->metrics= sens_struct->num_interval; 
 
@@ -907,6 +1027,11 @@ int read_sensors_list_from_file(struct sensor_struct *sens_struct)
             {
 		sens_struct[curr_sensor].time_interval=atoll(value_buffer);
 		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor time_interval [%lld])\n",curr_sensor,(sens_struct[curr_sensor]).time_interval);
+            }
+          if (!(strcmp (buffer, "table")))
+            {
+		snprintf((sens_struct[curr_sensor]).sensor_table,sizeof((sens_struct[curr_sensor]).sensor_table),value_buffer);
+		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor table [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_table);
             }
           if (!(strcmp (buffer, "exec")))
             {

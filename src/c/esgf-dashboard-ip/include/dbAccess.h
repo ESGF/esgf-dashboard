@@ -175,12 +175,18 @@
 #define QUERY_INSERT_METRIC_TABLE "insert into esgf_dashboard.sensor_table_%s (host_name,sensor_name,last5m_o, last1h_o, last1d_o, last1w_o, last1m_o, last1y_o, last5m_p, last1h_p, last1d_p, last1w_p, last1m_p, last1y_p) values('%s','%s',%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f,%4.2f);"
 
 #define QUERY_UPDATE_METRIC_TABLE "update esgf_dashboard.sensor_table_%s set last5m_o=%4.2f, last1h_o=%4.2f, last1d_o=%4.2f, last1w_o=%4.2f, last1m_o=%4.2f, last1y_o=%4.2f, last5m_p=%4.2f, last1h_p=%4.2f, last1d_p=%4.2f, last1w_p=%4.2f, last1m_p=%4.2f, last1y_p=%4.2f, time_stamp=now() where host_name='%s' and sensor_name='%s';"
-
-#define QUERY_RENAME_METRIC_TABLE "drop table if exists esgf_dashboard.sensor_table_%s; alter table esgf_dashboard.sensor_table_%s_tmp rename to sensor_table_%s;"
+// no longer used
+//#define QUERY_RENAME_METRIC_TABLE "drop table if exists esgf_dashboard.sensor_table_%s; alter table esgf_dashboard.sensor_table_%s_tmp rename to sensor_table_%s;"
 
 #define QUERY_LIST_ACTIVE_HOSTS "SELECT h.name, h.ip FROM esgf_dashboard.host h INNER JOIN esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN esgf_dashboard.uses u ON u.idServiceInstance=s.id INNER JOIN esgf_dashboard.project_dash p ON p.id=u.idProject WHERE u.endDate IS NULL AND p.endDate IS NULL GROUP BY h.ip, h.name ORDER BY h.ip;"
 
 // END QUERIES FOR NEW STATS ENGINE
+
+// START QUERIES FOR NEW DATA MARTS
+#define QUERY_CREATE_CLIENT_DATAMART "drop table if exists esgf_dashboard.client_stats_dm; CREATE TABLE esgf_dashboard.client_stats_dm (host character varying(255),lat numeric(9,6),lon numeric(9,6),country character varying(64),numclient integer);"
+#define QUERY_GET_LIST_CLIENT_IPS "select distinct(remote_addr) as remote_addr from esgf_node_manager.access_logging;"
+#define QUERY_INSERT_CLIENT_INFO "insert into esgf_dashboard.client_stats_dm (host,lat,lon,country,numclient) values('%s',%f,%f,'%s',1);"
+// END QUERIES FOR NEW DATA MARTS
 
 // --------------------------------------------------------
 

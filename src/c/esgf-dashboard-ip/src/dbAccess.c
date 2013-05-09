@@ -894,6 +894,86 @@ int reconciliation_process_planB()
  	return 0;
 }
 
+int compute_remote_clients_data_mart()
+{
+	PGconn *conn;
+	PGresult *res;
+	PGresult *res2;
+	long int numTuples;
+	long long int lastimport_id;
+	int ret_code, nFields;
+	char conninfo[1024] = {'\0'};
+  	char attributes_list[2048] = { '\0' };
+  	char attributes_list_temp[2048] = { '\0' };
+	int code;
+  	struct geo_output_struct geo_output;
+  	int geo_outputmask=255;
+  	char buffer[256] = { '\0' };
+        int t;
+
+	//QUERY_GET_LIST_CLIENT_IPS
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - Building new client data mart (once a day)\n");
+      	if (ret_code=transaction_based_query(QUERY_CREATE_CLIENT_DATAMART,QUERY8, QUERY4))
+		{
+		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Building new client data mart FAILED! [Code %d]\n",ret_code);
+		  return ret_code;
+		}
+
+	// OPEN CONNECTION  
+        snprintf (conninfo, sizeof (conninfo), CONNECTION_STRING, POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+	conn = PQconnectdb ((const char *) conninfo);
+
+	if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+		PQfinish(conn);
+		return -10;
+        }
+	// SELECT START 
+	res = PQexec(conn,QUERY_GET_LIST_CLIENT_IPS);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -11;
+    	}
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of remote client entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	for(t = 0; t < numTuples; t ++) {
+			// tuple level geoip resolv
+  			char insert_query_client_dm[10024] = { '\0' };
+  			char ip_str[1024] = { '\0' };
+
+			snprintf (ip_str,sizeof (ip_str),"%s",PQgetvalue(res, t, 0));
+
+  			if (code = esgf_geolookup (ip_str,&geo_output))
+        			fprintf (stdout, "Exit code for esgf-lookup [%d]\n", code);
+
+			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, geo_output.latitude, geo_output.longitude,geo_output.country_code);
+  			res2 = PQexec(conn, insert_query_client_dm);
+
+  			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+    				{
+	        		pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in local client data mart failed\n");
+	        		PQclear(res2);
+				return -4;
+    				}
+  			PQclear(res2);
+	}
+
+	PQclear(res);
+
+	// CLOSE CONNECTION  
+    	PQfinish(conn);
+
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"END - Building new client data mart (once a day)\n");
+ 	return 0;
+}
+
 /*int reconciliation_process()
 {
 	PGconn *conn;

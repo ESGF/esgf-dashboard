@@ -57,11 +57,11 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
 
   sprintf (geoipdat, "%s/share/GeoIP/%s", GEOIP_DATA_PATH, GEOIPIDATABASE);
 
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Loading GeoLiteCity from %s...\n",geoipdat);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Loading GeoLiteCity from %s...\n",geoipdat);
   if (gi = GeoIP_open (geoipdat, GEOIP_STANDARD))
     {
       i = GeoIP_database_edition (gi);
-      pmesg(LOG_DEBUG,__FILE__,__LINE__," GeoIP database found [Ok]\n");
+      //pmesg(LOG_DEBUG,__FILE__,__LINE__," GeoIP database found [Ok]\n");
       if (ret_code = geoiplookup (gi, hostname, i, geo_output))
 	{
 	GeoIP_delete (gi);
@@ -76,7 +76,7 @@ esgf_geolookup (char *hostname, struct geo_output_struct *geo_output)
     }
 
   GeoIP_delete (gi);
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Geoiplookup ok [code=%d]\n", ret_code);
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Geoiplookup ok [code=%d]\n", ret_code);
   return 0;
 }
 
