@@ -6,17 +6,22 @@
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include "libpq-fe.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../include/stats.h"
 #include "../include/dbAccess.h"
 #include "../include/debug.h"
 #include "../include/config.h"
+#include "../include/ping.h"
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 
 int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_struct)
 {
    int i,j;
+   return 0;
    for (i=0; i<num_sensors;i++)
 	{
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor name [%s])\n",i,(sens_struct[i]).sensor_name);
@@ -71,7 +76,7 @@ thread_serve (void *arg)
     sleep(sens_struct->time_interval);
     }
     
-   display_windows_pointers(sens_struct);
+   //display_windows_pointers(sens_struct);
    close_windows_FILE_pointers(sens_struct);
 
  return 0;
@@ -92,7 +97,7 @@ int increment_num_interval(struct sensor_struct *sens_struct)
 int create_metric_stat_table(struct sensor_struct *sens_struct)
 {
    char query_create_table[2048];
-   snprintf(query_create_table,sizeof(query_create_table),QUERY_CREATE_METRIC_TABLE,sens_struct->sensor_table,sens_struct->sensor_name); 
+   snprintf(query_create_table,sizeof(query_create_table),QUERY_CREATE_METRIC_TABLE,sens_struct->sensor_table); 
    if (transaction_based_query(query_create_table, QUERY8, QUERY4))
    	pmesg(LOG_WARNING,__FILE__,__LINE__,"Table for sensor %s already existing\n",sens_struct->sensor_name);
    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Table setup for sensor %s ok!\n",sens_struct->sensor_name);
@@ -106,8 +111,8 @@ int compute_and_display_current_time_stamp(struct sensor_struct *sens_struct)
 
     sens_struct->current_time = sens_struct->current_time + sens_struct->time_interval;
     c_time_string = ctime(&(sens_struct->current_time));
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"***************************************************\n");
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Regular current time for stats is %s", c_time_string);
+    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"***************************************************\n");
+    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Regular current time for stats is %s", c_time_string);
    return 0;
 }
 
@@ -144,7 +149,7 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
 		sens_struct->aggregated_values[i]+=(availability_struct->metrics);	
    		sens_struct->window_avg_values_p[i]=sens_struct->aggregated_values[i]/sens_struct->windows_limits[i];
    		sens_struct->window_avg_values_o[i]=sens_struct->aggregated_values[i]/sens_struct->windows_length[i];
-    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"|A->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,sens_struct->windows_pointers[i],availability_struct->metrics,sens_struct->aggregated_values[i],sens_struct->windows_length[i], sens_struct->window_avg_values_o[i],sens_struct->window_avg_values_p[i]);
+    		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"|A->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,sens_struct->windows_pointers[i],availability_struct->metrics,sens_struct->aggregated_values[i],sens_struct->windows_length[i], sens_struct->window_avg_values_o[i],sens_struct->window_avg_values_p[i]);
 		}
 		else 
     		{ 
@@ -155,12 +160,12 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
 			if (sens_struct->windows_length[i] == sens_struct->windows_limits[i])   
 				{
  			   	sens_struct->windows_pointers[i]++;
-				pmesg(LOG_DEBUG,__FILE__,__LINE__,"Regular window\n");
+				//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Regular window\n");
 				}
 			else 
 				if ((sens_struct->num_interval-sens_struct->windows_pointers[i])==sens_struct->windows_limits[i])
 					{
-					pmesg(LOG_DEBUG,__FILE__,__LINE__, "Non regular window!\n");	
+					//pmesg(LOG_DEBUG,__FILE__,__LINE__, "Non regular window!\n");	
 					sens_struct->windows_pointers[i]=sens_struct->stats_array[i].intervals;
 					}
 
@@ -176,7 +181,7 @@ int shift_windows_set(struct stats_struct *availability_struct,struct sensor_str
    			  sens_struct->window_avg_values_o[i]=sens_struct->aggregated_values[i]/sens_struct->windows_length[i];
    			}
 			
-    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,sens_struct->windows_pointers[i],availability_struct->metrics,sens_struct->aggregated_values[i],sens_struct->windows_length[i], sens_struct->window_avg_values_o[i],sens_struct->window_avg_values_p[i]);
+    		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"|B->i=[%d] Pointer=[%lld] Metrics=[%4.2f] Aggreg=[%4.2f] Length=[%lld] Optim=[%4.2f] Pessim=[%4.2f]\n", i,sens_struct->windows_pointers[i],availability_struct->metrics,sens_struct->aggregated_values[i],sens_struct->windows_length[i], sens_struct->window_avg_values_o[i],sens_struct->window_avg_values_p[i]);
 
    		}
 
@@ -275,10 +280,9 @@ int setup_time_windows(struct sensor_struct *sens_struct)
    	}
    close_file(binaryFile);
 
-   if (time_counter)	
-   	for (i=0 ; i<sens_struct->windows_number; i++) 
-    		pmesg(LOG_DEBUG,__FILE__,__LINE__,"|A->i=[%d] FilePointer=[%lld] WinPointer=[%lld]\n", i,sens_struct->stats_array[i].intervals,sens_struct->windows_pointers[i]);
-    	
+  /*if (time_counter)	
+     for (i=0 ; i<sens_struct->windows_number; i++) 
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"|A->i=[%d] FilePointer=[%lld] WinPointer=[%lld]\n", i,sens_struct->stats_array[i].intervals,sens_struct->windows_pointers[i]);*/	
    for (i=0 ; i<sens_struct->windows_number; i++) 
    	sens_struct->window_avg_values_p[i]=sens_struct->aggregated_values[i]/sens_struct->windows_limits[i];
    for (i=0 ; i<sens_struct->windows_number; i++) 
@@ -323,19 +327,19 @@ int setup_and_synchronize_start_time(struct sensor_struct *sens_struct)
     } 
     
     c_string = ctime(&(start_time_struct.start_time));
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting time for stats is: %s Number of past T[i] (time intervals) [%lld]\n", c_string,sens_struct->num_interval);
+    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting time for stats is: %s Number of past T[i] (time intervals) [%lld]\n", c_string,sens_struct->num_interval);
     sens_struct->current_time = sens_struct->current_time - sens_struct->time_interval;
     c2_time_string = ctime(&(sens_struct->current_time));
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Raw (current time -1) for stats is: %s\n", c2_time_string);
+    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Raw (current time -1) for stats is: %s\n", c2_time_string);
     if ((int)diff_time % sens_struct->time_interval)
     {
 	// the line below will be commented ones the sleep one will be uncommented
-    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Synchronize (%d) seconds\n", sens_struct->time_interval- ((int)diff_time % sens_struct->time_interval));	
+    	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Synchronize (%d) seconds\n", sens_struct->time_interval- ((int)diff_time % sens_struct->time_interval));	
 	sleep(sens_struct->time_interval- ((int)diff_time % sens_struct->time_interval));
     	sens_struct->current_time = sens_struct->current_time + sens_struct->time_interval - ((int)diff_time % sens_struct->time_interval);
     } 
     c2_time_string = ctime(&(sens_struct->current_time));
-    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Synchronized (current time -1) for stats is: %s\n", c2_time_string);
+    //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Synchronized (current time -1) for stats is: %s\n", c2_time_string);
     // ***** END setup start time only at the beginning of the information provider ******
     return 0; 
 } 
@@ -372,6 +376,7 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     snprintf(sens_struct->sensor_table,sizeof(sens_struct->sensor_table), sens_struct->sensor_name); 
     snprintf(sens_struct->sensor_args,sizeof(sens_struct->sensor_args), ""); 
     snprintf(sens_struct->sensor_type,sizeof(sens_struct->sensor_type), ""); 
+    snprintf(sens_struct->sensor_result,sizeof(sens_struct->sensor_result), ""); 
     snprintf(sens_struct->sensor_executable,sizeof(sens_struct->sensor_executable), ""); 
     sens_struct->reset_onstart=0;			// reset raw_file removing the history every time the ip boots default 0 which means keeps the history 
     sens_struct->ext_sensor=0;  			// external sensor 1=yes, which means of out of the box sensor ; 0=no, which means core sensor 
@@ -485,10 +490,15 @@ long long int parse_xml_search_file(char* tmp_file)
   long long int num_rec_d=0;
   char *position;
   char *position2;
+  struct stat buf;
+
+  stat(tmp_file, &buf);
+  if (!buf.st_size)
+	return -1;
 
   FILE *file = fopen (tmp_file, "r");
 
-  if (file == NULL)             // /esg/config/infoprovider.properties not found
+  if (file == NULL)             
     return -1;
 
   while_end = 1;
@@ -680,7 +690,7 @@ int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername, cha
  return 0;
 }
 
-double get_cpu_metrics(char* sensor_args)
+double get_cpu_metrics(char* sensor_result)
 {
  // retrieving CPU load average metrics
   char esgf_nodetype_filename[256] = { '\0' };
@@ -716,15 +726,51 @@ double get_cpu_metrics(char* sensor_args)
   }
 
   fclose (file);
-  if (!strcmp(sensor_args,"last1min")) 
+  if (!strcmp(sensor_result,"last1min")) 
 	return atof(loadavg1);
-  if (!strcmp(sensor_args,"last5min")) 
+  if (!strcmp(sensor_result,"last5min")) 
 	return atof(loadavg5);
-  if (!strcmp(sensor_args,"last15min")) 
+  if (!strcmp(sensor_result,"last15min")) 
 	return atof(loadavg15);
+  return atof(loadavg1); // default last 1 min
 }
 
-int get_memory_metrics(char* sensor_args)
+double get_ping_single_host_metric(char* sensor_args, char* sensor_result)
+{
+  struct host item; 
+  char value_buffer[1024] = { '\0' };
+  char copy_sensor_args[1024] = { '\0' };
+  char *position;
+   
+  snprintf(copy_sensor_args,sizeof(copy_sensor_args),sensor_args);
+  position = strchr (copy_sensor_args, ':');
+  if (position != NULL)     // the ':' has been found
+        {
+      	strcpy (value_buffer, position + 1);  // now value_buffer stores the VALUE, which is the port number
+ 	item.portNumber=(unsigned int) atoi(value_buffer);
+       	*position = '\0';     // now sensors_args stores the ATTRIBUTE which is the hostname
+  	snprintf(item.hostName,sizeof(item.hostName),copy_sensor_args);
+  	//printf("if HOSTNAMEEEEE && PORT ------------> %s %u\n",item.hostName,item.portNumber); 
+	}
+   else
+        {
+ 	item.portNumber=(unsigned int) atoi(copy_sensor_args);
+  	snprintf(item.hostName,sizeof(item.hostName),ESGF_HOSTNAME);
+  	//printf("else HOSTNAMEEEEE && PORT ------------> %s %u\n",item.hostName,item.portNumber); 
+	}
+
+  //printf("HOSTNAMEEEEE && PORT ------------> %s %u\n",item.hostName,item.portNumber); 
+  item.status=0;
+  ping (&item);
+  //printf("RESULTS ------------> %d %d\n",item.status,item.elapsedTime); 
+  if (!strcmp(sensor_result,"status")) 
+  	return ((double) item.status);
+  if (!strcmp(sensor_result,"elapsedtime")) 
+  	return ((double) item.elapsedTime);
+  return ((double) item.status); // default status
+}
+
+int get_memory_metrics(char* sensor_result)
 {
  // retrieving memory (swap/ram) metrics
 
@@ -791,27 +837,27 @@ int get_memory_metrics(char* sensor_args)
 
  uram = tram-fram;
  uswap= tswap-fswap;
- if (!strcmp(sensor_args,"freeram")) 
+ if (!strcmp(sensor_result,"freeram")) 
 	return atof(freeram);
- if (!strcmp(sensor_args,"freeswap")) 
+ if (!strcmp(sensor_result,"freeswap")) 
 	return atof(freeswap);
- if (!strcmp(sensor_args,"totram")) 
+ if (!strcmp(sensor_result,"totram")) 
 	return atof(totram);
- if (!strcmp(sensor_args,"totswap")) 
+ if (!strcmp(sensor_result,"totswap")) 
 	return atof(totswap);
- if (!strcmp(sensor_args,"usedram")) 
+ if (!strcmp(sensor_result,"usedram")) 
 	return ((double) uram);
- if (!strcmp(sensor_args,"usedswap")) 
+ if (!strcmp(sensor_result,"usedswap")) 
 	return ((double) uswap);
- if (!strcmp(sensor_args,"freeram%")) 
-	return ((double) (fram/tram));
- if (!strcmp(sensor_args,"freeswap%")) 
-	return ((double) (fswap/tswap));
- if (!strcmp(sensor_args,"usedram%")) 
-	return ((double) (uram/tram));
- if (!strcmp(sensor_args,"usedswap%")) 
-	return ((double) (uswap/tswap));
- return 0;
+ if (!strcmp(sensor_result,"freeram%")) 
+	return ((double) (fram*100/tram));
+ if (!strcmp(sensor_result,"freeswap%")) 
+	return ((double) (fswap*100/tswap));
+ if (!strcmp(sensor_result,"usedram%")) 
+	return ((double) (uram*100/tram));
+ if (!strcmp(sensor_result,"usedswap%")) 
+	return ((double) (uswap*100/tswap));
+ return atof(freeram);  // default free ram
 }
 
 
@@ -835,24 +881,24 @@ int get_search_metrics(char* name, char* query)
 
   snprintf (url_action, sizeof (url_action),query);
   snprintf (tmp_file, sizeof (tmp_file),TEMP_SEARCH_STATS_FILE,name);
-
-  // filename to be stats_<host>_<processed_id>.tmp
+  remove(tmp_file);
 
   tmp=fopen(tmp_file, "w");
   if(tmp==NULL)
         {
-         //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR to open file stats.tmp\n");
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
          return -2;
         }
 
   curl = curl_easy_init();
   curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
   curl_res = curl_easy_perform(curl);
 
   if(curl_res)
         {
-        //pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting [%s] or downloading stats\n",peername);
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
         remove(tmp_file);
         fclose(tmp);
         curl_easy_cleanup(curl);
@@ -879,15 +925,17 @@ int produce_and_append_next_sample_to_raw_file(struct stats_struct *availability
 	
     	availability_struct->intervals=sens_struct->num_interval;
 	if (!(strcmp(sens_struct->sensor_type,"search")))	
-		availability_struct->metrics= (double) get_search_metrics(sens_struct->sensor_name, sens_struct->sensor_executable);
+		availability_struct->metrics= (double) get_search_metrics(sens_struct->sensor_name, sens_struct->sensor_args);
 	if (!(strcmp(sens_struct->sensor_type,"cpu")))	
-		availability_struct->metrics= (double) get_cpu_metrics(sens_struct->sensor_args);
+		availability_struct->metrics= (double) get_cpu_metrics(sens_struct->sensor_result);
 	if (!(strcmp(sens_struct->sensor_type,"memory")))	
-		availability_struct->metrics= (double) get_memory_metrics(sens_struct->sensor_args);
+		availability_struct->metrics= (double) get_memory_metrics(sens_struct->sensor_result);
 	if (!(strcmp(sens_struct->sensor_type,"availability")))	
+		availability_struct->metrics= (double) get_ping_single_host_metric(sens_struct->sensor_args,sens_struct->sensor_result);
+	if (!(strcmp(sens_struct->sensor_type,"test")))	
     		availability_struct->metrics= sens_struct->num_interval; 
 
-    	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Generated metrics sensor [%s] [%lld]-[%4.2f] \n", sens_struct->sensor_name,availability_struct->intervals, availability_struct->metrics);
+    	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Generated metrics sensor [%s] [%lld]-[%4.2f] \n", sens_struct->sensor_name,availability_struct->intervals, availability_struct->metrics);
 
     	open_create_file(&binaryF,sens_struct->file_name_sensor_stats,"a+"); // a+ - open for reading and writing (append if file exists)
     	write_stats_to_file(binaryF,availability_struct);
@@ -1008,45 +1056,50 @@ int read_sensors_list_from_file(struct sensor_struct *sens_struct)
             {
 		curr_sensor++; // this index is the right one for this sensor
 		snprintf((sens_struct[curr_sensor]).sensor_name,sizeof((sens_struct[curr_sensor]).sensor_name),value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor name [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_name);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor name [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_name);
    		setup_sens_struct_from_config_file(&sens_struct[curr_sensor]);
 
             }
           if (!(strcmp (buffer, "type"))) // mandatory
             {
 		snprintf((sens_struct[curr_sensor]).sensor_type,sizeof((sens_struct[curr_sensor]).sensor_type),value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor type [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_type);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor type [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_type);
     		snprintf((sens_struct[curr_sensor]).file_name_sensor_stats,sizeof((sens_struct[curr_sensor]).file_name_sensor_stats),FILE_NAME_STATS,DASHBOARD_SERVICE_PATH,sens_struct[curr_sensor].sensor_type,sens_struct[curr_sensor].sensor_name); 
             }
           if (!(strcmp (buffer, "reset")))
             {
 		sens_struct[curr_sensor].reset_onstart=atoi(value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor reset_onstart [%d])\n",curr_sensor,(sens_struct[curr_sensor]).reset_onstart);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor reset_onstart [%d])\n",curr_sensor,(sens_struct[curr_sensor]).reset_onstart);
             }
           if (!(strcmp (buffer, "interval")))
             {
 		sens_struct[curr_sensor].time_interval=atoll(value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor time_interval [%lld])\n",curr_sensor,(sens_struct[curr_sensor]).time_interval);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor time_interval [%lld])\n",curr_sensor,(sens_struct[curr_sensor]).time_interval);
             }
           if (!(strcmp (buffer, "table")))
             {
 		snprintf((sens_struct[curr_sensor]).sensor_table,sizeof((sens_struct[curr_sensor]).sensor_table),value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor table [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_table);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor table [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_table);
             }
           if (!(strcmp (buffer, "exec")))
             {
 		snprintf((sens_struct[curr_sensor]).sensor_executable,sizeof((sens_struct[curr_sensor]).sensor_executable),value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor executable [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_executable);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor executable [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_executable);
+            }
+          if (!(strcmp (buffer, "result")))
+            {
+		snprintf((sens_struct[curr_sensor]).sensor_result,sizeof((sens_struct[curr_sensor]).sensor_result),value_buffer);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor result [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_result);
             }
           if (!(strcmp (buffer, "args")))
             {
 		snprintf((sens_struct[curr_sensor]).sensor_args,sizeof((sens_struct[curr_sensor]).sensor_args),value_buffer);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor args [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_args);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor args [%s])\n",curr_sensor,(sens_struct[curr_sensor]).sensor_args);
             }
          }
 	else {
 	buffer[strlen(buffer)-1]='\0';
-	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Skipping line [%s]\n",buffer);
+	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Skipping line [%s]\n",buffer);
     	}
 
     }

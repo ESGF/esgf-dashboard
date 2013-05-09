@@ -2,10 +2,10 @@
 #define TEMP_SEARCH_STATS_FILE "search_%s_stats.xml"
 #define FILE_NAME_START_STATS "%s/start_stats_time.dat"
 #define MAX_WINDOWS 10
-#define MAX_SENSORS 10
+#define MAX_SENSORS 100
 #define BUFCHAR_MAX 1024
 #define BUFCHAR_EXEC_MAX 1024
-#define THREAD_SENSOR_OPEN_MAX 10 
+#define THREAD_SENSOR_OPEN_MAX 100 
 
 struct stats_struct 
 {
@@ -31,6 +31,7 @@ struct sensor_struct
     char sensor_type[BUFCHAR_MAX];		// type of the sensor (cpu, memory, availability) 
     char sensor_name[BUFCHAR_MAX];		// name of the sensor (it is the key in the info properties file)
     char sensor_table[BUFCHAR_MAX];		// table name in the database for the sensor information 
+    char sensor_result[BUFCHAR_MAX];		// specific output of the sensor we are interested in 
     char file_name_sensor_stats[BUFCHAR_MAX];	// filename for the raw stats 
     char sensor_executable[BUFCHAR_EXEC_MAX];	// executable for sensors
     char sensor_args[BUFCHAR_MAX];	// args for executable for sensors
