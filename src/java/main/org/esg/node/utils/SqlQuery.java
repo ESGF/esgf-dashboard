@@ -135,6 +135,13 @@ public enum SqlQuery {
 						   "WHERE idProject IN (?) AND u.endDate IS NULL and ((h.nodetype & '10000')>0)" +
 						   "GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
 						   "ORDER BY h.regusers DESC;"),
+						   
+	// RegisteredUsers Map2					   
+	PROJECT_HOSTS_POSITION_REG_USERS2("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
+						"FROM  esgf_dashboard.host h INNER JOIN  esgf_dashboard.service_instance s ON h.id=s.idHost INNER JOIN  esgf_dashboard.uses u ON s.id=u.idServiceInstance " +
+						"WHERE idProject IN (?) AND u.endDate IS NULL and ((h.regusers)>0)" +
+						"GROUP BY h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.regusers " +
+						"ORDER BY h.regusers DESC;"),					   
 		
 	// NodeType Map					   
 	PROJECT_HOSTS_POSITION_NODE_TYPE("SELECT h.id, h.name, h.ip, h.latitude, h.longitude, h.city, h.nodetype " +

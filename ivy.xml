@@ -136,5 +136,7 @@ xwork-core-2.1.6.jar
     <dependency org="xstream" name="xstream" rev="1.2.2" transitive="false"/>
     <dependency org="com.opensymphony" name="xwork-core" rev="2.1.6" transitive="false"/>
     
+    <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1"/>
+
   </dependencies>
 </ivy-module>
