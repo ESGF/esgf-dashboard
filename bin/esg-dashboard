@@ -423,6 +423,8 @@ setup_dashboard_provider() {
 	tar xzf ${esgf_dashboard_ip_dist_file}
     fi
 
+    local ip_props_filename=infoprovider.properties
+
     pushd ${esgf_dashboard_ip_dist_dir}
     ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "(Hmmm... not respecting \"make clean\" - eh, no worries)")
     echo "./configure --prefix=${esgf_dashboard_ip_install_dir}"
@@ -430,6 +432,13 @@ setup_dashboard_provider() {
 	&& make \
 	&& make install
     then
+        #Install the configuration for for ip run services...
+        if [ ! -e ${esg_config_dir}/dashboard/${ip_props_filename} ] || ((force_install)); then
+            mkdir -p ${esg_config_dir}/dashboard
+            mv ${esg_config_dir}/dashboard/${ip_props_filename}{,.bak} >& /dev/null
+            \cp -v ${esgf_dashboard_ip_dist_dir}/etc/${ip_props_filename} ${esg_config_dir}/dashboard/${ip_props_filename}
+        fi
+
 	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
 	if [ ! -e "${esgf_dashboard_ip_install_dir}/bin/esgf-dashboard-ip" ]; then
             echo" ERROR: Did NOT successfully build ESGF Dashboard IP Executable!!" && popd >& /dev/null && checked_done 1
