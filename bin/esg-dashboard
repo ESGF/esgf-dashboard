@@ -436,7 +436,7 @@ setup_dashboard_provider() {
         if [ ! -e ${esg_config_dir}/dashboard/${ip_props_filename} ] || ((force_install)); then
             mkdir -p ${esg_config_dir}/dashboard
             mv ${esg_config_dir}/dashboard/${ip_props_filename}{,.bak} >& /dev/null
-            \cp -v ${esgf_dashboard_ip_dist_dir}/etc/${ip_props_filename} ${esg_config_dir}/dashboard/${ip_props_filename}
+            \cp -v etc/${ip_props_filename} ${esg_config_dir}/dashboard/${ip_props_filename}
         fi
 
 	echo "Successfully Configured and Built ESGF Dashboard IP in: ${esgf_dashboard_ip_install_dir}"
