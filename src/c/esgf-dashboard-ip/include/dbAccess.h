@@ -15,7 +15,8 @@
 // --------------- Query ----------------------------------
 #define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;" 
 
-#define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance) " 
+#define QUERY2	"INSERT INTO esgf_dashboard.service_status(status, elapsedTime, idServiceInstance)" 
+#define QUERY2_UPDATE	"update esgf_dashboard.host set status=%d, elapsedTime=%ld where ip='%s';" 
 
 //#define QUERY3 	"start transaction esgf_dashboard.service_instance AND esgf_dashboard.host"
 #define QUERY3 	"start transaction; lock esgf_dashboard.service_instance; lock esgf_dashboard.host;"
