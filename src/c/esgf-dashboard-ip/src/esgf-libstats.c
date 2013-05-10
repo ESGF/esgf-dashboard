@@ -21,7 +21,6 @@
 int display_sensor_structures_info(int num_sensors, struct sensor_struct *sens_struct)
 {
    int i,j;
-   return 0;
    for (i=0; i<num_sensors;i++)
 	{
 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Sensor info index [%d] Sensor name [%s])\n",i,(sens_struct[i]).sensor_name);
@@ -1009,13 +1008,14 @@ thread_manager_stop (pthread_t *threads, struct sensor_struct *sens_struct, cons
   return 0;
 }
 
-int read_sensors_list_from_file(struct sensor_struct *sens_struct)
+int read_sensors_list_from_file(char* esgf_properties, struct sensor_struct *sens_struct)
 {
   char sensor_file[256] = { '\0' };
   char *position;
   int while_end,found_sensor, curr_sensor;
 
-  snprintf (sensor_file,sizeof(sensor_file),"/esg/config/infoprovider.properties");
+  // todo: /esg/config should be ESG_HOME
+  snprintf (sensor_file,sizeof(sensor_file),"/%s/config/dashboard/infoprovider.properties",esgf_properties);
 
   //pmesg(LOG_DEBUG,__FILE__,__LINE__,"%s\n", sensor_file);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"[START] %s\n", sensor_file);

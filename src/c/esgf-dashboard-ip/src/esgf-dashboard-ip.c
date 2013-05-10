@@ -472,8 +472,9 @@ main (int argc, char **argv)
   snprintf (query_remove_old_local_memory_metrics,sizeof (query_remove_old_local_memory_metrics),REMOVE_OLD_MEMORY_METRICS,HISTORY_MONTH, HISTORY_DAY);
 
   // at the beginning of the information provider	
-  num_sensors = read_sensors_list_from_file(&sens_struct[0]);
-  display_sensor_structures_info(num_sensors,&sens_struct[0]);
+  num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
+  fprintf(stdout, "Num sensors %d\n",num_sensors);
+  //display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
@@ -490,7 +491,8 @@ main (int argc, char **argv)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
   // enabling threads pool for sensors 
-  thread_manager_start (&threads[0],&sens_struct,num_sensors);
+  if (num_sensors!=-1)
+  	thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
@@ -554,7 +556,8 @@ main (int argc, char **argv)
     	}		
 
   // end of thread pool for sensors	
-  thread_manager_stop (&threads[0],&sens_struct,num_sensors);
+  if (num_sensors!=-1)
+  	thread_manager_stop (&threads[0],&sens_struct,num_sensors);
   
   // freeing space
   fprintf(stderr,"***************************************************\n");
