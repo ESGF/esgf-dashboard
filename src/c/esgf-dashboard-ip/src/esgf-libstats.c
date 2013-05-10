@@ -57,7 +57,8 @@ thread_serve (void *arg)
    create_metric_stat_table(sens_struct);
 
    //while (1) TEST_ 
-   while (counter--) 
+   //while (counter--) 
+   while (1) 
     {
     increment_num_interval(sens_struct);
 	
@@ -382,20 +383,20 @@ int setup_sens_struct_from_config_file(struct sensor_struct *sens_struct)
     sens_struct->federation=0;  			// it relates to the federation mechanism. Default 0=no, 1=yes 
     sens_struct->time_interval=300;			// default 5 minutes	
     sens_struct->windows_number=6;  	// PRODUCTION_ number of time_windows to be managed 
-    sens_struct->windows_limits[0]=1;   // TEST_
+    /*sens_struct->windows_limits[0]=1;   // TEST_
     sens_struct->windows_limits[1]=2;   // TEST_
     sens_struct->windows_limits[2]=4;   // TEST_
     sens_struct->windows_limits[3]=8;   // TEST_
     sens_struct->windows_limits[4]=16;  // TEST_
-    sens_struct->windows_limits[5]=32;  // TEST_ 
+    sens_struct->windows_limits[5]=32;*/  // TEST_ 
 	// PRODUCTION_
-    /*
+    
     sens_struct->windows_limits[0]=1;
     sens_struct->windows_limits[1]=12;
     sens_struct->windows_limits[2]=12*24;
     sens_struct->windows_limits[3]=12*24*7;
     sens_struct->windows_limits[4]=12*24*30;
-    sens_struct->windows_limits[5]=12*24*365;*/
+    sens_struct->windows_limits[5]=12*24*365;
     return 0; 
 }
 

@@ -202,7 +202,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (0) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		realtime_monitoring_setup();
@@ -220,7 +220,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (0) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {  
@@ -338,7 +338,7 @@ main (int argc, char **argv)
   int counter = 0;
   int c;
   int option_index = 0;
-  int iterator = 0;  // TEST_   PRODUCTION_ 1 
+  int iterator = 1;  // TEST_   PRODUCTION_ 1 
   int opt_t = 0;
   int mandatory;
   int allprop;
