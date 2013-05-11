@@ -937,7 +937,7 @@ int compute_remote_clients_data_mart()
         {
                 pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
 		PQfinish(conn);
-		return -10;
+		return -1;
         }
 	// SELECT START 
 	res = PQexec(conn,QUERY_GET_LIST_CLIENT_IPS);
@@ -947,7 +947,7 @@ int compute_remote_clients_data_mart()
 	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
 	        PQclear(res);
 		PQfinish(conn);
-		return -11;
+		return -2;
     	}
 	numTuples = PQntuples(res);
 	nFields = PQnfields(res);
@@ -961,23 +961,22 @@ int compute_remote_clients_data_mart()
 			snprintf (ip_str,sizeof (ip_str),"%s",PQgetvalue(res, t, 0));
 
   			if (code = esgf_geolookup (ip_str,&geo_output))
-        			fprintf (stdout, "Exit code for esgf-lookup [%d]\n", code);
-
+    				{
+				pmesg(LOG_WARNING,__FILE__,__LINE__,"Local client data mart. Failing to resolve [%s]\n",ip_str);
+    				} 
+			else  
+			{
 			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, geo_output.latitude, geo_output.longitude,geo_output.country_code);
   			res2 = PQexec(conn, insert_query_client_dm);
 
   			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
-    				{
-	        		pmesg(LOG_ERROR,__FILE__,__LINE__,"Query insert entry in local client data mart failed\n");
-	        		PQclear(res2);
-				return -4;
-    				}
+	        		pmesg(LOG_WARNING,__FILE__,__LINE__,"Query insert entry in local client data mart failed\n");
   			PQclear(res2);
+    			} 
 	}
 
 	PQclear(res);
 
-	// CLOSE CONNECTION  
     	PQfinish(conn);
 
       	pmesg(LOG_DEBUG,__FILE__,__LINE__,"END - Building new client data mart (once a day)\n");

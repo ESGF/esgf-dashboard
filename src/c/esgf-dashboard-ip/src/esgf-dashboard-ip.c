@@ -518,7 +518,7 @@ main (int argc, char **argv)
       hosts = loadHosts (&numHosts);
 
       // Retrieving local metrics	  
-      retrieve_localhost_metrics();	
+      //retrieve_localhost_metrics();	
 
       // Retrieving global metrics	  
       if (numHosts != 0 && hosts != NULL)
