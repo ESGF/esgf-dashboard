@@ -101,6 +101,10 @@ Builds the project via ant (obviously).
     <arg value="-c"/>
     <arg value="git tag | sed 's/^v//' | sort -s -t. -k1,1n -k2,2n -k3,3n  | sed -ne 's/\([0-9]*\.[0-9]*\.[0-9]*\)-\([a-zA-Z0-9_-]*\)-release.*$/\2/p'| tail -n 1"/>
   </exec>
+  <exec executable="bash" dir="${basedir}" outputproperty="python_version">
+    <arg value="-c"/>
+    <arg value='python -c "import sys; print str(sys.version_info.major)+chr(46)+str(sys.version_info.minor)"'/>
+  </exec>
 
   <property name="ivy.esgf-repo-local.default.root.dir" value="${user.home}/.ivy2/local"/>
   <property name="ivy_retrieve_type" value="jar, bundle"/>
@@ -115,6 +119,8 @@ Builds the project via ant (obviously).
   <filter token="commit"  value="${commit}"/>
   <property name="db_version_num" value="0.0.0"/>
   <filter token="db_version_num"  value="${db_version_num}"/>
+  <property name="python_version" value="0.0"/>
+  <filter token="python_version_num"  value="${python_version}"/>
   <property name="release_name" value="no_name"/>
   <filter token="release_name" value="${release_name}"/>
   <filter token="module" value="${module}"/>
@@ -181,7 +187,7 @@ Builds the project via ant (obviously).
     <property name="test_coverage_file"   value="${basedir}/.cobertura.ser"/>
     <property name="ivy.lib.dir" value="${lib_fetched_dir}"/>
      
-    <property name="python_version"       value="2.6"/>
+    <property name="python_version"       value="${python_version}"/>
     <property name="py_src_dir"	          value="${basedir}/src/python/esgf"/>
 
     <echo message="--------------------------------"/> 
