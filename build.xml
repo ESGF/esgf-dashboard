@@ -103,7 +103,7 @@ Builds the project via ant (obviously).
   </exec>
   <exec executable="bash" dir="${basedir}" outputproperty="python_version">
     <arg value="-c"/>
-    <arg value='python -c "import sys; print str(sys.version_info.major)+chr(46)+str(sys.version_info.minor)"'/>
+    <arg value='python -c "import platform as p;print chr(46).join(p.python_version_tuple()[:2])"'/>
   </exec>
 
   <property name="ivy.esgf-repo-local.default.root.dir" value="${user.home}/.ivy2/local"/>
