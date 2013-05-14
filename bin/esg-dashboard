@@ -132,11 +132,11 @@ init() {
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
 
-    echo "$(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)"
-    echo "$(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)"
+    echo "$(prefix_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)"
+    echo "$(prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)"
 
-    append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
-    append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
+    prefix_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
+    prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
     dedup ${envfile} && source ${envfile}
 
     ((DEBUG)) && echo ${envfile}
@@ -336,8 +336,8 @@ setup_geoip() {
 
 write_geoip_paths() {
     ((show_summary_latch++))
-    append_to_path PATH ${geoip_install_dir}/bin >> ${envfile}
-    append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
+    prefix_to_path PATH ${geoip_install_dir}/bin >> ${envfile}
+    prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib >> ${envfile}
     dedup ${envfile} && source ${envfile}
 }
 
@@ -462,7 +462,7 @@ setup_dashboard_provider() {
 write_esgf_dashboard_ip_env() {
     ((show_summary_latch++))
     echo "export ESGF_DASHBOARD_IP_HOME=${esgf_dashboard_ip_install_dir}" >> ${envfile}
-    append_to_path PATH ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
+    prefix_to_path PATH ${esgf_dashboard_ip_install_dir}/bin >> ${envfile}
     dedup ${envfile} && source ${envfile}
     return 0
 }
@@ -485,8 +485,8 @@ write_geolocation_properties() {
     get_property node_geolocation_lon
 
     if [ -z "${node_geolocation_city}"  -o  -z "${node_geolocation_lat}" -o -z "${node_geolocation_lon}" ]; then
-        $(append_to_path PATH ${geoip_install_dir}/bin)
-        $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib)
+        $(prefix_to_path PATH ${geoip_install_dir}/bin)
+        $(prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib)
         local command="${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup ${esgf_host_ip} 52 2>/dev/null"
         debug_print "${esgf_dashboard_ip_install_dir}/bin/esgf-iplookup ${esgf_host_ip} 52 2>/dev/null"
         $command
@@ -510,8 +510,8 @@ write_geolocation_properties() {
 
 start_dashboard_services() {
     echo -n "Starting dashboard provider... "
-    $(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
-    $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
+    $(prefix_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
+    $(prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     pgrep esgf-dashboard && echo " -> Detected already running dashboard service (must explicitly stop or restart to start new instance)" && return 0
     echo
     ${esgf_dashboard_ip_install_dir}/bin/ip.service start 2>&1 | tee ${dashboard_log_file}.last >(cat >> ${dashboard_log_file}) >& /dev/null &
@@ -521,8 +521,8 @@ start_dashboard_services() {
 
 stop_dashboard_services() {
     echo "Stopping dashboard provider..."
-    $(append_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
-    $(append_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
+    $(prefix_to_path PATH ${geoip_install_dir}/bin ${esgf_dashboard_ip_install_dir}/bin)
+    $(prefix_to_path LD_LIBRARY_PATH ${geoip_install_dir}/lib ${postgress_install_dir}/lib)
     ${esgf_dashboard_ip_install_dir}/bin/ip.service stop
     [ $? != 0 ] && echo " ERROR: Could not stop esgf dashboard provider" && popd && return 1
     return 0
