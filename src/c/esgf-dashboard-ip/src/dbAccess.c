@@ -418,22 +418,20 @@ int writeResults(struct host *hosts, const unsigned numHosts) {
 		// Query composition //
 		snprintf (insert_query, sizeof (insert_query), "%s VALUES(%d,%d,%d);", QUERY2,hosts[index].status, hosts[index].elapsedTime,hosts[index].id);
 		snprintf (update_query, sizeof (update_query), QUERY2_UPDATE, hosts[index].status, hosts[index].elapsedTime,hosts[index].hostName);
-		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Service Metrics [%d] -> %s\n",index, insert_query);
+		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Service Metrics [%d] -> %s\n",index, insert_query);
 		//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Global Metrics [%d] -> %s\n",index, update_query);
 
 		res = PQexec(conn, insert_query);
 
   		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
        		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Insert SERVICE METRICS query failed\n");
-
     		PQclear(res);
 
-		/*res = PQexec(conn, update_query);
+		res = PQexec(conn, update_query);
 
-  		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
-       		 	pmesg(LOG_ERROR,__FILE__,__LINE__,"Update global-host availability metrics query failed\n");
-
-    		PQclear(res);*/
+		if ((!res) || (PQresultStatus(res) != PGRES_COMMAND_OK))
+			pmesg(LOG_ERROR,__FILE__,__LINE__,"Update global-host availability metrics query failed\n");
+		PQclear(res);
 	}
         PQfinish(conn);
 	return 0;
