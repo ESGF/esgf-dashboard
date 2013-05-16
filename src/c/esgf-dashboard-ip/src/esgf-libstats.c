@@ -762,6 +762,9 @@ double get_ping_single_host_metric(char* sensor_args, char* sensor_result)
   //printf("HOSTNAMEEEEE && PORT ------------> %s %u\n",item.hostName,item.portNumber); 
   item.status=0;
   ping (&item);
+  
+  if (item.status!=1)
+	item.status=0;
   //printf("RESULTS ------------> %d %d\n",item.status,item.elapsedTime); 
   if (!strcmp(sensor_result,"status")) 
   	return ((double) item.status);
