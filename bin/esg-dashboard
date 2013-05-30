@@ -104,6 +104,8 @@ geoip_version=1.4.8
 dashboard_log_dir=${dashboard_log_dir:-"/var/log"}
 dashboard_log_file=${dashboard_log_file:-"${dashboard_log_dir}/esgf-dashboard-ip.log"}
 
+word_size=${word_size:-$(file /bin/bash | perl -ple 's/^.*ELF\s*(32|64)-bit.*$/$1/g')}
+
 init() {
     debug_print "esgf-dashoard->init()..."
     #[ -n "${envfile}" ] && [ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "dashboard services: sourcing environment from: ${envfile} \n"
