@@ -163,7 +163,7 @@ setup_dashboard() {
     init
     setup_dashboard_database $@
     setup_dashboard_webapp $@
-    setup_geoip && setup_geoip_data && setup_dashboard_provider $@ && write_geolocation_properties
+    setup_geoip && setup_geoip_data && (LD_LIBRARY_PATH=/usr/lib${word_size}:$LD_LIBRARY_PATH setup_dashboard_provider $@) && write_geolocation_properties
 }
 
 setup_dashboard_webapp() {
