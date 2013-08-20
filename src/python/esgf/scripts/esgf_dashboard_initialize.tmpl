@@ -5,9 +5,14 @@ import os.path
 import getopt
 
 from pkg_resources import resource_filename
+import sqlalchemy.exc
+sqlalchemy.exceptions = sqlalchemy.exc
 from migrate.versioning.shell import main as versioning_main
 from migrate.versioning.api import version_control, db_version, upgrade, downgrade
-from migrate.versioning.exceptions import DatabaseAlreadyControlledError
+try:
+    from migrate.versioning.exceptions import DatabaseAlreadyControlledError
+except:
+    from migrate.exceptions import DatabaseAlreadyControlledError
 
 # SQLAlchemy versions <0.6 have protocol "postgres", >=0.6 use "postgresql"
 from sqlalchemy import __version__ as sqlalchemy_version
