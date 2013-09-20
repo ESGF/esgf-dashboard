@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>ESGF: Dashbaord</title>
+    <!-- the syle sheet link  -->
+    <link rel='stylesheet' href='http://esgf.org/styles.css' type='text/css'>
+    <!-- favorite icon - needs to have the http://full_path link  -->
+    <link rel="icon" type="image/png" href="http://esgf.org/images/esgf-favicon.png">
+    
+    <!-- keywords for search  engines  -->
+    <!-- keywords for search  engines  -->
+    <meta name="keywords" content="earth systems grid, go-essp, esg, esgf, distributed computing, distributed storage, climate science">
+    <meta name="description" content="A distributed database for structured data.">
+    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'> 
+  </head>
+  
+  <!-- the page code starts here -->    
+  <body>
+    <div >  <!-- body -->    
+<a href="https://github.com/ESGF/esgf-dashboard"><img style="position:absolute;top:0;right:0;border:0;" width="149" height="149" src="images/forkme.png" alt="Fork me on GitHub"></a>
+      <!-- header starts here -->
+      <div id="header" style="overflow: hidden">
+        <!-- image floats tot the right -->
+        <div style='float: right; margin-right: 100px'>
+	  <img src='images/logo.png' width="70" height="70" >
+        </div>
+
+        <div id='logo' style='float: left; margin-right: 20px; margin-left: -10px'> 
+          <a href="http://esgf.org/"><img src='http://esgf.org/images/esgf-logo.png' width="70" height="70" border="0"></a>
+        </div>
+
+	<div>  <!-- inside header -->   
+	  <div class="title">ESGF</div>
+	  <div class="subtitle">Earth System Grid Federation</div>
+          <!-- projects top navigation -->  
+	  <div class="projects">  <!-- projects -->   
+            <a href="http://esgf.org/esgf-installer-site/">installer</a> &middot;
+            <a href="http://esgf.org/esgf-node-manager-site/">node-manager</a> &middot;
+	    <a href="http://esgf.org/esg-publisher-site/">publisher</a> &middot;
+	    <a href="http://esgf.org/esgf-idp-site/">idp</a> &middot;
+	    <a href="http://esgf.org/esg-orp-site/">orp</a> &middot;
+	    <a href="http://esgf.org/esgf-security-site/">security</a> &middot;
+	    <a href="http://esgf.org/esg-search-site/">search</a> &middot; 
+	    <!-- <a href="http://esgf.org/esg-script-gen-site/">script-gen</a> &middot; -->
+	    <a href="http://esgf.org/esgf-drslib-site/">drslib</a> &middot;
+	    <a href="http://esgf.org/esgf-stager-site/">stager</a> 
+	    <a href="http://esgf.org/esgf-fetcher-site/">fetcher</a> &middot;
+	    <a href="http://esgf.org/esgf-toolbox-site/">toolbox</a> &middot;
+	    <a href="http://esgf.org/projects.html">...</a>
+          </div> <!-- projects -->    
+	  
+        </div>  <!-- inside header -->
+      </div>  <!-- header -->
+      
+      <!-- left side navigation bar starts here -->
+      <div class="lsidebar">  <!-- lsidebar -->
+	<ul>
+	  <li>   <a href="http://esgf.org/">esgf</a> </li>
+          <li>   <a href="design.html">design</a> </li>
+          <li>   <a href="">download</a> </li>
+          <li>   <a href="quickstart.html">quickstart</a>  </li>
+          <li>   <a href="developer.html">developer&nbsp;info</a> </li>
+          <li>   <a href="performance.html">performance</a> </li>
+          <li>   <a href="http://esgf.org/gitweb/?p=esg-node.git;a=summary">repo</a> </li>
+          <li>   <a href="docs-generated/javadocs/">code docs</a> </li>
+          <li>   <a href="docs-generated/dep-reports/">dep-report</a> </li>
+          <li>   <a href="docs-generated/test-reports/">unit tests</a> </li>
+          <li>   <a href="docs-generated/coverage-reports/">coverage</a> </li>
+          <li>   <a href="ci.html">ci</a> </li>
+          <li>   <a href="faq.html">faq</a> </li>
+          <li>   <a href="mailing_list.html">mailing list</a> </li>
+          <li>   <a href="http://esgf.org/bugzilla">bugs</a>  </li>
+          <li>   <a href="http://esgf.org/wiki">wiki</a>   </li>		
+	  <li>   <a href="http://esgf.org/blog" target="_blank">blog</a> </li>
+        </ul>
+        
+	
+      </div>   <!-- lsidebar -->
+      
+      <!-- main text comes here -->
+      <div class='content'>
+	
+	<!-- make titles to be <h3> tags -->
+	<h1>ESGF Dashboard</h1>
+	<h2>Introduction</h2>
+	<p> The ESGF Dashboard extends the functionalities provided by the data node adding “monitoring-based” features. 
+	It extends the data node by providing a back-end monitoring system and a front-end user interface for monitoring purposes.
+	</p>
+
+	<h2>Architecture</h2>
+	<p> The dashboard module consists of three major components: the <i>user interface</i>, the <i>information provider</i> and the <i>dashboard catalog</i><br>
+	The user interface (front-end part) provides several views at different levels (global, peer group, host and service).<br> 
+	The information provider (back-end part) periodically collects the metrics information (i.e. service availability, failure type, etc.) about the P2P infrastructure.<br> 
+	The dashboard catalog (back-end part) is a new part of the esgcet database modeling the most relevant dashboard-related concepts. A new namespace has been created to properly manage the new tables <br> 
+	</p>
+	<img src='images/dashboardarch.png' width="40%" >
+
+	<h2>Configuring the Dashboard</h2>
+	<p> The dashboard does not require any configuration.<br>The needed pieces of information about the P2P infrastructure are provided by the node manager (through the registration.xml file) and are automatically extracted and stored into the dashboard catalog by the information provider.</p>
+	<p>Anyway, if the geolocation information (latitude, longitude and city) automatically provided by the geoip library are not sufficiently accurate, they can be changed in the esgf.properties file. The two properties about the geolocation are:<br>
+- node.geolocation.lat <br>
+- node.geolocation.lon <br>
+
+
+ </p> 
+
+	<h2>Starting/Stopping the Dashboard components</h2>
+	<p>The information provider can be started/stopped running the following command: </p>
+	<p>[root@adm07 bin]# ./ip.service</p> 
+	<p>Usage: ./ip.service {start|stop|status|restart|version}</p>
+
+	<h2>Logging</h2>
+	<p>The information provider stores all the information into two log files:</p>
+	<p>/var/log/esgf-dashboard-ip.log = it contains all of the log information since the first run </p>
+	<p>/var/log/esgf-dashboard-ip.log.last = it contains all of the log information related just to the last run</p>
+
+	<h2>Useful queries</h2>
+	<p>Here is a list of useful queries related to the Dashboard</p>
+	<p>a) Get the older statistics timestamp stored into the database: </p>
+	<p><i>esgcet=# select max(timestamp) from service_status;</i></p>
+        <i>max = 2012-01-17 17:36:44.894609</i><br>
+	<p>b) Get the last statistics timestamp stored into the database: </p>
+	<p><i>esgcet=# select max(timestamp) from service_status;</i></p>
+        <i>min = 2012-01-12 22:50:40.703723</i><br>
+	<p>c.1) Remove statistics older than a specific timestamp... </p>
+	<p><i>esgcet=# delete from service_status where timestamp < '2012-01-13';</i><br>
+	DELETE 45<br>
+	<p>c.2) ...and check again the new 'older' timestamp: </p>
+	<i>esgcet=# select min(timestamp) from service_status;</i><br>
+        <i>min = 2012-01-13 00:02:07.010275</i>
+	</p>
+      </div> <!-- content -->
+      <!-- end of "main text comes here" -->
+      
+      <br class="clearfloat" />
+      <!-- footer section here -->
+      <div id="footer"> 
+	<div >  
+	  <div class="projects"> 
+	    <a href="http://www-pcmdi.llnl.gov" target="_other">PCMDI</a> &middot;
+	    <a href="http://cmip-pcmdi.llnl.gov/cmip5/" target="_other">CMIP5</a> &middot; 
+	    <a href="http://www.llnl.gov" target="_other">LLNL</a> &middot;
+            <a href="https://www.llnl.gov/disclaimer.html" target="_other">Privacy &amp; Legal Notice</a> &middot;
+            <a  > LLNL-WEB-460643 &nbsp;&nbsp;&nbsp; </a &middot;></div>
+	</div>
+      </div>    <!-- footer -->      
+      
+    </div> <!-- body -->    
+  </body>
+</html>
