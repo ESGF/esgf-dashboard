@@ -521,7 +521,7 @@ long int get_last_processed_id (PGconn * conn, char *query)
   return fk;
 }
 
-int store_last_id_feddw(PGconn * conn, long int last_id_feddw, char* peername)
+/*int store_last_id_feddw(PGconn * conn, long int last_id_feddw, char* peername)
 {
   PGresult *res;
   char insert_last_id[1024] = { '\0' };
@@ -534,9 +534,9 @@ int store_last_id_feddw(PGconn * conn, long int last_id_feddw, char* peername)
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Processing entry [%s] END ==> Last_id=%ld\n",peername,last_id_feddw);
   PQclear(res);
-}
+}*/
 
-int federation_level_aggregation_metrics_planB()
+/*int federation_level_aggregation_metrics_planB()
 {
 	PGconn *conn;
 	PGresult *res;
@@ -597,7 +597,7 @@ int federation_level_aggregation_metrics_planB()
 		 if (w==0) {
  		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = delete node stats from federationdw & get them again from scratch (non-transact)\n",peername);
 			remove_stats_from_federation_level_dw(conn,remove_stats_feddw,update_query_timestamp_counter_aggr,START_TRANSACTION_FEDDW_PLANB,END_TRANSACTION_FEDDW_PLANB);
-			harvest_stats_planB(conn,peername);
+			//harvest_stats_planB(conn,peername);
 			}
 		 if (w==1) {
  		 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Action for [%s] planB = skipping node\n",peername);
@@ -611,7 +611,7 @@ int federation_level_aggregation_metrics_planB()
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federation-level stats planB aggregation process END\n");
 
   return 0;
-}
+}*/
  
 /*int federation_level_aggregation_metrics()
 {
@@ -697,7 +697,7 @@ int federation_level_aggregation_metrics_planB()
 }*/
 
 
-int harvest_stats_planB(PGconn *conn,char *peername)
+/*int harvest_stats_planB(PGconn *conn,char *peername)
 {
   CURL *curl;
   PGresult *res;
@@ -779,9 +779,9 @@ int harvest_stats_planB(PGconn *conn,char *peername)
   
  return 0;
 }
+*/
 
-
-int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
+/*int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
 {
   CURL *curl;
   PGresult *res;
@@ -873,7 +873,7 @@ int harvest_stats(long long int processed_id, PGconn *conn,char *peername)
  } 
  
  return 0;
-}
+}*/
 
 int reconciliation_process_planB()
 {

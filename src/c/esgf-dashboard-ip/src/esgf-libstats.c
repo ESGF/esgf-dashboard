@@ -70,8 +70,8 @@ thread_serve (void *arg)
 
     store_metrics_into_stats_table(sens_struct);
 
-    if (sens_struct->federation)
-    	federating_aggregated_sensor_stats(sens_struct);
+    //if (sens_struct->federation)
+    //	federating_aggregated_sensor_stats(sens_struct);
      
     sleep(sens_struct->time_interval);
     }
@@ -555,7 +555,7 @@ long long int parse_xml_search_file(char* tmp_file)
   return num_rec_d; 
 }
 
-int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
+/*int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
 {
 	PGconn *conn;
 	PGresult *res;
@@ -608,9 +608,9 @@ int federating_aggregated_sensor_stats(struct sensor_struct *sens_struct)
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Federating aggregated sensor stats process END\n");
 
   return 0;
-}
+}*/
 
-int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername, char* table_name)
+/*int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername, char* table_name)
 {
   CURL *curl;
   PGresult *res;
@@ -688,7 +688,7 @@ int harvest_aggregated_stats(PGconn *conn,char* sensor_name, char* peername, cha
   remove(file_stats);
   
  return 0;
-}
+}*/
 
 double get_cpu_metrics(char* sensor_result)
 {

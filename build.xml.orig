@@ -345,7 +345,7 @@ Builds the project via ant (obviously).
       PREPARATION & PACKAGING....
       ************************************************************
     -->
-<!--  <target name="make_jar" depends="make"
+  <target name="make_jar" depends="make"
 	  description="(Creates the jar file distribution of this project)">
     <echo message="JAR -  ${build_dir} ->> ${dist_dir}/${module}-${version_num}.jar"/>
     <delete>
@@ -371,9 +371,9 @@ Builds the project via ant (obviously).
 	</section>
       </manifest>
     </jar>
-  </target> -->
+  </target>
 
-<!--  <target name="make_test_jar" depends="make_test" description="(Creates test jar file)">
+  <target name="make_test_jar" depends="make_test" description="(Creates test jar file)">
     <echo message="JAR -  ${test_build_dir} ->> ${dist_dir}/${module}-test-${version_num}.jar"/>
     <delete>
       <fileset dir="." includes="${dist_dir}/${module}-test-${version_num}.jar"/>
@@ -396,11 +396,10 @@ Builds the project via ant (obviously).
       </manifest>
     </jar>
   </target>
-  -->
-
-<!--  <target name="make_all_jars" depends="make_jar,make_test_jar"/> -->
+  
+  <target name="make_all_jars" depends="make_jar,make_test_jar"/>
 	
-<!--  <target name="make_war" depends="make,init"
+  <target name="make_war" depends="make,init"
 	          description="(Creates war file of this project)">
 	    <mkdir dir="${dist_dir}" />
 	    <mkdir dir="${dist_dir}/tmplib"/>
@@ -432,7 +431,7 @@ Builds the project via ant (obviously).
 	    </war>
 	    <delete dir="${dist_dir}/tmplib"/>
 	  </target>
--->
+
 
   <target name="make_ip" depends="init" description="Creates the tar for the
                                                      Information
@@ -454,7 +453,7 @@ Builds the project via ant (obviously).
     <delete dir="${build_dir}/${module}-ip-${version_num}"/>
   </target>
 
-  <target name="make_dist" depends="make_python, make_ip"
+  <target name="make_dist" depends="make_all_jars, make_war, make_python, make_ip"
 	  description="(Creates full software distribution)">
     <delete file="${dist_dir}/${module}-${version_num}.tar.gz"/> 
     <tar destfile="${dist_dir}/${module}-${version_num}.tar">
@@ -718,7 +717,7 @@ Builds the project via ant (obviously).
       ************************************************************
     -->
   
-<!--  <target name="run" depends="make_jar">
+  <target name="run" depends="make_jar">
     
     <path id="jar_cp">
       <fileset dir="${lib_dir}">
@@ -734,12 +733,12 @@ Builds the project via ant (obviously).
     <java classname="${main_class}" fork="true">
       <classpath refid="jar_cp"/>
       <!-- <classpath refid="main_classpath"/> -->
-   <!--   <assertions enableSystemAssertions="true">
+      <assertions enableSystemAssertions="true">
 	<enable/>
       </assertions>
     </java>
     
-  </target>-->
+  </target>
 
   
   <target name="make_everything" depends="make_dist,test,docs,dep_report"
