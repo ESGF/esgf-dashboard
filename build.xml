@@ -411,7 +411,6 @@ Builds the project via ant (obviously).
 	  	<echo message="${conf_dir}"/>
 	    <delete file="${dist_dir}/${module}.war"/>
 	    <war destfile="${dist_dir}/${module}.war" webxml="${build_dir}/${module}-web.xml">
-	    	<!-- Add configuration files to WEB-INF -->
 	      <fileset dir="${web_dir}" excludes="WEB-INF/**/web.xml/**,**semantic.cache**"/>
 	      <webinf dir="${conf_dir}" includes="**/*.xml" excludes="${module}-web.xml"/>
 	      <lib dir="${dist_dir}/tmplib">
@@ -733,8 +732,7 @@ Builds the project via ant (obviously).
 
     <java classname="${main_class}" fork="true">
       <classpath refid="jar_cp"/>
-      <!-- <classpath refid="main_classpath"/> -->
-   <!--   <assertions enableSystemAssertions="true">
+     <assertions enableSystemAssertions="true">
 	<enable/>
       </assertions>
     </java>
@@ -756,7 +754,7 @@ Builds the project via ant (obviously).
   </target>
 
 
-  <target name="make_web_dir" depends="make, init" 
+<!--  <target name="make_web_dir" depends="make, init" 
 	  description="(Assembles the WEB-INF directory to run the web application in place.)">
     
     <mkdir dir="${basedir}/WebContent" />
@@ -764,31 +762,27 @@ Builds the project via ant (obviously).
   	<mkdir dir="${basedir}/WebContent/themes" />
     <property name="web_deploy_dir" value="${basedir}/WebContent/WEB-INF"/>
     
-    <!-- web configuration files -->
     <copy file="${conf_dir}/${module}-web.xml" tofile="${web_deploy_dir}/web.xml"/>
     <copy todir="${web_deploy_dir}">
       <fileset dir="${conf_dir}" includes="**/*.xml, **/*.properties" excludes="**/${module}-web.xml"/>
     </copy>
     
-    <!-- web views -->
   	<copy file="${web_dir}/index.jsp" tofile="${basedir}/WebContent/index.jsp"/>
     <copy todir="${web_deploy_dir}/views">
       <fileset dir="${web_dir}/WEB-INF/views" />
     </copy>
   	
-	<!-- images and css -->
     <copy todir="${basedir}/WebContent/themes">
       <fileset dir="${web_dir}/themes" />
     </copy>
     
-    <!-- web lib -->
     <copy todir="${web_deploy_dir}/lib" flatten="true">
       <fileset dir="${lib_dir}" includes="**/*.jar" excludes="**/junit*.jar,**/*sources.jar,**/*javadoc.jar"/>
     </copy>
     
   </target>
   
-  
+ --> 
   <!--
       ************************************************************
       Artifact and Documentation distribution targets
