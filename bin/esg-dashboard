@@ -157,7 +157,7 @@ init() {
 setup_dashboard() {
     init
     setup_dashboard_database $@
-    setup_dashboard_webapp $@
+    #setup_dashboard_webapp $@
     setup_geoip && setup_geoip_data && (LD_LIBRARY_PATH=/usr/lib${word_size}:$LD_LIBRARY_PATH setup_dashboard_provider $@) && write_geolocation_properties
 }
 
@@ -218,29 +218,29 @@ setup_dashboard_webapp() {
     [ $? != 0 ] && return 1
     pushd ${workdir} >& /dev/null
 
-    local dashboard_dist_file=$(pwd)/${dashboard_dist_url##*/}
-    checked_get ${dashboard_dist_file} ${dashboard_dist_url} $((force_install))
-    (( $? > 1 )) && echo " ERROR: Could not download ${node_dist_url} :-(" && popd >& /dev/null && checked_done 1
+#    local dashboard_dist_file=$(pwd)/${dashboard_dist_url##*/}
+#    checked_get ${dashboard_dist_file} ${dashboard_dist_url} $((force_install))
+#    (( $? > 1 )) && echo " ERROR: Could not download ${node_dist_url} :-(" && popd >& /dev/null && checked_done 1
     
-    stop_tomcat
+#    stop_tomcat
 
     #----------------------------
     #make room for new install
-    set_aside_web_app ${dashboard_app_home}
-    mkdir -p ${dashboard_app_home}
-    [ $? != 0 ] && echo "Could not create dir ${dashboard_app_home}" && popd >& /dev/null && checked_done 1
-    cd ${dashboard_app_home}
-    echo "Expanding war ${dashboard_dist_file} in $(pwd)"
-    $JAVA_HOME/bin/jar xf ${dashboard_dist_file}
-    set_aside_web_app_cleanup ${dashboard_app_home} $?
+#    set_aside_web_app ${dashboard_app_home}
+#    mkdir -p ${dashboard_app_home}
+#    [ $? != 0 ] && echo "Could not create dir ${dashboard_app_home}" && popd >& /dev/null && checked_done 1
+#    cd ${dashboard_app_home}
+#    echo "Expanding war ${dashboard_dist_file} in $(pwd)"
+#    $JAVA_HOME/bin/jar xf ${dashboard_dist_file}
+#    set_aside_web_app_cleanup ${dashboard_app_home} $?
     
-    chown -R ${tomcat_user} ${dashboard_app_home}
-    chgrp -R ${tomcat_group} ${dashboard_app_home}
-    popd >& /dev/null
+#    chown -R ${tomcat_user} ${dashboard_app_home}
+#    chgrp -R ${tomcat_group} ${dashboard_app_home}
+#    popd >& /dev/null
     #----------------------------
     
-    popd >& /dev/null
-    write_dashboard_install_log
+#    popd >& /dev/null
+#    write_dashboard_install_log
     checked_done 0
 
 }

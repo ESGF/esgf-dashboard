@@ -227,8 +227,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	    	reconciliation_process_planB();
 		compute_aggregate_data_user_metrics();	
   		compute_remote_clients_data_mart();
-		if (FEDERATED_STATS) 
-			federation_level_aggregation_metrics_planB();
+		//if (FEDERATED_STATS) 
+		//	federation_level_aggregation_metrics_planB();
 		}
 	    //sleep(1); // TEST_ 
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
@@ -479,8 +479,8 @@ main (int argc, char **argv)
   reconciliation_process_planB();
   compute_aggregate_data_user_metrics();
   compute_remote_clients_data_mart();
-  if (FEDERATED_STATS)
-	federation_level_aggregation_metrics_planB();
+  //if (FEDERATED_STATS)
+	//federation_level_aggregation_metrics_planB();
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 

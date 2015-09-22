@@ -109,7 +109,7 @@ Builds the project via ant (obviously).
   <property name="ivy.esgf-repo-local.default.root.dir" value="${user.home}/.ivy2/local"/>
   <property name="ivy_retrieve_type" value="jar, bundle"/>
   <property name="filter" value="false"/>
-  <property name="java.version.val" value="1.8"/>
+  <property name="java.version.val" value="1.7"/>
 
   <!-- **static defines** -->
   <property name="version_num" value="0.0.0"/>
@@ -345,7 +345,7 @@ Builds the project via ant (obviously).
       PREPARATION & PACKAGING....
       ************************************************************
     -->
-<!--  <target name="make_jar" depends="make"
+  <target name="make_jar" depends="make"
 	  description="(Creates the jar file distribution of this project)">
     <echo message="JAR -  ${build_dir} ->> ${dist_dir}/${module}-${version_num}.jar"/>
     <delete>
@@ -371,9 +371,9 @@ Builds the project via ant (obviously).
 	</section>
       </manifest>
     </jar>
-  </target> -->
+  </target>
 
-<!--  <target name="make_test_jar" depends="make_test" description="(Creates test jar file)">
+  <target name="make_test_jar" depends="make_test" description="(Creates test jar file)">
     <echo message="JAR -  ${test_build_dir} ->> ${dist_dir}/${module}-test-${version_num}.jar"/>
     <delete>
       <fileset dir="." includes="${dist_dir}/${module}-test-${version_num}.jar"/>
@@ -396,11 +396,10 @@ Builds the project via ant (obviously).
       </manifest>
     </jar>
   </target>
-  -->
-
-<!--  <target name="make_all_jars" depends="make_jar,make_test_jar"/> -->
+  
+  <target name="make_all_jars" depends="make_jar,make_test_jar"/>
 	
-<!--  <target name="make_war" depends="make,init"
+  <target name="make_war" depends="make,init"
 	          description="(Creates war file of this project)">
 	    <mkdir dir="${dist_dir}" />
 	    <mkdir dir="${dist_dir}/tmplib"/>
@@ -411,6 +410,7 @@ Builds the project via ant (obviously).
 	  	<echo message="${conf_dir}"/>
 	    <delete file="${dist_dir}/${module}.war"/>
 	    <war destfile="${dist_dir}/${module}.war" webxml="${build_dir}/${module}-web.xml">
+	    	<!-- Add configuration files to WEB-INF -->
 	      <fileset dir="${web_dir}" excludes="WEB-INF/**/web.xml/**,**semantic.cache**"/>
 	      <webinf dir="${conf_dir}" includes="**/*.xml" excludes="${module}-web.xml"/>
 	      <lib dir="${dist_dir}/tmplib">
@@ -431,7 +431,7 @@ Builds the project via ant (obviously).
 	    </war>
 	    <delete dir="${dist_dir}/tmplib"/>
 	  </target>
--->
+
 
   <target name="make_ip" depends="init" description="Creates the tar for the
                                                      Information
@@ -453,7 +453,7 @@ Builds the project via ant (obviously).
     <delete dir="${build_dir}/${module}-ip-${version_num}"/>
   </target>
 
-  <target name="make_dist" depends="make_python, make_ip"
+  <target name="make_dist" depends="make_all_jars, make_war, make_python, make_ip"
 	  description="(Creates full software distribution)">
     <delete file="${dist_dir}/${module}-${version_num}.tar.gz"/> 
     <tar destfile="${dist_dir}/${module}-${version_num}.tar">
@@ -717,7 +717,7 @@ Builds the project via ant (obviously).
       ************************************************************
     -->
   
-<!--  <target name="run" depends="make_jar">
+  <target name="run" depends="make_jar">
     
     <path id="jar_cp">
       <fileset dir="${lib_dir}">
@@ -732,12 +732,13 @@ Builds the project via ant (obviously).
 
     <java classname="${main_class}" fork="true">
       <classpath refid="jar_cp"/>
-     <assertions enableSystemAssertions="true">
+      <!-- <classpath refid="main_classpath"/> -->
+      <assertions enableSystemAssertions="true">
 	<enable/>
       </assertions>
     </java>
     
-  </target>-->
+  </target>
 
   
   <target name="make_everything" depends="make_dist,test,docs,dep_report"
@@ -754,7 +755,7 @@ Builds the project via ant (obviously).
   </target>
 
 
-<!--  <target name="make_web_dir" depends="make, init" 
+  <target name="make_web_dir" depends="make, init" 
 	  description="(Assembles the WEB-INF directory to run the web application in place.)">
     
     <mkdir dir="${basedir}/WebContent" />
@@ -762,27 +763,31 @@ Builds the project via ant (obviously).
   	<mkdir dir="${basedir}/WebContent/themes" />
     <property name="web_deploy_dir" value="${basedir}/WebContent/WEB-INF"/>
     
+    <!-- web configuration files -->
     <copy file="${conf_dir}/${module}-web.xml" tofile="${web_deploy_dir}/web.xml"/>
     <copy todir="${web_deploy_dir}">
       <fileset dir="${conf_dir}" includes="**/*.xml, **/*.properties" excludes="**/${module}-web.xml"/>
     </copy>
     
+    <!-- web views -->
   	<copy file="${web_dir}/index.jsp" tofile="${basedir}/WebContent/index.jsp"/>
     <copy todir="${web_deploy_dir}/views">
       <fileset dir="${web_dir}/WEB-INF/views" />
     </copy>
   	
+	<!-- images and css -->
     <copy todir="${basedir}/WebContent/themes">
       <fileset dir="${web_dir}/themes" />
     </copy>
     
+    <!-- web lib -->
     <copy todir="${web_deploy_dir}/lib" flatten="true">
       <fileset dir="${lib_dir}" includes="**/*.jar" excludes="**/junit*.jar,**/*sources.jar,**/*javadoc.jar"/>
     </copy>
     
   </target>
   
- --> 
+  
   <!--
       ************************************************************
       Artifact and Documentation distribution targets

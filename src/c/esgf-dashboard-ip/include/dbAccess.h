@@ -114,9 +114,9 @@
 #define QUERY_DATA_DOWNLOAD_METRICS_GET_RAW_DATA "select al.id as al_id, dwstep6f.datasetid, dwstep6f.file_id, dwstep6f.project, dwstep6f.model, dwstep6f.experiment, dwstep6f.url, dwstep6f.mv,  dwstep6f.var, dwstep6f.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6f.datasetname, dwstep6f.time_frequency,dwstep6f.institute, dwstep6f.product,dwstep6f.ensemble,dwstep6f.cmor_table, (dwstep6f.size)/1024 as size, (case success when 't' then 1 else 0 end) success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6f where dwstep6f.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
 //#define QUERY_DATA_DOWNLOAD_METRICS_GET_RAW_DATA "select al.id as al_id, dwstep6f.datasetid, dwstep6f.file_id, dwstep6f.project, dwstep6f.model, dwstep6f.experiment, dwstep6f.url, dwstep6f.mv,  dwstep6f.var, dwstep6f.realm, al.user_id_hash, al.user_idp,  (extract(year from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as year, (extract(month from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as month, (extract(day from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as day,  (extract(hour from (TIMESTAMP WITH TIME ZONE 'epoch' + al.date_fetched * INTERVAL '1 second'))) as hour, al.service_type, al.remote_addr,  dwstep6f.datasetname, dwstep6f.time_frequency,dwstep6f.institute, dwstep6f.product,dwstep6f.ensemble,dwstep6f.cmor_table, (dwstep6f.size)/1024 as size, success, al.duration  from esgf_node_manager.access_logging as al, esgf_dashboard.dwstep6f where dwstep6f.url=al.url and al.id>(select lastprocessed_id from esgf_dashboard.reconciliation_process) order by al_id;"
 
-#define URL_STATS "http://%s/esgf-desktop/olapJson/GetStats?al_id=%ld&delta=%ld"
-#define URL_STATS_PLANB "http://%s/esgf-desktop/olapJson/GetStatsB"
-#define URL_AGGREGATED_STATS "http://%s/esgf-desktop/olapJson/GetMetrics?sensor=%s&hostname=%s"
+//#define URL_STATS "http://%s/esgf-desktop/olapJson/GetStats?al_id=%ld&delta=%ld"
+//#define URL_STATS_PLANB "http://%s/esgf-desktop/olapJson/GetStatsB"
+//#define URL_AGGREGATED_STATS "http://%s/esgf-desktop/olapJson/GetMetrics?sensor=%s&hostname=%s"
 //#define URL_STATS "http://%s:8080/ESGFNodeDesktop/gridJson/GetStats?al_id=%ld&delta=%ld"
 
 #define QUERY_INSERT_DATA_DOWNLOAD_METRICS_FINALDW "insert into esgf_dashboard.finaldw(%s,peername) values(%s,'%s');"
@@ -137,12 +137,12 @@
 #define END_TRANSACTION_FEDDW "end transaction;"
 #define END_TRANSACTION_FEDDW_PLANB "end transaction;"
 
-#define INSERT_REMOTE_STAT "insert into esgf_dashboard.federationdw(al_id, datasetid,file_id,project,model,experiment, url,mv, var, realm, user_id_hash, user_idp, year, month, day, hour , service_type, remote_addr , datasetname ,time_frequency , institute , product ,ensemble ,cmor_table , size ,success , duration , peername) values%s" 
-#define INSERT_REMOTE_STAT_PLANB "insert into esgf_dashboard.federationdw_planb(year, month, downloads,files,users,gb,host) values%s" 
+//#define INSERT_REMOTE_STAT "insert into esgf_dashboard.federationdw(al_id, datasetid,file_id,project,model,experiment, url,mv, var, realm, user_id_hash, user_idp, year, month, day, hour , service_type, remote_addr , datasetname ,time_frequency , institute , product ,ensemble ,cmor_table , size ,success , duration , peername) values%s" 
+//#define INSERT_REMOTE_STAT_PLANB "insert into esgf_dashboard.federationdw_planb(year, month, downloads,files,users,gb,host) values%s" 
 #define INSERT_AGGREGATED_STATS "insert into esgf_dashboard.sensor_table_%s_tmp(host_name,last5m_o, last1h_o, last1d_o, last1w_o, last1m_o, last1y_o, last5m_p, last1h_p, last1d_p, last1w_p, last1m_p, last1y_p) values%s" 
 
-#define QUERY_GET_LAST_PROCESSED_ID_FED  "select max(al_id) from esgf_dashboard.federationdw where peername='%s';"
-#define QUERY_UPDATE_PEER_LAST_ID "update esgf_dashboard.aggregation_process set lastprocessed_id=%ld where hostname='%s';"
+//#define QUERY_GET_LAST_PROCESSED_ID_FED  "select max(al_id) from esgf_dashboard.federationdw where peername='%s';"
+//#define QUERY_UPDATE_PEER_LAST_ID "update esgf_dashboard.aggregation_process set lastprocessed_id=%ld where hostname='%s';"
 
 // PLAN B
 #define QUERY_PLANB_SUMMARY_DB_TMP "drop table if exists esgf_dashboard.finaldw_planb_tmp; create table esgf_dashboard.finaldw_planb_tmp as (SELECT EXTRACT (YEAR FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as year, EXTRACT (MONTH FROM (TIMESTAMP WITH TIME ZONE 'epoch' + fixed_log.date_fetched * INTERVAL '1 second')) as month, count(*) as downloads, count(distinct url) as files, count(distinct user_id_hash) as users, sum(fixed_log.size)/1024/1024/1024 as gb FROM (SELECT file.url, log.user_id_hash, max(log.date_fetched) as date_fetched, max(file.size) as size FROM esgf_node_manager.access_logging as log join public.file_version as file on (log.url LIKE '%.nc' AND lower(regexp_replace(log.url, E'^.*/(cmip5/.*\\.nc)$', E'\\\\1')) = lower(regexp_replace(file.url, E'^.*/(cmip5/.*\\.nc)$', E'\\\\1'))) where log.success and log.duration > 1000 group by file.url,log.user_id_hash) as fixed_log group by year,month order by year,month);"
