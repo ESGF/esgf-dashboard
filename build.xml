@@ -853,7 +853,7 @@ Builds the project via ant (obviously).
                  revision="${version_num}"
                  overwrite="true" haltonmissing="false">
       <artifacts pattern="dist/[artifact]-[revision].[ext]"/>
-      <artifacts pattern="dist/[artifact].war" />
+     <!-- <artifacts pattern="dist/[artifact].war" />-->
     </ivy:publish>
   </target>
 
