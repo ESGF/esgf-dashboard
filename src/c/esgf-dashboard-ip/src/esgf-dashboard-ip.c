@@ -21,6 +21,10 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
+static const char *project[]={"cmip5","cordex","obs4mips","all projects",NULL};
+ 
+static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs_data_usage","all_data_usage",NULL};
+
 int msglevel; // global variable for log purposes 
 
 static struct option long_options[] = {
@@ -67,6 +71,7 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"NODE_TYPE = [%d]\n",NODE_TYPE);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTNAME = [%s]\n",ESGF_HOSTNAME);
 }
+
 
 /* Allow for 1024 simultanious events */
 /* #define BUFF_SIZE ((sizeof(struct inotify_event)+FILENAME_MAX)*1024)
@@ -202,7 +207,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		realtime_monitoring_setup();
@@ -220,18 +225,21 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
-	    if (i>0) {  
-	    	reconciliation_process_planB();
-		compute_aggregate_data_user_metrics();	
-  		compute_remote_clients_data_mart();
+	    if (i>0) {
+                int num_proj;
+                for(num_proj=0; project[num_proj]!=NULL; num_proj++)
+                   reconciliation_process_planB(project[num_proj], table[num_proj],num_proj);  
+	    	//27-01-2016 reconciliation_process_planB();
+		//27-01-2016 compute_aggregate_data_user_metrics();	
+  		//27-01-2016 compute_remote_clients_data_mart();
 		//if (FEDERATED_STATS) 
 		//	federation_level_aggregation_metrics_planB();
 		}
-	    //sleep(1); // TEST_ 
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	    sleep(1); // TEST_ 
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
 	    i++;  
 	}
 
@@ -463,9 +471,18 @@ main (int argc, char **argv)
       return 0;
     }
 
-  //print_all_properties (); // TEST_ --- PRODUCTION_ // da commentare 
+  print_all_properties (); // TEST_ --- PRODUCTION_ // da commentare
+
+  //aggiungere la libcurl 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
+
+  res=get_download_registration(REGISTRATION_XML_PATH, esgf_registration_xml_path);
+  if(res==0)
+      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download registration.xml with success\n");
+  else
+      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download registration.xml with unsuccess\n");
+
 
   snprintf (query_remove_old_service_metrics,sizeof (query_remove_old_service_metrics),QUERY5,HISTORY_MONTH, HISTORY_DAY);
   snprintf (query_remove_old_local_cpu_metrics,sizeof (query_remove_old_local_cpu_metrics),REMOVE_OLD_CPU_METRICS,HISTORY_MONTH, HISTORY_DAY);
@@ -476,9 +493,12 @@ main (int argc, char **argv)
   fprintf(stdout, "Num sensors %d\n",num_sensors);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
-  reconciliation_process_planB();
-  compute_aggregate_data_user_metrics();
-  compute_remote_clients_data_mart();
+
+  int num_proj;
+  for(num_proj=0; project[num_proj]!=NULL; num_proj++)
+      reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
+  //27-01-2016 compute_aggregate_data_user_metrics();
+  //27-01-2016 compute_remote_clients_data_mart();
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();
 
@@ -490,14 +510,17 @@ main (int argc, char **argv)
   if (ENABLE_REALTIME)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
-  // enabling threads pool for sensors 
+  // enabling threads pool for sensors
+  //27-01-2016 ho cambiato num_sensors!=-1
+  num_sensors=-1; //ONLY TEST 27-01-2016
+ 
   if (num_sensors!=-1)
   	thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator)   
+  while (iterator--)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
@@ -674,7 +697,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   FEDERATED_STATS = 0;		// federated stats enabled=1 or disabled=0. Default disabled! 
   DATA_METRICS_SPAN=24;		// default 24 hour   
   REALTIME_SAMPLES=10; 
-  ENABLE_REALTIME=1;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
+  ENABLE_REALTIME=0;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
   *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file

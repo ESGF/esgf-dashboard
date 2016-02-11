@@ -875,29 +875,61 @@ long int get_last_processed_id (PGconn * conn, char *query)
  return 0;
 }*/
 
-int reconciliation_process_planB()
+int reconciliation_process_planB(char* proj, char* tabl, int i)
 {
   	char update_query_hostname[2048] = { '\0' };
+  	char str[2048] = { '\0' };
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB START\n");
+
+        //fprintf(stdout, "proj vale %s, tabl %s and query %s\n", proj, tabl, QUERY_PLANB_SUMMARY_DB_TMP);
+
+        if(!(strcmp(proj, "all projects")))
+            sprintf(str,"%s", "%");
+        else
+            sprintf(str,"%%%s%%", proj);
+
 	
-	if (transaction_based_query(QUERY_PLANB_SUMMARY_DB_TMP, QUERY8, QUERY4))
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_TMP,tabl,tabl,str);
+        fprintf(stdout, "query vale %s\n", update_query_hostname);	
+
+
+	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB_TMP, QUERY8, QUERY4))
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
+ 	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] con query %s\n", update_query_hostname);
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
 
-	if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_ADD_HOSTNAME_COLUMN, tabl);
+	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK]\n");
-	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,ESGF_HOSTNAME);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] con query %s\n", update_query_hostname);
+
+	//27-01-2016 snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,ESGF_HOSTNAME);
+	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,tabl, ESGF_HOSTNAME);
 
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK]\n");
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] con query %s\n", update_query_hostname);
+	
+        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB,tabl,tabl,tabl);
 
-	if (transaction_based_query(QUERY_PLANB_SUMMARY_DB, QUERY8, QUERY4))
+	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB, QUERY8, QUERY4))
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK]\n");
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] con query %s\n", update_query_hostname);
 
+        if(i==0)
+        {
+	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_IDP, QUERY8, QUERY4))
+		return -1;
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_IDP);
+	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_USER, QUERY8, QUERY4))
+		return -1;
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_USER);
+        }
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
  	return 0;
 }

@@ -57,8 +57,8 @@ thread_serve (void *arg)
    create_metric_stat_table(sens_struct);
 
    //while (1) TEST_ 
-   //while (counter--) 
-   while (1) 
+   while (counter--) 
+   //while (1) 
     {
     increment_num_interval(sens_struct);
 	
@@ -1052,7 +1052,7 @@ int read_sensors_list_from_file(char* esgf_properties, struct sensor_struct *sen
         {
           strcpy (value_buffer, position + 1);  
           *position = '\0';    // now value_buffer stores the VALUE 
-          position = strchr(value_buffer,'\n');  
+        position = strchr(value_buffer,'\n');  
 	  *position = '\0';     // now buffer stores the ATTRIBUTE       
 	  	
           //fprintf(stdout,"Attribute=[%s] Value=[%s]\n",buffer,value_buffer);
@@ -1111,3 +1111,54 @@ int read_sensors_list_from_file(char* esgf_properties, struct sensor_struct *sen
   return curr_sensor;
 }
 
+int get_download_registration(char *path_xml, char *file_dest)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char url_action[10024];
+  char tmp_file[1024];
+  long int i;
+  long long int num_rec;
+  int right_url;
+
+  snprintf (url_action, sizeof (url_action),REGISTRATION_XML_URL);
+  sprintf (tmp_file, "%s/%s", path_xml, "registration_tmp.xml");
+  remove(tmp_file);
+
+  tmp=fopen(tmp_file, "w");
+  if(tmp==NULL)
+        {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
+        remove(tmp_file);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  rename(tmp_file, file_dest);
+  remove(tmp_file);
+
+ return 0;
+}

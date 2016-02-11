@@ -39,7 +39,7 @@ AC_ARG_ENABLE(postgresql,
            [
                 AC_FIND_HEADER(postgres, libpq-fe.h, [$postgres_header_path $postgres_path/include /usr/local/pgsql/include /usr/include /usr/include/pgsql /usr/local/include /usr/local/include/pgsql])
                 if test "x$postgres_FIND" != "x"; then
-                        AC_FIND_LIB(pq, [$postgres_lib_path $postgres_path/lib /usr/local/pgsql/lib /usr/lib /usr/lib/pgsql /usr/local/lib /usr/local/lib/pgsql])
+                        AC_FIND_LIB(pq, [$postgres_lib_path $postgres_path/lib /usr/local/pgsql/lib /usr/lib /usr/lib/pgsql /usr/local/lib /usr/local/lib/pgsql /usr/lib64/])
                         if test "x$pq_LIB_FIND" != "x"; then
                                 postgresql="yes"
                         else
