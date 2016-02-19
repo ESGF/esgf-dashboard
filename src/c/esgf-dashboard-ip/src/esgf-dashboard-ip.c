@@ -232,9 +232,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
                 int num_proj;
                 for(num_proj=0; project[num_proj]!=NULL; num_proj++)
                    reconciliation_process_planB(project[num_proj], table[num_proj],num_proj);  
-	    	//27-01-2016 reconciliation_process_planB();
-		//27-01-2016 compute_aggregate_data_user_metrics();	
-  		//27-01-2016 compute_remote_clients_data_mart();
+		compute_aggregate_data_user_metrics();	
+  		compute_remote_clients_data_mart();
 		//if (FEDERATED_STATS) 
 		//	federation_level_aggregation_metrics_planB();
 		}
@@ -473,7 +472,6 @@ main (int argc, char **argv)
 
   print_all_properties (); // TEST_ --- PRODUCTION_ // da commentare
 
-  //aggiungere la libcurl 
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -493,12 +491,12 @@ main (int argc, char **argv)
   fprintf(stdout, "Num sensors %d\n",num_sensors);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
-
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
-  //27-01-2016 compute_aggregate_data_user_metrics();
-  //27-01-2016 compute_remote_clients_data_mart();
+  compute_aggregate_data_user_metrics();
+  compute_remote_clients_data_mart();
+
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();
 
@@ -506,16 +504,14 @@ main (int argc, char **argv)
 
   // start thread 
   pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
-  
+
   if (ENABLE_REALTIME)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
 
   // enabling threads pool for sensors
-  //27-01-2016 ho cambiato num_sensors!=-1
-  num_sensors=-1; //ONLY TEST 27-01-2016
- 
   if (num_sensors!=-1)
   	thread_manager_start (&threads[0],&sens_struct,num_sensors);
+
 
   counter = 0;
  // PRODUCTION_  while (iterator)
@@ -565,11 +561,11 @@ main (int argc, char **argv)
     }				// forever loop end
 
   // end thread
+
   if (pthread_join (pth, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master!\n");
-  // end thread
   if (ENABLE_REALTIME)
 	{
   	if (pthread_join (pth_realtime, NULL))
@@ -581,6 +577,7 @@ main (int argc, char **argv)
   // end of thread pool for sensors	
   if (num_sensors!=-1)
   	thread_manager_stop (&threads[0],&sens_struct,num_sensors);
+
   
   // freeing space
   fprintf(stderr,"***************************************************\n");
@@ -697,7 +694,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   FEDERATED_STATS = 0;		// federated stats enabled=1 or disabled=0. Default disabled! 
   DATA_METRICS_SPAN=24;		// default 24 hour   
   REALTIME_SAMPLES=10; 
-  ENABLE_REALTIME=0;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
+  ENABLE_REALTIME=1;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
   *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
   *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file

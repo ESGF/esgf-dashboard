@@ -1002,7 +1002,17 @@ int compute_remote_clients_data_mart()
   			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
 	        		pmesg(LOG_WARNING,__FILE__,__LINE__,"Query insert entry in local client data mart failed\n");
   			PQclear(res2);
-    			} 
+
+         	        //QUERY_UPDATE_CLIENT_DATA_MART_WITH_CONTINENT 
+			sprintf(insert_query_client_dm, "%s", QUERY_UPDATE_CLIENT_STATS_DM);
+      	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - Update the client data mart with continent\n");
+      	                  if (transaction_based_query(insert_query_client_dm, QUERY8, QUERY4))
+		          {
+		            pmesg(LOG_ERROR,__FILE__,__LINE__,"Updating the client data mart FAILED! [Code %d]\n",ret_code);
+		            return ret_code;
+		          }
+		        }
+                       
 	}
 
 	PQclear(res);

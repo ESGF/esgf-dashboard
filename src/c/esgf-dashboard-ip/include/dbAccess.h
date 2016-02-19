@@ -193,9 +193,10 @@
 // END QUERIES FOR NEW STATS ENGINE
 
 // START QUERIES FOR NEW DATA MARTS
-#define QUERY_CREATE_CLIENT_DATAMART "drop table if exists esgf_dashboard.client_stats_dm; CREATE TABLE esgf_dashboard.client_stats_dm (host character varying(255),lat numeric(9,6),lon numeric(9,6),country character varying(64),numclient integer);"
+#define QUERY_CREATE_CLIENT_DATAMART "drop table if exists esgf_dashboard.client_stats_dm; CREATE TABLE esgf_dashboard.client_stats_dm (host character varying(255),lat numeric(9,6),lon numeric(9,6),country character varying(64),numclient integer,continent character varying(64));"
 #define QUERY_GET_LIST_CLIENT_IPS "select distinct(remote_addr) as remote_addr from esgf_node_manager.access_logging;"
 #define QUERY_INSERT_CLIENT_INFO "insert into esgf_dashboard.client_stats_dm (host,lat,lon,country,numclient) values('%s',%f,%f,'%s',1);"
+#define QUERY_UPDATE_CLIENT_STATS_DM "UPDATE esgf_dashboard.client_stats_dm SET continent=subquery.continent_name FROM (SELECT countries.country_code, continent.continent_name FROM esgf_dashboard.continent JOIN esgf_dashboard.countries ON countries.continent_code=continent.continent_code GROUP BY countries.country_code, continent.continent_name ORDER BY countries.country_code) AS subquery WHERE client_stats_dm.country=subquery.country_code;"
 // END QUERIES FOR NEW DATA MARTS
 
 // --------------------------------------------------------
