@@ -279,3 +279,5 @@ INSERT INTO esgf_dashboard.countries VALUES ('243', 'YT', 'Mayotte', 'Mayotte', 
 INSERT INTO esgf_dashboard.countries VALUES ('244', 'ZA', 'South Africa', 'Republic of South Africa', 'ZAF', '710', 'AF', '205');
 INSERT INTO esgf_dashboard.countries VALUES ('245', 'ZM', 'Zambia', 'Republic of Zambia', 'ZMB', '894', 'AF', '244');
 INSERT INTO esgf_dashboard.countries VALUES ('246', 'ZW', 'Zimbabwe', 'Republic of Zimbabwe', 'ZWE', '716', 'AF', '245');
+INSERT INTO esgf_dashboard.countries VALUES ('247', 'EU', 'No country', 'No country', '000', '000', 'EU', '000');
+INSERT INTO esgf_dashboard.countries VALUES ('248', 'AP', 'No country', 'No country', '000', '000', 'AS', '000');
