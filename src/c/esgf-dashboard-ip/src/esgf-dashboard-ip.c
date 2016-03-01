@@ -207,7 +207,7 @@ void * realtime_monitoring(void *arg)
 	int i; 
 
 	i=0; 
-	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    if (!i) //the first time it creates the files
   		realtime_monitoring_setup();
@@ -225,7 +225,7 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	int i; 
 
 	i=0; 
-	while (i<3) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {
@@ -237,8 +237,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 		//if (FEDERATED_STATS) 
 		//	federation_level_aggregation_metrics_planB();
 		}
-	    sleep(1); // TEST_ 
-	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	    //sleep(1); // TEST_ 
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
 	    i++;  
 	}
 
@@ -516,7 +516,7 @@ main (int argc, char **argv)
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
-  while (iterator--)   
+  while (iterator)   
     {
       // Removing old metrics once 1 day
       if ((counter % 288) == 0) {
