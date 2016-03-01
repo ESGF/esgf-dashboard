@@ -1,3 +1,15 @@
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+SET search_path = esgf_dashboard, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
 -- ----------------------------
 -- Table structure for `continent`
 -- ----------------------------
@@ -52,7 +64,7 @@ INSERT INTO esgf_dashboard.countries VALUES ('16', 'AX', 'Åland', 'Åland Islan
 INSERT INTO esgf_dashboard.countries VALUES ('17', 'AZ', 'Azerbaijan', 'Republic of Azerbaijan', 'AZE', '031', 'AS', '17');
 INSERT INTO esgf_dashboard.countries VALUES ('18', 'BA', 'Bosnia and Herzegovina', 'Bosnia and Herzegovina', 'BIH', '070', 'EU', '29');
 INSERT INTO esgf_dashboard.countries VALUES ('19', 'BB', 'Barbados', 'Barbados', 'BRB', '052', 'NA', '21');
-INSERT INTO esgf_dashboard.countries VALUES ('20', 'BD', 'Bangladesh', 'People\'s Republic of Bangladesh', 'BGD', '050', 'AS', '20');
+INSERT INTO esgf_dashboard.countries VALUES ('20', 'BD', 'Bangladesh', 'People Republic of Bangladesh', 'BGD', '050', 'AS', '20');
 INSERT INTO esgf_dashboard.countries VALUES ('21', 'BE', 'Belgium', 'Kingdom of Belgium', 'BEL', '056', 'EU', '23');
 INSERT INTO esgf_dashboard.countries VALUES ('22', 'BF', 'Burkina Faso', 'Burkina Faso', 'BFA', '854', 'AF', '37');
 INSERT INTO esgf_dashboard.countries VALUES ('23', 'BG', 'Bulgaria', 'Republic of Bulgaria', 'BGR', '100', 'EU', '36');
@@ -76,11 +88,11 @@ INSERT INTO esgf_dashboard.countries VALUES ('40', 'CD', 'Congo (Kinshasa)', 'De
 INSERT INTO esgf_dashboard.countries VALUES ('41', 'CF', 'Central African Republic', 'Central African Republic', 'CAF', '140', 'AF', '43');
 INSERT INTO esgf_dashboard.countries VALUES ('42', 'CG', 'Congo (Brazzaville)', 'Republic of the Congo', 'COG', '178', 'AF', '52');
 INSERT INTO esgf_dashboard.countries VALUES ('43', 'CH', 'Switzerland', 'Swiss Confederation', 'CHE', '756', 'EU', '214');
-INSERT INTO esgf_dashboard.countries VALUES ('44', 'CI', 'Côte d\'Ivoire', 'Republic of Cote d\'Ivoire', 'CIV', '384', 'AF', '55');
+INSERT INTO esgf_dashboard.countries VALUES ('44', 'CI', 'Côte d Ivoire', 'Republic of Cote d Ivoire', 'CIV', '384', 'AF', '55');
 INSERT INTO esgf_dashboard.countries VALUES ('45', 'CK', 'Cook Islands', 'Cook Islands', 'COK', '184', 'OC', '53');
 INSERT INTO esgf_dashboard.countries VALUES ('46', 'CL', 'Chile', 'Republic of Chile', 'CHL', '152', 'SA', '45');
 INSERT INTO esgf_dashboard.countries VALUES ('47', 'CM', 'Cameroon', 'Republic of Cameroon', 'CMR', '120', 'AF', '40');
-INSERT INTO esgf_dashboard.countries VALUES ('48', 'CN', 'China', 'People\'s Republic of China', 'CHN', '156', 'AS', '46');
+INSERT INTO esgf_dashboard.countries VALUES ('48', 'CN', 'China', 'People Republic of China', 'CHN', '156', 'AS', '46');
 INSERT INTO esgf_dashboard.countries VALUES ('49', 'CO', 'Colombia', 'Republic of Colombia', 'COL', '170', 'SA', '49');
 INSERT INTO esgf_dashboard.countries VALUES ('50', 'CR', 'Costa Rica', 'Republic of Costa Rica', 'CRI', '188', 'NA', '54');
 INSERT INTO esgf_dashboard.countries VALUES ('51', 'CU', 'Cuba', 'Republic of Cuba', 'CUB', '192', 'NA', '57');
@@ -93,7 +105,7 @@ INSERT INTO esgf_dashboard.countries VALUES ('57', 'DJ', 'Djibouti', 'Republic o
 INSERT INTO esgf_dashboard.countries VALUES ('58', 'DK', 'Denmark', 'Kingdom of Denmark', 'DNK', '208', 'EU', '60');
 INSERT INTO esgf_dashboard.countries VALUES ('59', 'DM', 'Dominica', 'Commonwealth of Dominica', 'DMA', '212', 'NA', '62');
 INSERT INTO esgf_dashboard.countries VALUES ('60', 'DO', 'Dominican Republic', 'Dominican Republic', 'DOM', '214', 'NA', '63');
-INSERT INTO esgf_dashboard.countries VALUES ('61', 'DZ', 'Algeria', 'People\'s Democratic Republic of Algeria', 'DZA', '012', 'AF', '5');
+INSERT INTO esgf_dashboard.countries VALUES ('61', 'DZ', 'Algeria', 'People Democratic Republic of Algeria', 'DZA', '012', 'AF', '5');
 INSERT INTO esgf_dashboard.countries VALUES ('62', 'EC', 'Ecuador', 'Republic of Ecuador', 'ECU', '218', 'SA', '64');
 INSERT INTO esgf_dashboard.countries VALUES ('63', 'EE', 'Estonia', 'Republic of Estonia', 'EST', '233', 'EU', '69');
 INSERT INTO esgf_dashboard.countries VALUES ('64', 'EG', 'Egypt', 'Arab Republic of Egypt', 'EGY', '818', 'AF', '65');
@@ -152,12 +164,12 @@ INSERT INTO esgf_dashboard.countries VALUES ('116', 'KH', 'Cambodia', 'Kingdom o
 INSERT INTO esgf_dashboard.countries VALUES ('117', 'KI', 'Kiribati', 'Republic of Kiribati', 'KIR', '296', 'OC', '116');
 INSERT INTO esgf_dashboard.countries VALUES ('118', 'KM', 'Comoros', 'Union of the Comoros', 'COM', '174', 'AF', '50');
 INSERT INTO esgf_dashboard.countries VALUES ('119', 'KN', 'Saint Kitts and Nevis', 'Federation of Saint Kitts and Nevis', 'KNA', '659', 'NA', '187');
-INSERT INTO esgf_dashboard.countries VALUES ('120', 'KP', 'Korea, North', 'Democratic People\'s Republic of Korea', 'PRK', '408', 'AS', '117');
+INSERT INTO esgf_dashboard.countries VALUES ('120', 'KP', 'Korea, North', 'Democratic People Republic of Korea', 'PRK', '408', 'AS', '117');
 INSERT INTO esgf_dashboard.countries VALUES ('121', 'KR', 'Korea, South', 'Republic of Korea', 'KOR', '410', 'AS', '118');
 INSERT INTO esgf_dashboard.countries VALUES ('122', 'KW', 'Kuwait', 'State of Kuwait', 'KWT', '414', 'AS', '119');
 INSERT INTO esgf_dashboard.countries VALUES ('123', 'KY', 'Cayman Islands', 'Cayman Islands', 'CYM', '136', 'NA', '42');
 INSERT INTO esgf_dashboard.countries VALUES ('124', 'KZ', 'Kazakhstan', 'Republic of Kazakhstan', 'KAZ', '398', 'AS', '114');
-INSERT INTO esgf_dashboard.countries VALUES ('125', 'LA', 'Laos', 'Lao People\'s Democratic Republic', 'LAO', '418', 'AS', '121');
+INSERT INTO esgf_dashboard.countries VALUES ('125', 'LA', 'Laos', 'Lao People Democratic Republic', 'LAO', '418', 'AS', '121');
 INSERT INTO esgf_dashboard.countries VALUES ('126', 'LB', 'Lebanon', 'Lebanese Republic', 'LBN', '422', 'AS', '123');
 INSERT INTO esgf_dashboard.countries VALUES ('127', 'LC', 'Saint Lucia', 'Saint Lucia', 'LCA', '662', 'NA', '188');
 INSERT INTO esgf_dashboard.countries VALUES ('128', 'LI', 'Liechtenstein', 'Principality of Liechtenstein', 'LIE', '438', 'EU', '127');
@@ -281,3 +293,5 @@ INSERT INTO esgf_dashboard.countries VALUES ('245', 'ZM', 'Zambia', 'Republic of
 INSERT INTO esgf_dashboard.countries VALUES ('246', 'ZW', 'Zimbabwe', 'Republic of Zimbabwe', 'ZWE', '716', 'AF', '245');
 INSERT INTO esgf_dashboard.countries VALUES ('247', 'EU', 'No country', 'No country', '000', '000', 'EU', '000');
 INSERT INTO esgf_dashboard.countries VALUES ('248', 'AP', 'No country', 'No country', '000', '000', 'AS', '000');
+
+SET search_path = public, pg_catalog;
