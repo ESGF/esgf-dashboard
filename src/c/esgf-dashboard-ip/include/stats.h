@@ -6,7 +6,7 @@
 #define BUFCHAR_MAX 1024
 #define BUFCHAR_EXEC_MAX 1024
 #define THREAD_SENSOR_OPEN_MAX 100 
-#define REGISTRATION_XML_URL "http://dist.ceda.ac.uk/esgf/dist/devel/lists/registration.xml" //29-01-2016 
+//#define REGISTRATION_XML_URL "http://dist.ceda.ac.uk/esgf/dist/devel/lists/registration.xml" //29-01-2016 
 
 struct stats_struct 
 {

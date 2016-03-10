@@ -21,7 +21,7 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 
-static const char *project[]={"cmip5","cordex","obs4mips","all projects",NULL};
+static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
 static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs_data_usage","all_data_usage",NULL};
 
@@ -67,6 +67,7 @@ print_all_properties (void)
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"PING_SPAN_NO_HOSTS = [%d]\n", PING_SPAN_NO_HOSTS);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTS_LOADING_SPAN = [%d]\n", HOSTS_LOADING_SPAN);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_PATH = [%s]\n", REGISTRATION_XML_PATH);
+  pmesg(LOG_DEBUG,__FILE__,__LINE__,"REGISTRATION_XML_URL = [%s]\n", REGISTRATION_XML_URL);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"DASHBOARD_SERVICE_PATH = [%s]\n", DASHBOARD_SERVICE_PATH);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"NODE_TYPE = [%d]\n",NODE_TYPE);
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"HOSTNAME = [%s]\n",ESGF_HOSTNAME);
@@ -422,7 +423,9 @@ main (int argc, char **argv)
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Mandatory properties are:\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[db.host], [db.database], [db.port], [db.user]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.host]\n");
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[node.manager.service.app.home]\n");
+	  //pmesg(LOG_ERROR,__FILE__,__LINE__,"[node.manager.service.app.home]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.path]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.download_url]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[dashboard.ip.app.home]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please check!!!\n");
 	  myfree (esgf_properties);
@@ -431,6 +434,7 @@ main (int argc, char **argv)
 	  myfree (POSTGRES_USER);
       	  myfree (DASHBOARD_SERVICE_PATH);
       	  myfree (REGISTRATION_XML_PATH);
+      	  myfree (REGISTRATION_XML_URL);
       	  myfree (ESGF_HOSTNAME);
 	  return 0;
 	}
@@ -449,6 +453,7 @@ main (int argc, char **argv)
       myfree (POSTGRES_DB_NAME);
       myfree (POSTGRES_USER);
       myfree (REGISTRATION_XML_PATH);
+      myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
       return 0;
@@ -464,6 +469,7 @@ main (int argc, char **argv)
       myfree (POSTGRES_DB_NAME);
       myfree (POSTGRES_USER);
       myfree (REGISTRATION_XML_PATH);
+      myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
       myfree (POSTGRES_PASSWD);
@@ -593,6 +599,7 @@ main (int argc, char **argv)
   myfree (POSTGRES_USER);
   myfree (POSTGRES_PASSWD);
   myfree (REGISTRATION_XML_PATH);
+  myfree (REGISTRATION_XML_URL);
   myfree (ESGF_HOSTNAME);
   myfree (DASHBOARD_SERVICE_PATH);
 
@@ -697,7 +704,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   ENABLE_REALTIME=1;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
   *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
-  *mandatory_properties = 7;	// number of mandatory properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 8;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
     {
@@ -752,9 +759,17 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "node.manager.service.app.home")))
+	  if (!(strcmp (buffer, "esgf.registration_xml.path")))
 	    {
 	      strcpy (REGISTRATION_XML_PATH =
+		      (char *) malloc (strlen (value_buffer) + 1),
+		      value_buffer);
+	      (*notfound)--;
+	      (*mandatory_properties)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.registration_xml.download_url")))
+	    {
+	      strcpy (REGISTRATION_XML_URL =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;
