@@ -1,7 +1,7 @@
 all: xmlexample
-LIBS= -L. -lcurl -lxml2 -lm -L/usr/lib64 -lpq -L/home/esgf/geoip_install/lib -lGeoIP 
+LIBS= -L. -lcurl -lxml2 -lm -L/usr/lib64 -lpq -L/usr/local/lib -lGeoIP 
 
-INCLUDES= -I. -I/usr/include/libxml2 -I/usr/include/curl/ -I/usr/include/ -I/home/esgf/geoip_install/include 
+INCLUDES= -I. -I/usr/include/libxml2 -I/usr/include/curl/ -I/usr/include/ -I/usr/local/include 
 
 xmlexample: debug.o hashtbl.o esgf-dashboard-insert-dw.o ftpget.o esgf-libiplookup.o xmlreader.o
 	gcc -o xmlexample xmlreader.o ftpget.o esgf-dashboard-insert-dw.o hashtbl.o esgf-libiplookup.o debug.o $(LIBS)

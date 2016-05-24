@@ -219,19 +219,25 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
                 (*datasetproj)[cnt]->id=strdup(prop1); 
                 xmlFree(prop1);
               }
+              if(xmlStrcasecmp(prop, (xmlChar *)"version")==0)
+              {
+                prop1 = xmlNodeGetContent(cur_node);
+                (*datasetproj)[cnt]->version=strdup(prop1); 
+                xmlFree(prop1);
+              }
               if(xmlStrcasecmp(prop, (xmlChar *)"dataset_id")==0)
               {
                 prop1 = xmlNodeGetContent(cur_node);
                 (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1); 
-                char *tmp_str=strstr(prop1, "|");
+                /*char *tmp_str=strstr(prop1, "|");
                 if(tmp_str)
                 {
                    *tmp_str = 0; 
                 }
                 char *tmp_str1=strstr(prop1, ".v");
                 if(tmp_str1)
-                  (*datasetproj)[cnt]->version=strdup(tmp_str1+2);
+                  (*datasetproj)[cnt]->version=strdup(tmp_str1+2);*/
                 xmlFree(prop1);
               }
               if(xmlStrcasecmp(prop, (xmlChar *)"project")==0)
@@ -385,7 +391,7 @@ main(int argc, char **argv)
     char *filename_conf="conf/conf.xml";
     LIBXML_TEST_VERSION
 
-    conninfo = "dbname = esgcet2 user=dbsuper password=abcdef";
+    conninfo = "dbname = esgcet user=dbsuper password=XXXXX"; /* change it */
 
 while(1)
 {
@@ -411,7 +417,8 @@ while(1)
      */
     //res1 = PQexec(conn, "select \"url_path\",\"id\" from esgf_dashboard.dashboard_queue;");
     res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 order by timestamp DESC limit 1000;");
-    //res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where id=352770;");
+    //res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where id=371755 and processed=0");
+    //res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where id=9161");
     if (PQresultStatus(res1) != PGRES_TUPLES_OK)
     {
         fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(conn));
