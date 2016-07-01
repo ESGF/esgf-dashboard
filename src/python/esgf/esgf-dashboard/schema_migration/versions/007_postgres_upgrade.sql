@@ -294,5 +294,3 @@ INSERT INTO esgf_dashboard.country VALUES ('245', 'ZM', 'Zambia', 'AF');
 INSERT INTO esgf_dashboard.country VALUES ('246', 'ZW', 'Zimbabwe', 'AF');
 INSERT INTO esgf_dashboard.country VALUES ('247', 'EU', 'No country', 'EU');
 INSERT INTO esgf_dashboard.country VALUES ('248', 'AP', 'No country', 'AS');
-
-SET search_path = public, pg_catalog;
