@@ -996,7 +996,7 @@ int compute_remote_clients_data_mart()
     				} 
 			else  
 			{
-			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, geo_output.latitude, geo_output.longitude,geo_output.country_code);
+			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, ip_str,geo_output.latitude, geo_output.longitude,geo_output.country_code);
   			res2 = PQexec(conn, insert_query_client_dm);
 
   			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
