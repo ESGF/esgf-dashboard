@@ -493,7 +493,6 @@ main (int argc, char **argv)
 
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
-  fprintf(stdout, "Num sensors %d\n",num_sensors);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
 
   compute_remote_clients_data_mart();
