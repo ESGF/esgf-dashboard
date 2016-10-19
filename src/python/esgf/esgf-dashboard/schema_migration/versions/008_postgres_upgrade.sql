@@ -74,6 +74,7 @@ ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;
 --
 drop function if exists store_dashboard_queue() CASCADE;
 drop function if exists update_url();
+drop function if exists update_url(integer);
 drop LANGUAGE if exists plpgsql;
 
 --
@@ -86,29 +87,14 @@ insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_has
 -- Function to update the urls in the dashboard_queue table
 --
 CREATE LANGUAGE plpgsql;
-create function update_url()
+create function update_url(integer)
 returns integer as'
 declare
-url_http varchar;
-id int;
-i int;
-j int;
+i alias for $1;
+j integer:=28+i;
 begin
-j:=0;
-select into i count(*) from esgf_dashboard.dashboard_queue where url_path
-like ''http%'' ;
-FOR url_http, id in select url_path, id from esgf_dashboard.dashboard_queue
-where url_path like ''http%''
-LOOP
-raise notice ''j %****%********'', j, url_http;
-update esgf_dashboard.dashboard_queue set url_path=subquery.url_res
-FROM (select file.url as url_res from public.file_version as file,
-esgf_dashboard.dashboard_queue as log where log.url_path like ''%''||file.url
-and log.url_path=url_http) as subquery where url_path=url_http;
-j:=j+1;
-if (j=i) then EXIT;
-end if;
-END LOOP;
+UPDATE esgf_dashboard.dashboard_queue SET url_path = substr(url_path,
+j) where url_path like ''http%'';
 return 0;
 end;
 'language 'plpgsql';
