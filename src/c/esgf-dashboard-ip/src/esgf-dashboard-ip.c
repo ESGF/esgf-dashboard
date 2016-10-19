@@ -23,7 +23,7 @@
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
-static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs_data_usage","all_data_usage",NULL};
+static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs4mips_data_usage","all_data_usage",NULL};
 
 int msglevel; // global variable for log purposes 
 
@@ -230,11 +230,11 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {
+  		compute_remote_clients_data_mart();
                 int num_proj;
                 for(num_proj=0; project[num_proj]!=NULL; num_proj++)
                    reconciliation_process_planB(project[num_proj], table[num_proj],num_proj);  
 		compute_aggregate_data_user_metrics();	
-  		compute_remote_clients_data_mart();
 		//if (FEDERATED_STATS) 
 		//	federation_level_aggregation_metrics_planB();
 		}
@@ -493,14 +493,14 @@ main (int argc, char **argv)
 
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
-  fprintf(stdout, "Num sensors %d\n",num_sensors);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
+
+  compute_remote_clients_data_mart();
 
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
   compute_aggregate_data_user_metrics();
-  compute_remote_clients_data_mart();
 
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();

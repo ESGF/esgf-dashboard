@@ -882,8 +882,6 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB START\n");
 
-        //fprintf(stdout, "proj vale %s, tabl %s and query %s\n", proj, tabl, QUERY_PLANB_SUMMARY_DB_TMP);
-
         if(!(strcmp(proj, "all projects")))
             sprintf(str,"%s", "%");
         else
@@ -891,44 +889,208 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
 
 	
 	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_TMP,tabl,tabl,str);
-        fprintf(stdout, "query vale %s\n", update_query_hostname);	
 
-
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB_TMP, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] con query %s\n", update_query_hostname);
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
 
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] with query %s\n", update_query_hostname);
+
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CNT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with downloads [OK]\n");
+
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CONTINENT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with continent [OK]\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CONTINENT_CNT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with continent and downloads [OK]\n");
+
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - select number of downloads without continent\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_SELECT_DOWNLOADS,tabl);
+
+        PGconn *conn;
+        PGresult *res;
+        PGresult *res_cont;
+        int numTuples;
+        char conninfo[1024] = {'\0'};
+
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -2;
+        }
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
+        res = PQexec(conn, QUERY3); 
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+	// SELECT START 
+	res = PQexec(conn,update_query_hostname);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+	numTuples = PQntuples(res);
+	int nFields = PQnfields(res);
+        int t=0;
+        if(numTuples==0)
+          t=-1;
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of remote client entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	for(t = 0; t < numTuples; t ++) {
+  			char year[10024] = { '\0' };
+  			char month[1024] = { '\0' };
+  			int downloads=0;
+
+			snprintf (year,sizeof (year),"%s",PQgetvalue(res, t, 0));
+			snprintf (month,sizeof (month),"%s",PQgetvalue(res, t, 1));
+			downloads=atoi(PQgetvalue(res, t, 2));
+	                snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_UPDATE_DOWNLOADS,tabl, downloads, month, year);
+
+                        res_cont=PQexec(conn,update_query_hostname);
+ 	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
+                        PQclear(res_cont);
+    	}
+        // stop transaction
+        res = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
+        res = PQexec(conn, QUERY3); 
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - select number of downloads with continent\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_SELECT_DOWNLOADS_CONT,tabl);
+	// SELECT START 
+	res = PQexec(conn,update_query_hostname);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+        if(numTuples!=0)
+          t=0;
+        else
+          t=-1;
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of remote client entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	for(t = 0; t < numTuples; t ++) {
+  			char year[10024] = { '\0' };
+  			char month[1024] = { '\0' };
+  			int downloads=0;
+  			char continent[1024] = { '\0' };
+
+			snprintf (year,sizeof (year),"%s",PQgetvalue(res, t, 0));
+			snprintf (month,sizeof (month),"%s",PQgetvalue(res, t, 1));
+			downloads=atoi(PQgetvalue(res, t, 2));
+			snprintf (continent,sizeof (continent),"%s",PQgetvalue(res, t, 3));
+	                snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_UPDATE_DOWNLOADS_CONT,tabl, downloads, continent, month, year);
+
+                        res_cont = PQexec(conn,update_query_hostname);
+ 	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
+                        PQclear(res_cont);
+    	}
+        // stop transaction
+        res = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res);
+    
+        PQfinish(conn);
+        
 	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_ADD_HOSTNAME_COLUMN, tabl);
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] con query %s\n", update_query_hostname);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] with query %s\n", update_query_hostname);
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_ADD_HOSTNAME_COLUMN_CONTINENT, tabl);
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] with continent %s\n", update_query_hostname);
 
-	//27-01-2016 snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,ESGF_HOSTNAME);
 	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,tabl, ESGF_HOSTNAME);
 
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] con query %s\n", update_query_hostname);
-	
-        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB,tabl,tabl,tabl);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] with query %s\n", update_query_hostname);
+	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE_CONTINENT,tabl, ESGF_HOSTNAME);
 
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] con query %s\n", update_query_hostname);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] with continent %s\n", update_query_hostname);
+	
+        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB,tabl,tabl,tabl,tabl);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] with query %s\n", update_query_hostname);
+        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB_CONTINENT,tabl,tabl,tabl,tabl);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] with continent %s\n", update_query_hostname);
 
         if(i==0)
         {
 	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_IDP, QUERY8, QUERY4))
 		return -1;
- 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_IDP);
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK] with query %s\n", QUERY_PLANB_DOWNLOADS_BY_IDP);
 	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_USER, QUERY8, QUERY4))
 		return -1;
- 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_USER);
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK] with query %s\n", QUERY_PLANB_DOWNLOADS_BY_USER);
         }
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
  	return 0;
@@ -996,7 +1158,7 @@ int compute_remote_clients_data_mart()
     				} 
 			else  
 			{
-			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, geo_output.latitude, geo_output.longitude,geo_output.country_code);
+			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, ip_str,geo_output.latitude, geo_output.longitude,geo_output.country_code);
   			res2 = PQexec(conn, insert_query_client_dm);
 
   			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
