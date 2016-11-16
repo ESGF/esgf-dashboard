@@ -16,6 +16,7 @@ char *ESGF_HOSTNAME;
 char *REGISTRATION_XML_PATH;
 char *REGISTRATION_XML_URL;
 char *DASHBOARD_SERVICE_PATH;
+char *ESGF_NODE_SOLR;
 int CONNECTION_TIMEOUT; // microseconds
 unsigned short THREAD_OPEN_MAX; // max threads #
 int PING_SPAN;

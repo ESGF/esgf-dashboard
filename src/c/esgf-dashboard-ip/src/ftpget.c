@@ -1,15 +1,11 @@
-/*****************************************************************************
- *                                  _   _ ____  _
- *  Project                     ___| | | |  _ \| |
- *                             / __| | | | |_) | |
- *                            | (__| |_| |  _ <| |___
- *                             \___|\___/|_| \_\_____|
- *
- * $Id: ftpget.c,v 1.4 2004/08/23 14:22:52 bagder Exp $
+/*
+ *  ftpget.c
+ *    
+ *  Author: University of Salento and CMCC 
+ *         
  */
 
 #include <stdio.h>
-
 #include <curl/curl.h>
 #include <curl/types.h>
 #include <curl/easy.h>
@@ -21,7 +17,9 @@ int my_fwrite(void *buffer, size_t size, size_t nmemb, void *stream)
   struct FtpFile *out=(struct FtpFile *)stream;
   if(out && !out->stream) {
     /* open file for writing */
-    out->stream=fopen(out->filename, "wb");
+    char tmp_file[2048] = {'\0'};
+    sprintf (tmp_file, ".work/%s", out->filename);
+    out->stream=fopen(tmp_file, "wb");
     if(!out->stream)
     {
       return -1; /* failure, can't open file to write */
@@ -74,6 +72,7 @@ int ftp_download_file(struct FtpFile **file, int size)
 	//	free(respfile);
 	}
 	curl_global_cleanup();
-	return SUCCESS;
+	return res;
+	//return SUCCESS;
 }
 

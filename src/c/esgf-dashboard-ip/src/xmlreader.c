@@ -1,14 +1,10 @@
-/**
- * section: Tree
- * synopsis: Navigates a tree to print element names
- * purpose: Parse a file to a tree, use xmlDocGetRootElement() to
- *          get the root element, then walk the document and print
- *          all the element name in document order.
- * usage: tree1 filename_or_URL
- * test: tree1 test2.xml > tree1.tmp ; diff tree1.tmp tree1.res ; rm tree1.tmp
- * author: Dodji Seketeli
- * copy: see Copyright for the status of this software.
+/*
+ *  xmlreader.c
+ *  
+ *  Author: University of Salento and CMCC 
+ *     
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -19,17 +15,6 @@
 #include "ftpget.h"
 #include <error.h>
 #include <sys/time.h>
-#include <libpq-fe.h>
-#define BUFSIZE 1024
-#define QUERY_UPDATE_DASHBOARD_QUEUE "update esgf_dashboard.dashboard_queue set processed=1 where id=%d;"
-/*
- *To compile this file using gcc you can type
- *gcc `xml2-config --cflags --libs` -o xmlexample libxml2-example.c
- */
-
-// legge il file indicato, nella directory indicata,
-// e copia il valore di execution_cmd nella stringa cmd_name
-// ritona un valore negativo e cmd_name = "" se l'operazione fallisce
 
 /**
  * print_element_names:
@@ -200,6 +185,7 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
     xmlChar *prop1 = NULL;
     xmlNode * b_node=NULL;
     int num_str=0;
+    char str_dataset_id[2048] = { '\0' };
     
     int res, proj=0;
     int i=0;
@@ -229,7 +215,16 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
               {
                 prop1 = xmlNodeGetContent(cur_node);
                 (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
-                (*datasetproj)[cnt]->dataset_id=strdup(prop1); 
+                char *tmp_str=strstr(prop1, "|");
+                char *tmp_str1=strstr(prop1, "|");
+                if(tmp_str)
+                {
+                   *tmp_str = 0; 
+                   sprintf(str_dataset_id,"%s%s%s",prop1,"%7C",tmp_str1+1); 
+                   //printf("str_dataset_id vale %s\n", str_dataset_id);
+                }
+          
+                (*datasetproj)[cnt]->dataset_id=strdup(str_dataset_id); 
                 /*char *tmp_str=strstr(prop1, "|");
                 if(tmp_str)
                 {
@@ -345,414 +340,6 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
   return res;
 }
 
-static void
-exit_nicely(PGconn *conn)
-{
-    PQfinish(conn);
-    exit(1);
-}
-
-static void usage (char *name)
-{
-  printf ("%s: Usage:\n", name);
-  printf ("\t nome del file xml, nome del database, operazione (0 per download ftp full release, 1 per update)\n");
-}
-
-/**
- * Simple example to parse a file called "file.xml", 
- * walk down the DOM, and print the name of the 
- * xml elements nodes.
- */
-int
-main(int argc, char **argv)
-{
-
-    const char *conninfo;
-    PGconn     *conn;
-    PGresult   *res1;
-    int         nFields;
-    char **datasetid=NULL;
-    char **queryid=NULL;
-    char **URL=NULL;
-    char **id_query=NULL;
-    int res, cnt, j=0;
-    xmlDoc *doc = NULL;
-    xmlNode *root_element = NULL, *root_children = NULL;
-    char str_url[256];
-    str_url[0]='\0';
-  
-    int size=0;
-    int i=0;
-    //char *projectName="obs4MIPs"; 
-    char *projectName=NULL; 
-    //char *esgf_node="esgf-test.cmcc.it";
-    char *esgf_node="esgf-node.jpl.nasa.gov";
-
-    char *filename_conf="conf/conf.xml";
-    LIBXML_TEST_VERSION
-
-    conninfo = "dbname = esgcet user=dbsuper password=XXXXX"; /* change it */
-
-while(1)
-{
-
-/* Make a connection to the database */
-    conn = PQconnectdb(conninfo);
-
-    /* Check to see that the backend connection was successfully made */
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-        fprintf(stderr, "Connection to database failed: %s",
-                PQerrorMessage(conn));
-        exit_nicely(conn);
-    }
-
-    /*
-     * Should PQclear PGresult whenever it is no longer needed to avoid memory
-     * leaks
-     */
-
-    /*
-     * Fetch rows from pg_database, the system catalog of databases
-     */
-    //res1 = PQexec(conn, "select \"url_path\",\"id\" from esgf_dashboard.dashboard_queue;");
-    res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 order by timestamp DESC limit 1000;");
-    //res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where id=371755 and processed=0");
-    //res1 = PQexec(conn, "select url_path,id from esgf_dashboard.dashboard_queue where id=9161");
-    if (PQresultStatus(res1) != PGRES_TUPLES_OK)
-    {
-        fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(conn));
-        PQclear(res1);
-        exit_nicely(conn);
-    }
-
-/* first, print out the attribute names */
-    nFields = PQnfields(res1);
-    size=PQntuples(res1);
-    printf("size vale %d\n", size);
-    printf("nFields %d\n", nFields);
-    URL=(char**) calloc (size+1, sizeof(char *));
-    id_query=(char**) calloc (size+1, sizeof(char *));
-    
-    char url_comp[2056]={'\0'};
-
-    char *str_url1=NULL;
-    char *str_u=NULL;
-    /* next, print out the rows */
-    for (i = 0; i < PQntuples(res1); i++)
-    {
-        str_url1=strdup(PQgetvalue(res1, i, 0));
-       
-        str_u=strstr(str_url1,"esg_dataroot/");
-        if(str_u)
-        {
-          //printf("url vale %s\n", str_u+13);
-          sprintf(url_comp, "http://%s/solr/files/select/?q=url:*esg_dataroot/%s*", esgf_node, str_u+13);
-          printf("url vale %s\n", url_comp);
-        }
-        else
-          sprintf(url_comp, "http://%s/solr/files/select/?q=url:*%s*", esgf_node, str_url1);
-        free(str_url1);
-
-        //URL[i]=strdup(PQgetvalue(res1, i, 0));
-        URL[i]=strdup(url_comp);
-        id_query[i]=strdup(PQgetvalue(res1, i, 1));
-       
-        //printf("%s\n", PQgetvalue(res1, i, 0));
-        //printf("%s\n", PQgetvalue(res1, i, 1));
-    }
-    size=PQntuples(res1);
-    printf("size vale %d\n", size);
-    PQclear(res1);
-    /* close the connection to the database and cleanup */
-    URL[i]=NULL;
-    id_query[i]=NULL;
-
-
-/*    URL=(char **) calloc (size, sizeof(char *));
-
-    URL[0]=strdup("http://sara.unisalento.it/~mirto/query1_0.xml");
-    URL[1]=strdup("http://sara.unisalento.it/~mirto/query1_1.xml");
-    URL[2]=strdup("http://sara.unisalento.it/~mirto/query1_2.xml");
-*/
-    struct FtpFile **ftpfile=NULL;
-    ftpfile=calloc (size+2, sizeof(struct FtpFile *));
-    if(!ftpfile)
-    {
-        myfree_array(URL,size+1);
-        myfree_array(id_query,size+1);
-        //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
-	return ERROR_CALLOC;
-    }
-
-    res=alloca_struct_FtpFile(ftpfile, URL, id_query, size);
-    if(res!=SUCCESS)
-    {
-       myfree_array(URL,size+1);
-       myfree_array(id_query,size+1);
-       free_struct_FtpFile(ftpfile);
-       return res;
-    }
-    
-    
-    res=ftp_download_file(ftpfile,size);
-   
-    if(res!=SUCCESS)
-    {
-        //pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
-    }
- 
-   int size_eff=0;
-   for (cnt=0; cnt < size; cnt++)
-    {
-      /*parse the file and get the DOM */
-      doc = xmlReadFile(ftpfile[cnt]->filename, NULL, 0);
-      if (doc == NULL)
-      {
-        //fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        size_eff++;
-        //return NULL;
-      }
-      xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();
-    }
-    size_eff=size-size_eff;
-    printf("size_eff vale %d\n", size_eff);
-    if(size_eff==0)  //significa che non ho scaricato nulla
-    {
-       myfree_array(URL,size+1);
-       myfree_array(id_query,size+1);
-       free_struct_FtpFile(ftpfile);
-       sleep(5);
-       continue;
-       //return -1; //devo andare in sleep
-    }
-
-    int num_metadata=0;
-    i=0;
-    datasetid=calloc(size_eff+1, sizeof(char*));
-    queryid=calloc(size_eff+1, sizeof(char*));
-    for (cnt=0; cnt < size; cnt++)
-    {
-      doc = xmlReadFile(ftpfile[cnt]->filename, NULL, 0);
-      if (doc != NULL)
-      {
-        //fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        queryid[i]=strdup(id_query[cnt]);
-        i++;
-        //return NULL;
-      }
-      xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();      
-    }
-
-    struct dataset_project **datasetproj;
-    datasetproj=calloc(size_eff+1, sizeof(struct dataset_project*));
-
-    int query_kind=0;
-    int cnt2=0;
-    int flag=0;
-    FILE *pFile;
-    for (cnt=0; cnt < size; cnt++)
-    {
-      /*parse the file and get the DOM */
-      doc = xmlReadFile(ftpfile[cnt]->filename, NULL, 0);
-      if (doc == NULL)
-      {
-	//fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        flag=1;
-	//return NULL;
-      }
-    if(flag==0)
-    { 
-      /*Get the root element node */
-      root_element = xmlDocGetRootElement(doc);
-      res=count_tag(doc,"//arr[@name='project']");
-      if(res!=0)
-      { 
-        char buffer[2056]={'\0'};
-        pFile = fopen ("myfile.csv", "a+");
-      sprintf(buffer, "%s,%s,yes",queryid[cnt],ftpfile[cnt]->URL); 
-      char *str=NULL;
-      str=strdup(buffer);
-      fprintf (pFile, "%s\n", str);
-      //fwrite (str,strlen(str),sizeof(str),pFile);
-      free(str);
-      str=NULL;
-      fclose (pFile);
-        int res1=0;
-        //printf("file letto %s\n", ftpfile[cnt]->filename); 
-        datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
-        datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
-        res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, queryid);
-        datasetproj[cnt2]->first[res]=NULL;
-        res1=read_conf_project(filename_conf,&datasetproj, cnt2);
-
-        int size1,size2, size3,size4;
-        for(size2=0; datasetproj[cnt2]->first[size2]!=NULL; size2++)
-        {
-          int num_metadata=datasetproj[cnt2]->first[size2]->size;
-          if(num_metadata>0) 
-            res = get_metadata_solr(doc, root_element, &datasetproj, cnt2, size2, num_metadata, query_kind);
-        }
-        sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s", esgf_node, datasetproj[cnt2]->dataset_id);
-        printf("str_url seconda interrogazione al solr %s\n", str_url);
-        //sprintf(str_url,"http://sara.unisalento.it/~mirto/query2_%d.xml", cnt2);
-        if(datasetid[cnt2]!=NULL)
-        {
-          free(datasetid[cnt2]);
-          datasetid[cnt2]=NULL;
-        }
-        datasetid[cnt2] = strdup(str_url);
-        printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
-        cnt2++;
-      }
-      else
-      {
-        char buffer[2056]={'\0'};
-        pFile = fopen ("myfile.csv", "a+");
-        sprintf(buffer, "%s,%s,no",queryid[cnt],ftpfile[cnt]->URL);
-        char *str=NULL;
-        str=strdup(buffer); 
-        fprintf (pFile, "%s\n", str);
-        free(str);
-        str=NULL;
-        fclose (pFile);
-        char update_dashboard_queue[2048] = { '\0' };
-        snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,atoi(queryid[cnt]));
-        submit_query (conn, update_dashboard_queue);
-
-      }
-     }
-      flag=0;
-      xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();
-      res=remove(ftpfile[cnt]->filename);
-#if 0
-      if(res!=0)
-        pmesg(LOG_ERROR, __FILE__, __LINE__, "Error in remove the file %s\n", ftpfile[cnt]->filename);
-      else
-        pmesg(LOG_DEBUG, __FILE__, __LINE__, "File %s removed\n", ftpfile[cnt]->filename);
-#endif
-    }
-    datasetid[cnt2]=NULL;  
-    datasetproj[cnt2]=NULL;
-
-    myfree_array(URL,size+1);
-    //myfree_array(id_query,nFields+1);
-
-    free_struct_FtpFile(ftpfile);
-
-    ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
-   
-    res=alloca_struct_FtpFile(ftpfile, datasetid, queryid, cnt2);
-    if(res!=SUCCESS)
-    {
-       free_struct_FtpFile(ftpfile);
-       return res;
-    }
-    myfree_array(id_query,size+1);
-   
-    res=ftp_download_file(ftpfile,cnt2);
-   
-    if(res!=SUCCESS)
-    {
-        //pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
-    }
-    free_datasetid(datasetid);
-    free_datasetid(queryid);
-
-    int k=0;
-
-    for (cnt=0; ftpfile[cnt]->filename!=NULL; cnt++)
-    {
-      /*parse the file and get the DOM */
-      printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
-      doc = xmlReadFile(ftpfile[cnt]->filename, NULL, 0);
-      if (doc == NULL)
-      {
-	fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        free_struct_FtpFile(ftpfile);
-        continue;
-	//return NULL;
-      }
-      /*Get the root element node */
-      root_element = xmlDocGetRootElement(doc);
-      int size1,size2, size3,size4;
-      for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
-      {
-          int num_metadata=datasetproj[cnt]->first[size2]->size;
-          int query_kind=1;
-          if(num_metadata>0)
-          {
-             for(size3=0; datasetproj[cnt]->first[size2]->first[size3]!=NULL; size3++)
-             {
-               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
-               {
-                 if((datasetproj[cnt]->first[size2]->first[size3]->name)&&(datasetproj[cnt]->first[size2]->first[size3]->size==0))
-                 {
-                    //printf("Sto vedendo se il metadato %s ha valori nella seconda query, with size2%d, size3%d\n", datasetproj[cnt]->first[size2]->first[size3]->name,size2,size3);
-                    res = get_metadata_solr(doc, root_element, &datasetproj, cnt, size2, size3, query_kind);
-                 }
-               }
-             }
-          }
-      }
-      datasetproj[cnt]->size=size2; //number of projects 
-
-        for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
-        {
-          printf("id_query** vale %d\n", datasetproj[cnt]->id_query);
-          printf("id** vale %s\n", datasetproj[cnt]->id);
-          printf("dataset_id** vale %s\n", datasetproj[cnt]->dataset_id);
-          printf("version** vale %s\n", datasetproj[cnt]->version);
-          printf("project** vale %s\n", datasetproj[cnt]->first[size2]->project);
-          for(size3=0; datasetproj[cnt]->first[size2]->first[size3]!=NULL; size3++)
-          {
-              if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
-              {
-                if(datasetproj[cnt]->first[size2]->first[size3]->name)
-                {
-                  printf("***metadato vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->name);
-                  //printf("***numero di metadati vale %d\n", datasetproj[cnt]->first[size2]->first[size3]->size);
-                }
-                  for(size4=0; datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
-                    printf("*******valore vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
-              }
-         }
-       }
-      res=remove(ftpfile[cnt]->filename);
-#if 0
-      if(res!=0)
-        pmesg(LOG_ERROR, __FILE__, __LINE__, "Error in remove the file %s\n", ftpfile[cnt]->filename);
-      else
-        pmesg(LOG_DEBUG, __FILE__, __LINE__, "File %s removed\n", ftpfile[cnt]->filename);
-#endif
-      xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();
-    }
-
-    check_cross_project(&datasetproj,esgf_node);
-    //insert_datamart_cross_project();
-    insert_dmart_cross_project();
-    free_struct_datasetproj(datasetproj);
-    
-    free_struct_FtpFile(ftpfile);
-    PQfinish(conn);
-    printf("%s\n", "attendo 5 sec");
-    sleep(5);
-    printf("%s\n", "prossimi 5 sec");
-}
-    return SUCCESS;
-}
 int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query, int size)
 {
     int res, cnt, j=0;
@@ -774,7 +361,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
-       printf("URL vale %s\n", URL[cnt]);
+       //printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
          //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
@@ -784,15 +371,21 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        char *filename=NULL;
        char *str_1=NULL;
-       str_1=strdup(URL[cnt]);
-       filename=strdup(basename(str_1));
-       free(str_1);
+
+       if(URL[cnt])
+       {
+         str_1=strdup(URL[cnt]);
+         //printf("str_1 vale %s\n", str_1);
+         filename=strrchr(str_1, '/');
+         //printf("filename vale %s\n", filename+1);
+         free(str_1);
+       }
         
        char *str=NULL;
-       str=strrchr(filename, '*');
+       str=strrchr(filename+1, '*');
        if(str!=NULL)
 	 *str='\0';
-       str=strstr(filename, "id:");
+       str=strstr(filename+1, "id:");
        if(str!=NULL)
        {
          str_1=strrchr(str, '|');
@@ -809,12 +402,12 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        else
        {
-         sprintf(str_2, "%s_%ld", filename, tv.tv_usec);           
+         sprintf(str_2, "%s_%ld", filename+1, tv.tv_usec);           
        }
-       free(filename);
+       //free(filename);
        filename=NULL;
        filename=strdup(str_2);
-       printf("filename vale %s\n", filename);
+       //printf("filename**** vale %s\n", filename);
        ftpfile[cnt]->filename = strdup(filename);
        free(filename);
        filename=NULL;
@@ -1149,6 +742,103 @@ int read_conf_project(char *filename_conf, struct dataset_project ***datasetproj
     xmlCleanupParser();
     xmlMemoryDump();
 //fine_lettura_file_conf
+}
+int read_shards(char *shardsName)
+{
+    int i=0;
+    int *res=0;
+    xmlDocPtr doc;
+    xmlNode *root_element = NULL;
+    /*parse the file and get the DOM */
+    doc = xmlReadFile(shardsName, NULL, 0);
+    if (doc == NULL)
+    {
+      fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, shardsName);
+      return NULL;
+    }
+
+    
+    /*Get the root element node */
+    root_element = xmlDocGetRootElement(doc);
+
+    xmlNode *cur_node = NULL;
+    xmlNode *a_node = NULL;
+    xmlChar *prop = NULL;
+    print_element(root_element,&res);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    xmlMemoryDump();
+    return res;
+}
+void print_element(xmlNode * a_node, int *res)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+	  if(xmlStrcasecmp(cur_node->name, (xmlChar *)"str")==0) {
+	      prop = xmlGetProp(cur_node, (xmlChar *)"name");
+	      if(prop)
+	      {
+		if(xmlStrcasecmp(prop, (xmlChar *)"shards")==0)
+		{
+                     xmlChar* content=xmlNodeGetContent(cur_node);
+                     char *tmp_str=strstr(content, "8982");
+                     if(tmp_str)
+                     {
+                        printf("content %s\n", content);
+                        *res=1;
+                     }
+                     else
+                        printf("content %s\n", "no found");
+                }
+              }
+              xmlFree(prop);
+           }
+        }
+        print_element(cur_node->children, res);
+   }
+}
+int get_replica(xmlDocPtr doc,xmlNode *root_element)
+{
+    int *res=0;
+
+    xmlNode *cur_node = NULL;
+    xmlNode *a_node = NULL;
+    xmlChar *prop = NULL;
+    print_element_replica(root_element,&res);
+    return res;
+}
+void print_element_replica(xmlNode * a_node, int *res)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+	  if(xmlStrcasecmp(cur_node->name, (xmlChar *)"bool")==0) {
+	      prop = xmlGetProp(cur_node, (xmlChar *)"name");
+	      if(prop)
+	      {
+		if(xmlStrcasecmp(prop, (xmlChar *)"replica")==0)
+		{
+                     xmlChar* content=xmlNodeGetContent(cur_node);
+                     char *tmp_str=strstr(content, "false");
+                     if(tmp_str)
+                     {
+                        printf("content %s\n", content);
+                        *res=1;
+                     }
+                     else
+                        printf("content %s\n", "no found");
+                }
+              }
+              xmlFree(prop);
+           }
+        }
+        print_element(cur_node->children, res);
+   }
 }
 
 

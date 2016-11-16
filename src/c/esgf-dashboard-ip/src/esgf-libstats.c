@@ -1162,3 +1162,56 @@ int get_download_registration(char *path_xml, char *file_dest)
 
  return 0;
 }
+int get_download_shards(char *path_xml, char *file_dest)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024];
+  char buffer1[10024];
+  char url_action[10024];
+  char tmp_file[1024];
+  long int i;
+  long long int num_rec;
+  int right_url;
+
+  sprintf(buffer1, "https://%s/esg-search/search/?type=File&latest=true&distrib=true&format=application%ssolr%sxml", ESGF_NODE_SOLR,"%%2F","%2B");
+  snprintf (url_action, sizeof (url_action),buffer1);
+  sprintf (tmp_file, "%s/%s", path_xml, "shards_tmp.xml");
+  remove(tmp_file);
+
+  tmp=fopen(tmp_file, "w");
+  if(tmp==NULL)
+        {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
+        remove(tmp_file);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  rename(tmp_file, file_dest);
+  remove(tmp_file);
+
+ return 0;
+}

@@ -15,6 +15,13 @@
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/debug.h"
+#include "../include/error.h"
+#include "../include/ftpget.h"
+#include <libxml/xpathInternals.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/tree.h>
+
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
@@ -882,8 +889,6 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB START\n");
 
-        //fprintf(stdout, "proj vale %s, tabl %s and query %s\n", proj, tabl, QUERY_PLANB_SUMMARY_DB_TMP);
-
         if(!(strcmp(proj, "all projects")))
             sprintf(str,"%s", "%");
         else
@@ -891,48 +896,602 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
 
 	
 	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_TMP,tabl,tabl,str);
-        fprintf(stdout, "query vale %s\n", update_query_hostname);	
 
-
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB_TMP, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	//pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] con query %s\n", update_query_hostname);
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK]\n");
 
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] with query %s\n", update_query_hostname);
+
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CNT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with downloads [OK]\n");
+
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CONTINENT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with continent [OK]\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_SUMMARY_DB_CONTINENT_CNT_TMP,tabl,tabl,str);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 with continent and downloads [OK]\n");
+
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - select number of downloads without continent\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_SELECT_DOWNLOADS,tabl);
+
+        PGconn *conn;
+        PGresult *res;
+        PGresult *res_cont;
+        int numTuples;
+        char conninfo[1024] = {'\0'};
+
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -2;
+        }
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
+        res = PQexec(conn, QUERY3); 
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+	// SELECT START 
+	res = PQexec(conn,update_query_hostname);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+	numTuples = PQntuples(res);
+	int nFields = PQnfields(res);
+        int t=0;
+        if(numTuples==0)
+          t=-1;
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of remote client entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	for(t = 0; t < numTuples; t ++) {
+  			char year[10024] = { '\0' };
+  			char month[1024] = { '\0' };
+  			int downloads=0;
+
+			snprintf (year,sizeof (year),"%s",PQgetvalue(res, t, 0));
+			snprintf (month,sizeof (month),"%s",PQgetvalue(res, t, 1));
+			downloads=atoi(PQgetvalue(res, t, 2));
+	                snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_UPDATE_DOWNLOADS,tabl, downloads, month, year);
+
+                        res_cont=PQexec(conn,update_query_hostname);
+ 	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
+                        PQclear(res_cont);
+    	}
+        // stop transaction
+        res = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
+        res = PQexec(conn, QUERY3); 
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"START - select number of downloads with continent\n");
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_SELECT_DOWNLOADS_CONT,tabl);
+	// SELECT START 
+	res = PQexec(conn,update_query_hostname);
+
+	if ((!res) || (PQresultStatus(res) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT remote clients data from access_logging FAILED\n");
+	        PQclear(res);
+		PQfinish(conn);
+		return -2;
+    	}
+	numTuples = PQntuples(res);
+	nFields = PQnfields(res);
+        if(numTuples!=0)
+          t=0;
+        else
+          t=-1;
+	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Number of remote client entries from the access_logging table to be processed [%ld] \n",numTuples);
+
+	for(t = 0; t < numTuples; t ++) {
+  			char year[10024] = { '\0' };
+  			char month[1024] = { '\0' };
+  			int downloads=0;
+  			char continent[1024] = { '\0' };
+
+			snprintf (year,sizeof (year),"%s",PQgetvalue(res, t, 0));
+			snprintf (month,sizeof (month),"%s",PQgetvalue(res, t, 1));
+			downloads=atoi(PQgetvalue(res, t, 2));
+			snprintf (continent,sizeof (continent),"%s",PQgetvalue(res, t, 3));
+	                snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_UPDATE_DOWNLOADS_CONT,tabl, downloads, continent, month, year);
+
+                        res_cont = PQexec(conn,update_query_hostname);
+ 	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
+                        PQclear(res_cont);
+    	}
+        // stop transaction
+        res = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res);
+    
+        PQfinish(conn);
+        
 	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_ADD_HOSTNAME_COLUMN, tabl);
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_ADD_HOSTNAME_COLUMN, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] con query %s\n", update_query_hostname);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] with query %s\n", update_query_hostname);
+	snprintf (update_query_hostname, sizeof (update_query_hostname), QUERY_PLANB_ADD_HOSTNAME_COLUMN_CONTINENT, tabl);
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 2 [OK] with continent %s\n", update_query_hostname);
 
-	//27-01-2016 snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,ESGF_HOSTNAME);
 	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE,tabl, ESGF_HOSTNAME);
 
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] con query %s\n", update_query_hostname);
-	
-        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB,tabl,tabl,tabl);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] with query %s\n", update_query_hostname);
+	snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_ADD_HOSTNAME_VALUE_CONTINENT,tabl, ESGF_HOSTNAME);
 
-	//27-01-2016 if (transaction_based_query(QUERY_PLANB_SUMMARY_DB, QUERY8, QUERY4))
 	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
 		return -1;
- 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] con query %s\n", update_query_hostname);
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 3 [OK] with continent %s\n", update_query_hostname);
+	
+        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB,tabl,tabl,tabl,tabl);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] with query %s\n", update_query_hostname);
+        snprintf (update_query_hostname, sizeof (update_query_hostname),QUERY_PLANB_SUMMARY_DB_CONTINENT,tabl,tabl,tabl,tabl);
+
+	if (transaction_based_query(update_query_hostname, QUERY8, QUERY4))
+		return -1;
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 4 [OK] with continent %s\n", update_query_hostname);
 
         if(i==0)
         {
 	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_IDP, QUERY8, QUERY4))
 		return -1;
- 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_IDP);
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 5 [OK] with query %s\n", QUERY_PLANB_DOWNLOADS_BY_IDP);
 	    if (transaction_based_query(QUERY_PLANB_DOWNLOADS_BY_USER, QUERY8, QUERY4))
 		return -1;
- 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK] con query %s\n", QUERY_PLANB_DOWNLOADS_BY_USER);
+ 	    pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 6 [OK] with query %s\n", QUERY_PLANB_DOWNLOADS_BY_USER);
         }
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
  	return 0;
 }
+//PLANA START
+int compute_solr_process_planA(int shards)
+{
+  	char select_query_dashboard[2048] = { '\0' };
+        int         nFields;
+        int size=0;
+        char **URL=NULL;
+        char **id_query=NULL;
+        char **datasetid=NULL;
+        char **queryid=NULL;
+
+        int i=0;
+        int res=0;
+        int res_rep=0;
+        int cnt=0;
+        xmlDoc *doc = NULL;
+        xmlNode *root_element = NULL;
+        char *filename_conf="../etc/conf.xml";
+        char str_url[256];
+        str_url[0]='\0';
+
+        LIBXML_TEST_VERSION
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Process planA START\n");
+
+	snprintf (select_query_dashboard, sizeof (select_query_dashboard),QUERY_PLANA_SELECT_URL);
+
+        PGconn *conn;
+        PGresult *res1;
+        int numTuples;
+        char conninfo[1024] = {'\0'};
+
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -2;
+        }
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY3);
+        res1 = PQexec(conn, QUERY3); 
+        if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res1);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res1);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+	// SELECT START 
+	res1 = PQexec(conn,select_query_dashboard);
+
+	if ((!res1) || (PQresultStatus(res1) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"%s\n", select_query_dashboard);
+	        PQclear(res1);
+		PQfinish(conn);
+		return -2;
+    	}
+        nFields = PQnfields(res1);
+        size=PQntuples(res1);
+
+        if(size==0)
+    	{
+          //there are not entries in the dashboard_queue with processed=0
+          // stop transaction
+          res1 = PQexec(conn, QUERY4);
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+          if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+          {
+             pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+             PQclear(res1);
+             PQfinish(conn);
+             return -2;
+          }
+          PQclear(res1);
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+          return -25;
+    	}
+          
+
+        URL=(char**) calloc (size+1, sizeof(char *));
+        id_query=(char**) calloc (size+1, sizeof(char *));
+
+        char url_comp1[2056]={'\0'};
+        char url_comp[2056]={'\0'};
+
+        char *str_url1=NULL;
+        char *str_u=NULL;
+        char *str_u1=NULL;
+        char *str_replica=NULL;
+        int ch=0;
+        /* next, print out the rows */
+        for (i = 0; i < PQntuples(res1); i++)
+        {
+          str_url1=strdup(PQgetvalue(res1, i, 0));
+          str_u=strstr(str_url1,"esg_dataroot/");
+          if(str_u)
+          {
+            //printf("url vale %s\n", str_u+13);
+            sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*esg_dataroot/%s*", ESGF_NODE_SOLR, str_u+13);
+           
+          }
+          else
+            sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
+          if(shards==0)
+            sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
+          else
+            sprintf(url_comp, "%s&shards=localhost:8983/solr/files,localhost:8982/solr/files", url_comp1);
+
+          free(str_url1);
+          URL[i]=strdup(url_comp);
+          id_query[i]=strdup(PQgetvalue(res1, i, 1));
+        }
+        size=PQntuples(res1);
+        URL[i]=NULL;
+        id_query[i]=NULL;
+
+
+        // stop transaction
+        res1 = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res1);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res1);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+        //myfree_array(URL,size+1);
+        //myfree_array(id_query,size+1);
+
+        struct FtpFile **ftpfile=NULL;
+        ftpfile=calloc (size+2, sizeof(struct FtpFile *));
+        if(!ftpfile)
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+          return ERROR_CALLOC;
+        }
+
+        res=alloca_struct_FtpFile(ftpfile, URL, id_query, size);
+        if(res!=SUCCESS)
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          free_struct_FtpFile(ftpfile);
+          return res;
+        }
+        //printf("%s\n", "entro in download");
+        res=ftp_download_file(ftpfile,size);
+        //printf("%s\n", "esco in download");
+        int size_eff=0;
+
+        if(res!=SUCCESS)
+        {
+           printf("%s\n", "Error in download files");
+           size_eff++;
+           pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
+        }
+
+        for (cnt=0; cnt < size; cnt++)
+        {
+          /*parse the file and get the DOM */
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+
+          doc = xmlReadFile(tmp_file, NULL, 0);
+          if (doc == NULL)
+          {
+            size_eff++;
+          }
+          xmlFreeDoc(doc);
+          xmlCleanupCharEncodingHandlers();
+          xmlCleanupParser();
+          xmlMemoryDump();
+        }
+        size_eff=size-size_eff;
+        //printf("size_eff vale %d\n", size_eff);
+        if(size_eff==0)  //no downloads
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          free_struct_FtpFile(ftpfile);
+          return -25; //sleep mode
+        }
+
+        int num_metadata=0;
+        i=0;
+        datasetid=calloc(size_eff+1, sizeof(char*));
+        queryid=calloc(size_eff+1, sizeof(char*));
+        for (cnt=0; cnt < size_eff; cnt++)
+        {
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+          doc = xmlReadFile(tmp_file, NULL, 0);
+          if (doc != NULL)
+          {
+             fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+             queryid[i]=strdup(id_query[cnt]);
+             i++;
+          }
+          xmlFreeDoc(doc);
+          xmlCleanupCharEncodingHandlers();
+          xmlCleanupParser();
+          xmlMemoryDump();
+        }
+        struct dataset_project **datasetproj;
+        datasetproj=calloc(size_eff+1, sizeof(struct dataset_project*));
+
+        int query_kind=0;
+        int cnt2=0;
+        int flag=0;
+        FILE *pFile;
+        for (cnt=0; cnt < size_eff; cnt++)
+        {
+           /*parse the file and get the DOM */
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+          doc = xmlReadFile(tmp_file, NULL, 0);
+          if (doc == NULL)
+          {
+            fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+            flag=1;
+          }
+          if(flag==0)
+          {
+             /*Get the root element node */
+             root_element = xmlDocGetRootElement(doc);
+             res=count_tag(doc,"//arr[@name='project']");
+             if(res!=0)
+             {
+               char buffer[2056]={'\0'};
+               pFile = fopen ("myfile.csv", "a+");
+               sprintf(buffer, "%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL);
+               char *str=NULL;
+               str=strdup(buffer);
+               fprintf (pFile, "%s\n", str);
+               free(str);
+               str=NULL;
+               fclose (pFile);
+               int res1=0;
+
+               datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
+               datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
+               res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, queryid);
+               datasetproj[cnt2]->first[res]=NULL;
+               res1=read_conf_project(filename_conf,&datasetproj, cnt2);
+              
+               int size1,size2, size3,size4;
+               for(size2=0; datasetproj[cnt2]->first[size2]!=NULL; size2++)
+               {
+                 int num_metadata=datasetproj[cnt2]->first[size2]->size;
+                 if(num_metadata>0)
+                   res = get_metadata_solr(doc, root_element, &datasetproj, cnt2, size2, num_metadata, query_kind);
+                 else
+                   res_rep=get_replica(doc, root_element);
+               }
+               if(shards==0)
+                 sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
+               else
+                 sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets,localhost:8982/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
+               //printf("str_url seconda interrogazione al solr %s\n", str_url);
+               if(datasetid[cnt2]!=NULL)
+               {
+                 free(datasetid[cnt2]);
+                 datasetid[cnt2]=NULL;
+               }
+               datasetid[cnt2] = strdup(str_url);
+               //printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
+               cnt2++;
+         }
+         else
+         {
+           char buffer[2056]={'\0'};
+           pFile = fopen ("myfile.csv", "a+");
+           sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
+           char *str=NULL;
+           str=strdup(buffer);
+           fprintf (pFile, "%s\n", str);
+           free(str);
+           str=NULL;
+           fclose (pFile);
+           char update_dashboard_queue[2048] = { '\0' };
+           if(queryid[cnt]!=NULL)
+           {
+            
+              snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,atoi(queryid[cnt]));
+              if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
+                return -1;
+           }
+
+        }
+      }
+      flag=0;
+      xmlFreeDoc(doc);
+      xmlCleanupCharEncodingHandlers();
+      xmlCleanupParser();
+      xmlMemoryDump();
+      res=remove(tmp_file);
+    }
+    datasetid[cnt2]=NULL;
+    datasetproj[cnt2]=NULL;
+    myfree_array(URL,size+1);
+    free_struct_FtpFile(ftpfile);
+
+    ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
+
+    res=alloca_struct_FtpFile(ftpfile, datasetid, queryid, cnt2);
+    if(res!=SUCCESS)
+    {
+      free_struct_FtpFile(ftpfile);
+      return res;
+    }
+    myfree_array(id_query,size+1);
+
+    res=ftp_download_file(ftpfile,cnt2);
+
+    if(res!=SUCCESS)
+    {
+      pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
+    } 
+    free_datasetid(datasetid);
+    free_datasetid(queryid);
+     
+    int k=0;
+      
+    for (cnt=0; ftpfile[cnt]->filename!=NULL; cnt++)
+    {
+      /*parse the file and get the DOM */
+      //printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
+      char tmp_file[2048] = {'\0'};
+      sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+      doc = xmlReadFile(tmp_file, NULL, 0);
+      if (doc == NULL)
+      {
+        fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+        free_struct_FtpFile(ftpfile);
+        continue;
+      }
+      /*Get the root element node */
+      root_element = xmlDocGetRootElement(doc);
+      int size1,size2, size3,size4;
+      for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
+      {
+          int num_metadata=datasetproj[cnt]->first[size2]->size;
+          int query_kind=1;
+          if(num_metadata>0)
+          {
+             for(size3=0; datasetproj[cnt]->first[size2]->first[size3]!=NULL; size3++)
+             {
+               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
+               {
+                 if((datasetproj[cnt]->first[size2]->first[size3]->name)&&(datasetproj[cnt]->first[size2]->first[size3]->size==0))
+                 {
+                    res = get_metadata_solr(doc, root_element, &datasetproj, cnt, size2, size3, query_kind);
+                 }
+               } 
+             }
+          }
+      }
+      datasetproj[cnt]->size=size2; //number of projects 
+
+      res=remove(tmp_file);
+      xmlFreeDoc(doc);
+      xmlCleanupCharEncodingHandlers();
+      xmlCleanupParser();
+      xmlMemoryDump();
+    }
+    check_cross_project(conn, &datasetproj,ESGF_NODE_SOLR, res_rep);
+    insert_dmart_cross_project(conn);
+    free_struct_datasetproj(datasetproj);
+
+    free_struct_FtpFile(ftpfile);
+    PQfinish(conn);
+
+    return 0;
+}
+
+//PLANA STOP
 
 int compute_remote_clients_data_mart()
 {
@@ -996,7 +1555,7 @@ int compute_remote_clients_data_mart()
     				} 
 			else  
 			{
-			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, geo_output.latitude, geo_output.longitude,geo_output.country_code);
+			snprintf (insert_query_client_dm, sizeof (insert_query_client_dm), QUERY_INSERT_CLIENT_INFO, ESGF_HOSTNAME, ip_str,geo_output.latitude, geo_output.longitude,geo_output.country_code);
   			res2 = PQexec(conn, insert_query_client_dm);
 
   			if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
@@ -1598,4 +2157,131 @@ int realtime_mem_get_stats(void)
   rotate_realtime_stats(REALTIME_MEM_SWAP, REALTIME_MEM_SWAP_TEMP, swapstr);
   return 0;
 }
+#if 0
+int myfree_array(char **arr, int size1)
+{
+   if(arr!=NULL)
+   {
+     int size;
+     for(size=0; arr[size]!=NULL; size++)
+     {
+        free(arr[size]);
+        arr[size]=NULL;
+     }
+     free(arr);
+     arr=NULL;
+    }
+    return 0;
+}
 
+int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query, int size)
+{
+    int res, cnt, j=0;
+
+    for (cnt=0; cnt < size; cnt++)
+    {
+       ftpfile[cnt] = calloc (1, sizeof(struct FtpFile));
+
+       if(!ftpfile[cnt])
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+         for(j=cnt-1; j>=0; j--)
+         {
+           if(ftpfile[j])
+             free(ftpfile[j]);
+         }
+         free(ftpfile);
+         return ERROR_CALLOC;
+       }
+       ftpfile[cnt]->id_query=atoi(id_query[cnt]);
+       ftpfile[cnt]->URL = strdup(URL[cnt]);
+       if(!ftpfile[cnt]->URL)
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
+         fprintf(stderr, "\n[%s:%d] Not enough memory. Error in strdup()\n", __FILE__, __LINE__);
+         free_struct_FtpFile(ftpfile);
+         return STRDUP_ERROR;
+       }
+       char *str_1=NULL;
+       char *filename=NULL;
+       str_1=strdup(URL[cnt]);
+       filename=strdup(basename(str_1));
+       free(str_1);
+
+       char *str=NULL;
+       str=strrchr(filename, '*');
+       if(str!=NULL)
+         *str='\0';
+       str=strstr(filename, "id:");
+       if(str!=NULL)
+       {
+         str_1=strrchr(str, '|');
+         if(str_1!=NULL)
+           *str_1='\0';
+       }
+       struct timeval tv;
+       gettimeofday(&tv,NULL);
+       char str_2[2048] = { '\0' };
+       if(str!=NULL)
+       {
+         sprintf(str_2, ".work/%s_%ld", str+3, tv.tv_usec);
+       }
+       else
+       {
+         sprintf(str_2, ".work/%s_%ld", filename, tv.tv_usec);
+       }
+       free(filename);
+       filename=NULL;
+       filename=strdup(str_2);
+       ftpfile[cnt]->filename = strdup(filename);
+       free(filename);
+       filename=NULL;
+       if(!ftpfile[cnt]->filename)
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
+         fprintf(stderr, "\n[%s:%d] Not enough memory. Error in strdup()\n", __FILE__, __LINE__);
+         free_struct_FtpFile(ftpfile);
+         return STRDUP_ERROR;
+       }
+    }
+
+    ftpfile[size] = calloc (1, sizeof(struct FtpFile));
+    if(!ftpfile[size])
+    {
+       pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+       return ERROR_CALLOC;
+    }
+    ftpfile[size]->URL=NULL;
+    ftpfile[size]->filename=NULL;
+    return SUCCESS;
+}
+
+int free_struct_FtpFile(struct FtpFile **ftp)
+{
+        if(ftp!=NULL)
+        {
+                int size;
+                for(size=0; ftp[size]!=NULL; size++)
+                {
+                        if(ftp[size]->URL!=NULL)
+                        {
+                                free(ftp[size]->URL);
+                                ftp[size]->URL=NULL;
+                        }
+                        if(ftp[size]->filename!=NULL)
+                        {
+                                free(ftp[size]->filename);
+                                ftp[size]->filename=NULL;
+                        }
+                        free(ftp[size]);
+                        ftp[size]=NULL;
+                }
+                free(ftp[size]);
+                ftp[size]=NULL;
+                free(ftp);
+                ftp=NULL;
+        }
+    return 0;
+}
+
+#endif

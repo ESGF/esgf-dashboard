@@ -23,7 +23,7 @@
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
-static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs_data_usage","all_data_usage",NULL};
+static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs4mips_data_usage","all_data_usage",NULL};
 
 int msglevel; // global variable for log purposes 
 
@@ -230,15 +230,14 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	{
 	    // skip the first time, because the process is called once before this loop	
 	    if (i>0) {
+  		compute_remote_clients_data_mart();
                 int num_proj;
                 for(num_proj=0; project[num_proj]!=NULL; num_proj++)
                    reconciliation_process_planB(project[num_proj], table[num_proj],num_proj);  
 		compute_aggregate_data_user_metrics();	
-  		compute_remote_clients_data_mart();
 		//if (FEDERATED_STATS) 
 		//	federation_level_aggregation_metrics_planB();
 		}
-	    //sleep(1); // TEST_ 
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
 	    i++;  
 	}
@@ -247,6 +246,36 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 }
 
 
+void * data_planA(void *arg)
+{
+        int res=0;
+        int res1=0;
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	{
+            res=get_download_shards(".work", ".work/shards.xml");
+            if(res==0)
+              pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with success\n");
+            else
+              pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with unsuccess\n");
+            res1=read_shards("./.work/shards.xml");
+            fprintf(stderr, "START PLANA");
+	    // skip the first time, because the process is called once before this loop	
+	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	    {
+               res=compute_solr_process_planA(res1);
+               if(res==-25)
+	       {
+                 fprintf(stderr, "There is no entries to be processed");
+                 break;
+	       }
+	    }
+            	
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+            fprintf(stderr, "DONE PLANA");
+	}
+
+	return NULL;
+}
 
 int compute_aggregate_data_user_metrics()
 {
@@ -337,6 +366,7 @@ main (int argc, char **argv)
 {
   pthread_t pth;		// this is our thread identifier
   pthread_t pth_realtime;		// this is our thread identifier
+  pthread_t pth_planA;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -436,6 +466,7 @@ main (int argc, char **argv)
       	  myfree (REGISTRATION_XML_PATH);
       	  myfree (REGISTRATION_XML_URL);
       	  myfree (ESGF_HOSTNAME);
+      	  myfree (ESGF_NODE_SOLR);
 	  return 0;
 	}
       // check on non-mandatory properties
@@ -456,6 +487,7 @@ main (int argc, char **argv)
       myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
+      myfree (ESGF_NODE_SOLR);
       return 0;
     }
 
@@ -472,6 +504,7 @@ main (int argc, char **argv)
       myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
+      myfree (ESGF_NODE_SOLR);
       myfree (POSTGRES_PASSWD);
       return 0;
     }
@@ -494,14 +527,26 @@ main (int argc, char **argv)
 
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
-  fprintf(stdout, "Num sensors %d\n",num_sensors);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
+  
+
+  struct stat st = {0};
+
+  if (stat(".work", &st) == -1) {
+            mkdir(".work", 0700);
+  }
+
+  // start thread PLANA
+  pthread_create (&pth_planA, NULL, &data_planA,NULL);
+  //compute_solr_process_planA(1);
+ 
+
+  compute_remote_clients_data_mart();
 
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
   compute_aggregate_data_user_metrics();
-  compute_remote_clients_data_mart();
 
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();
@@ -513,10 +558,11 @@ main (int argc, char **argv)
 
   if (ENABLE_REALTIME)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  
 
   // enabling threads pool for sensors
-  if (num_sensors!=-1)
-  	thread_manager_start (&threads[0],&sens_struct,num_sensors);
+  //if (num_sensors!=-1)
+  	//thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
 
   counter = 0;
@@ -525,16 +571,17 @@ main (int argc, char **argv)
   while (iterator)   
     {
       // Removing old metrics once 1 day
-      if ((counter % 288) == 0) {
-      	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics (once a day)\n");
-      	if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
-		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
-      	if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
-		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
-      	if (ret_code=transaction_based_query(query_remove_old_local_memory_metrics,START_TRANSACTION_MEMORY_METRICS, END_TRANSACTION_MEMORY_METRICS))
-		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local memory metrics FAILED! [Code %d]\n",ret_code);
-	counter=0;
-      }
+      //
+      //if ((counter % 288) == 0) {
+      //	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Removing old metrics (once a day)\n");
+      //	if (ret_code=transaction_based_query(query_remove_old_service_metrics,QUERY6, QUERY4))
+      //		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old service metrics FAILED! [Code %d]\n",ret_code);
+      //	if (ret_code=transaction_based_query(query_remove_old_local_cpu_metrics,START_TRANSACTION_CPU_METRICS, END_TRANSACTION_CPU_METRICS))
+      //		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local cpu metrics FAILED! [Code %d]\n",ret_code);
+      //	if (ret_code=transaction_based_query(query_remove_old_local_memory_metrics,START_TRANSACTION_MEMORY_METRICS, END_TRANSACTION_MEMORY_METRICS))
+      //		  pmesg(LOG_ERROR,__FILE__,__LINE__,"Remove old local memory metrics FAILED! [Code %d]\n",ret_code);
+      //	counter=0;
+      //}
       // Calling the automatic registration_xml_feed into the parser
       automatic_registration_xml_feed (esgf_registration_xml_path);
 
@@ -568,6 +615,7 @@ main (int argc, char **argv)
 
   // end thread
 
+//* LUISA1
   if (pthread_join (pth, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
   else
@@ -579,10 +627,14 @@ main (int argc, char **argv)
   	else
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
-
+  if (pthread_join (pth_planA, NULL))
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
+// LUISA2 */
   // end of thread pool for sensors	
-  if (num_sensors!=-1)
-  	thread_manager_stop (&threads[0],&sens_struct,num_sensors);
+  //if (num_sensors!=-1)
+  	//thread_manager_stop (&threads[0],&sens_struct,num_sensors);
 
   
   // freeing space
@@ -601,6 +653,7 @@ main (int argc, char **argv)
   myfree (REGISTRATION_XML_PATH);
   myfree (REGISTRATION_XML_URL);
   myfree (ESGF_HOSTNAME);
+  myfree (ESGF_NODE_SOLR);
   myfree (DASHBOARD_SERVICE_PATH);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
@@ -701,10 +754,10 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   FEDERATED_STATS = 0;		// federated stats enabled=1 or disabled=0. Default disabled! 
   DATA_METRICS_SPAN=24;		// default 24 hour   
   REALTIME_SAMPLES=10; 
-  ENABLE_REALTIME=1;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
+  ENABLE_REALTIME=0;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
   *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
-  *mandatory_properties = 8;	// number of mandatory properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 9;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
     {
@@ -778,6 +831,14 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "dashboard.ip.app.home")))
 	    {
 	      strcpy (DASHBOARD_SERVICE_PATH =
+		      (char *) malloc (strlen (value_buffer) + 1),
+		      value_buffer);
+	      (*notfound)--;
+	      (*mandatory_properties)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.index.peer")))
+	    {
+	      strcpy (ESGF_NODE_SOLR =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;
