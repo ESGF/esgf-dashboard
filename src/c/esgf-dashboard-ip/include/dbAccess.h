@@ -13,7 +13,7 @@
 // --------------------------------------------------------
 
 // Enable log file with SOLR urls.
-#define SOLR_LOG	0   //0 not enable to save the results in the myfile.csv, 1 otherwise
+#define SOLR_LOG	1   //0 not enable to save the results in the myfile.csv, 1 otherwise
 
 // --------------- Query ----------------------------------
 #define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;" 

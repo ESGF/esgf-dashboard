@@ -1456,7 +1456,7 @@ int compute_solr_process_planA(int shards)
       if (doc == NULL)
       {
         fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        free_struct_FtpFile(ftpfile);
+        //free_struct_FtpFile(ftpfile);
         continue;
       }
       /*Get the root element node */
