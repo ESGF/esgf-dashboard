@@ -43,5 +43,11 @@ struct geo_output_struct
   long int area_code;
 };
 
-
+struct _ptr_mng {
+  void **** ptr;
+  int *type; // 0 = string; 1 = array null termined
+  int len;
+};
+typedef struct _ptr_mng* ptr_mng;
+int ptr_register (ptr_mng* reg, void ** ptr, int type);
 #endif /* CONFIG_H_ */

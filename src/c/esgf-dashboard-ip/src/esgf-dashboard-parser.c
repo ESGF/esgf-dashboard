@@ -1,4 +1,3 @@
-/*fare il merge di questa funzione nel file dbAccess.c, dove c'e' gia' il collegamento con il DB e tutte le variabili sono ok */
 
 #include <stdio.h>
 #include <string.h>

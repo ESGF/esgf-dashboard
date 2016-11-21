@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/inotify.h>
+#include <sys/stat.h>
 
 #include "../include/ping.h"
 #include "../include/stats.h"
@@ -536,10 +537,19 @@ main (int argc, char **argv)
             mkdir(".work", 0700);
   }
 
+  pthread_mutex_t plana_mutex;
+  ptr_mng         ptr_handle = NULL;
+
+  pthread_mutex_init(&plana_mutex, NULL);
+
+  pthread_mutex_lock(&plana_mutex);
+  ptr_register(&ptr_handle, (void **) &plana_mutex, 6);
+
   // start thread PLANA
   pthread_create (&pth_planA, NULL, &data_planA,NULL);
   //compute_solr_process_planA(1);
  
+  pthread_mutex_unlock(&plana_mutex);
 
   compute_remote_clients_data_mart();
 
@@ -969,3 +979,40 @@ ESGF_node_type (char *esgf_passwd_path)
   fclose (file);
   return 0;
 }
+int ptr_register (ptr_mng* reg, void ** ptr, int type)
+{
+  void ****tmp;
+  int *tmp_i;
+
+  if (!(*reg)){
+    *reg = (ptr_mng) calloc (1, sizeof(struct _ptr_mng));
+        if (!*reg)
+           return -1;
+
+        (*reg)->len = 0;
+        (*reg)->ptr = (void****)calloc (1, sizeof(void*));
+    if (!(*reg)->ptr)
+      return -1;
+        (*reg)->type = (int*)calloc(1, sizeof(int));
+    if (!(*reg)->type)
+      return -1;
+  }
+
+  (*reg)->len++;
+  tmp = (void****) realloc((*reg)->ptr, (*reg)->len * sizeof(void*));
+  if (!tmp)
+        return -1;
+  (*reg)->ptr = tmp;
+
+  tmp_i = (int*) realloc((*reg)->type, (*reg)->len * sizeof(int));
+  if (!tmp_i)
+        return -1;
+  (*reg)->type = tmp_i;
+
+  (*reg)->ptr[(*reg)->len - 1] = (void***) ptr;
+
+  (*reg)->type[(*reg)->len - 1] = type;
+
+  return 0;
+}
+   

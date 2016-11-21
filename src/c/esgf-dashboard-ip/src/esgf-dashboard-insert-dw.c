@@ -67,12 +67,12 @@
 #define POSTGRES_DB_NAME "esgf2"
 #define POSTGRES_USER "postgres"
 #define POSTGRES_PASSWD ""
-#endif 
 #define POSTGRES_HOST "esgf-test.cmcc.it"
 #define POSTGRES_PORT_NUMBER 5432
-#define POSTGRES_DB_NAME "esgcet4"
+#define POSTGRES_DB_NAME "esgcet"
 #define POSTGRES_USER "dbsuper"
 #define POSTGRES_PASSWD "abcdef"
+#endif 
 
 // Start transaction and lock tables 
 #define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.cross_dim_date ; lock esgf_dashboard.cross_dim_geolocation ; lock esgf_dashboard.cross_dim_project ; lock esgf_dashboard.cross_bridge_project ; lock esgf_dashboard.cross_fact_download ; "
@@ -207,10 +207,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
     char *user_idp_row=NULL;
     char *success_row=NULL;
 
-    printf("%s\n", "sono qui");
+    //printf("%s\n", "sono qui");
     for(cnt=0; (*datasetproj)[cnt]!=NULL; cnt++)
     {
-    printf("%s\n", "sono qui2");
+    //printf("%s\n", "sono qui2");
                 char* replica=NULL; //cross_project
                 char* index_node=NULL; //obs4mips
                 //char* version=NULL; //obs4mips
@@ -3091,7 +3091,11 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
           else
           {
              char insert_cmip5_fact_download[2048] = { '\0' };
+             char fact1_row[2048] = { '\0' };
+          sprintf(fact1_row, "%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+             //printf("fact1_row %s\n", fact1_row);
              snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+             //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
 	     submit_query (conn, insert_cmip5_fact_download);
 
           }

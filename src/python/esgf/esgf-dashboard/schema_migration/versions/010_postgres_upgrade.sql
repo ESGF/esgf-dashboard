@@ -556,3 +556,15 @@ CREATE TABLE esgf_dashboard.registry (
   dmart_key integer default 0,
   timestamp integer
 );
+insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_variable_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_source_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_realm_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_dataset_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_experiment_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_model_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_variable_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_dataset_host_time',0,0);
