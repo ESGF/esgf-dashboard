@@ -1344,15 +1344,18 @@ int compute_solr_process_planA(int shards)
              res=count_tag(doc,"//arr[@name='project']");
              if(res!=0)
              {
-               char buffer[2056]={'\0'};
-               pFile = fopen ("myfile.csv", "a+");
-               sprintf(buffer, "%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL);
-               char *str=NULL;
-               str=strdup(buffer);
-               fprintf (pFile, "%s\n", str);
-               free(str);
-               str=NULL;
-               fclose (pFile);
+               if(SOLR_LOG==1)  
+               {
+                  char buffer[2056]={'\0'};
+                  pFile = fopen ("myfile.csv", "a+");
+                  sprintf(buffer, "%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL);
+                  char *str=NULL;
+                  str=strdup(buffer);
+                  fprintf (pFile, "%s\n", str);
+                  free(str);
+                  str=NULL;
+                  fclose (pFile);
+               }
                int res1=0;
 
                datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
@@ -1386,15 +1389,19 @@ int compute_solr_process_planA(int shards)
          }
          else
          {
-           char buffer[2056]={'\0'};
-           pFile = fopen ("myfile.csv", "a+");
-           sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
-           char *str=NULL;
-           str=strdup(buffer);
-           fprintf (pFile, "%s\n", str);
-           free(str);
-           str=NULL;
-           fclose (pFile);
+           
+           if(SOLR_LOG==1)  
+           {
+              char buffer[2056]={'\0'};
+              pFile = fopen ("myfile.csv", "a+");
+              sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
+              char *str=NULL;
+              str=strdup(buffer);
+              fprintf (pFile, "%s\n", str);
+              free(str);
+              str=NULL;
+              fclose (pFile);
+           }
            char update_dashboard_queue[2048] = { '\0' };
            if(queryid[cnt]!=NULL)
            {
