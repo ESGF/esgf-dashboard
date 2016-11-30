@@ -26,6 +26,8 @@ static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
 static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs4mips_data_usage","all_data_usage",NULL};
 
+static const char *dmart[]={"cmip5/dataset/","cmip5/experiment","cmip5/clients","cmip5/model", "cmip5/variable", "obs4mips/dataset", "obs4mips/clients", "obs4mips/realm", "obs4mips/source", "obs4mips/variable", "crossproject/projecttime", "crossproject/projectgeolocation", NULL};
+
 int msglevel; // global variable for log purposes 
 
 static struct option long_options[] = {
@@ -246,6 +248,16 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	return NULL;
 }
 
+void * data_federA(void *arg)
+{
+     int res=0;
+     while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+     {
+           res=compute_federation();
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+     }
+     return NULL;
+}
 
 void * data_planA(void *arg)
 {
@@ -368,6 +380,7 @@ main (int argc, char **argv)
   pthread_t pth;		// this is our thread identifier
   pthread_t pth_realtime;		// this is our thread identifier
   pthread_t pth_planA;		// this is our thread identifier
+  pthread_t pth_feder;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -538,6 +551,7 @@ main (int argc, char **argv)
   }
 
   pthread_mutex_t plana_mutex;
+  pthread_mutex_t plana_feder;
   ptr_mng         ptr_handle = NULL;
 
   pthread_mutex_init(&plana_mutex, NULL);
@@ -550,6 +564,18 @@ main (int argc, char **argv)
   //compute_solr_process_planA(1);
  
   pthread_mutex_unlock(&plana_mutex);
+
+#if 0  
+  pthread_mutex_init(&plana_feder, NULL);
+  pthread_mutex_lock(&plana_feder);
+  ptr_register(&ptr_handle, (void **) &plana_feder, 6);
+
+  // start thread PLANA
+  pthread_create (&pth_feder, NULL, &data_federA,NULL);
+  //compute_solr_process_planA(1);
+ 
+  pthread_mutex_unlock(&plana_feder);
+#endif 
 
   compute_remote_clients_data_mart();
 
@@ -625,7 +651,6 @@ main (int argc, char **argv)
 
   // end thread
 
-//* LUISA1
   if (pthread_join (pth, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error!!!\n");
   else
@@ -641,7 +666,13 @@ main (int argc, char **argv)
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
-// LUISA2 */
+#if 0  
+  if (pthread_join (pth_feder, NULL))
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join FEDERATION error!!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data federation thread joined the master for PLANA!\n");
+#endif
+  
   // end of thread pool for sensors	
   //if (num_sensors!=-1)
   	//thread_manager_stop (&threads[0],&sens_struct,num_sensors);

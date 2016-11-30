@@ -1102,6 +1102,11 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
  	return 0;
 }
+int compute_federation()
+{
+  
+}
+
 //PLANA START
 int compute_solr_process_planA(int shards)
 {

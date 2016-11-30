@@ -4360,7 +4360,7 @@ submit_query_res (PGconn * conn, char *query, PGresult **res)
 
   if ((!(*res)) || (PQresultStatus (*res) != PGRES_TUPLES_OK))
     {
-      printf("error in the query *+*+*+*%s\n", query);
+      //printf("error in the query *+*+*+*%s\n", query);
       //pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query failed\n");
       PQclear (*res);
       return -1;
