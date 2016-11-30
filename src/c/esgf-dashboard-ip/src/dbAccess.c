@@ -1382,7 +1382,7 @@ int compute_solr_process_planA(int shards)
                  sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
                else
                  sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets,localhost:8982/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
-               printf("str_url seconda interrogazione al solr %s\n", str_url);
+               //printf("str_url second query to solr %s\n", str_url);
                if(datasetid[cnt2]!=NULL)
                {
                  free(datasetid[cnt2]);
