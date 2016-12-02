@@ -15,18 +15,18 @@
 #include <errno.h>
 #include <sys/inotify.h>
 #include <sys/stat.h>
-
+#include "libpq-fe.h"
+#include <dirent.h>
 #include "../include/ping.h"
 #include "../include/stats.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/debug.h"
+#include "../include/ftpget.h"
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
 static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs4mips_data_usage","all_data_usage",NULL};
-
-static const char *dmart[]={"cmip5/dataset/","cmip5/experiment","cmip5/clients","cmip5/model", "cmip5/variable", "obs4mips/dataset", "obs4mips/clients", "obs4mips/realm", "obs4mips/source", "obs4mips/variable", "crossproject/projecttime", "crossproject/projectgeolocation", NULL};
 
 int msglevel; // global variable for log purposes 
 
@@ -263,6 +263,31 @@ void * data_planA(void *arg)
 {
         int res=0;
         int res1=0;
+
+        PGconn * conn;
+        PGresult *res2;
+        char conninfo[1024] = {'\0'};
+
+        /* Connect to database */
+
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -1;
+        }
+        
+        char update_query[2048] = { '\0' };
+ 
+        sprintf(update_query, "%s", QUERY_UPDATE_REGISTRY_INIT);        
+
+        res2 = PQexec(conn, update_query);
+        PQclear(res2);
+        PQfinish(conn);
+        
 	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
             res=get_download_shards(".work", ".work/shards.xml");
@@ -542,13 +567,34 @@ main (int argc, char **argv)
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
+ 
+  DIR* pDir = opendir(WORK_DIR);
+  struct dirent *pFile;
+  char file_n[128] = { '\0' };
+  while ((pFile = readdir(pDir))) {
+       sprintf(file_n, "%s/%s",WORK_DIR,pFile->d_name);
+       unlink(file_n);
+   }
+  closedir(pDir);
+  DIR* pDir2 = opendir(FED_DIR);
+  while ((pFile = readdir(pDir2))) {
+       sprintf(file_n, "%s/%s",FED_DIR,pFile->d_name);
+       unlink(file_n);
+   }
+  closedir(pDir2);
   
-
   struct stat st = {0};
-
-  if (stat(".work", &st) == -1) {
-            mkdir(".work", 0700);
+  rmdir(WORK_DIR);
+  rmdir(FED_DIR);
+  if (stat(WORK_DIR, &st) == -1) {
+            mkdir(WORK_DIR, 0700);
   }
+  if (stat(FED_DIR, &st) == -1) {
+            mkdir(FED_DIR, 0700);
+  }
+
+
+  //compute_federation(); 
 
   pthread_mutex_t plana_mutex;
   pthread_mutex_t plana_feder;

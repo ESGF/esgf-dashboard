@@ -21,7 +21,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/tree.h>
-
+#include <dirent.h>
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
@@ -29,6 +29,11 @@
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
 #define TOP_FILE ".top.txt"
 #define TOP_COMMAND "/usr/bin/top -b -n 1 i "
+char ipNodeAddress[max_num_node][ipLength]; //IP Addresses of Data Nodes
+char datamart[max_num_node][max_num_datamart][100]; //Name of datamarts associated of each Data Node
+char timestamp[max_num_node][max_num_datamart][50]; //Timestamps associated to each datamart of each Data Node
+char url[max_num_node][max_num_datamart][1000]; //Url generate from the component "Query Generator"
+char new_timestamp[max_num_node][max_num_datamart][50]; //New timestamps associated to each datamart of each Data Node
 
 int retrieve_localhost_metrics()
 {
@@ -1104,7 +1109,21 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
 }
 int compute_federation()
 {
-  
+    //struct fileXML config; //Structure for storing some information of the configuration file
+    int i;
+
+    read_config_feder(CONFIG_FILE_NAME);
+        struct dirent *entry;
+    int ret = 1;
+    DIR *dir;
+    dir = opendir (FED_DIR);
+    char path_feder[2048] = { '\0' };
+    while ((entry = readdir (dir)) != NULL) {
+        sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
+        read_dmart_feder(path_feder);
+        //printf("\n%s",entry->d_name);
+    }
+       
 }
 
 //PLANA START
@@ -1315,7 +1334,7 @@ int compute_solr_process_planA(int shards)
           doc = xmlReadFile(tmp_file, NULL, 0);
           if (doc != NULL)
           {
-             fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+             //fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
              queryid[i]=strdup(id_query[cnt]);
              i++;
           }
@@ -1493,7 +1512,7 @@ int compute_solr_process_planA(int shards)
       xmlCleanupParser();
       xmlMemoryDump();
     }
-    check_cross_project(conn, &datasetproj,ESGF_NODE_SOLR, res_rep);
+    check_cross_project(conn, &datasetproj,ESGF_HOSTNAME, res_rep);
     insert_dmart_cross_project(conn);
     free_struct_datasetproj(datasetproj);
 

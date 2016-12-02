@@ -56,8 +56,8 @@ am_esgf_dashboard_ip_OBJECTS =  \
 	esgf_dashboard_ip-hashtbl.$(OBJEXT) \
 	esgf_dashboard_ip-debug.$(OBJEXT) \
 	esgf_dashboard_ip-esgf-libstats.$(OBJEXT) \
-	esgf_dashboard_ip-ftpget.$(OBJEXT) \
 	esgf_dashboard_ip-xmlreader.$(OBJEXT) \
+	esgf_dashboard_ip-ftpget.$(OBJEXT) \
 	esgf_dashboard_ip-esgf-dashboard-insert-dw.$(OBJEXT)
 esgf_dashboard_ip_OBJECTS = $(am_esgf_dashboard_ip_OBJECTS)
 esgf_dashboard_ip_LDADD = $(LDADD)
@@ -182,7 +182,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = $(OPT) -I../include -Wall
-esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c esgf-libstats.c ftpget.c xmlreader.c esgf-dashboard-insert-dw.c 
+esgf_dashboard_ip_SOURCES = esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c esgf-libstats.c xmlreader.c ftpget.c esgf-dashboard-insert-dw.c 
 esgf_dashboard_ip_CFLAGS = -O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
 esgf_dashboard_ip_LDFLAGS = -O2 $(pq_LDFLAGS) -L/usr/local/curl-no-ssl/lib -lcurl -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
 esgf_iplookup_SOURCES = esgf-iplookup.c esgf-libiplookup.c debug.c 
@@ -420,20 +420,6 @@ esgf_dashboard_ip-esgf-libstats.obj: esgf-libstats.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-esgf-libstats.obj `if test -f 'esgf-libstats.c'; then $(CYGPATH_W) 'esgf-libstats.c'; else $(CYGPATH_W) '$(srcdir)/esgf-libstats.c'; fi`
 
-esgf_dashboard_ip-ftpget.o: ftpget.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-ftpget.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo -c -o esgf_dashboard_ip-ftpget.o `test -f 'ftpget.c' || echo '$(srcdir)/'`ftpget.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo $(DEPDIR)/esgf_dashboard_ip-ftpget.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ftpget.c' object='esgf_dashboard_ip-ftpget.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-ftpget.o `test -f 'ftpget.c' || echo '$(srcdir)/'`ftpget.c
-
-esgf_dashboard_ip-ftpget.obj: ftpget.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-ftpget.obj -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo -c -o esgf_dashboard_ip-ftpget.obj `if test -f 'ftpget.c'; then $(CYGPATH_W) 'ftpget.c'; else $(CYGPATH_W) '$(srcdir)/ftpget.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo $(DEPDIR)/esgf_dashboard_ip-ftpget.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ftpget.c' object='esgf_dashboard_ip-ftpget.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-ftpget.obj `if test -f 'ftpget.c'; then $(CYGPATH_W) 'ftpget.c'; else $(CYGPATH_W) '$(srcdir)/ftpget.c'; fi`
-
 esgf_dashboard_ip-xmlreader.o: xmlreader.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-xmlreader.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-xmlreader.Tpo -c -o esgf_dashboard_ip-xmlreader.o `test -f 'xmlreader.c' || echo '$(srcdir)/'`xmlreader.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/esgf_dashboard_ip-xmlreader.Tpo $(DEPDIR)/esgf_dashboard_ip-xmlreader.Po
@@ -447,6 +433,20 @@ esgf_dashboard_ip-xmlreader.obj: xmlreader.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmlreader.c' object='esgf_dashboard_ip-xmlreader.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-xmlreader.obj `if test -f 'xmlreader.c'; then $(CYGPATH_W) 'xmlreader.c'; else $(CYGPATH_W) '$(srcdir)/xmlreader.c'; fi`
+
+esgf_dashboard_ip-ftpget.o: ftpget.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-ftpget.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo -c -o esgf_dashboard_ip-ftpget.o `test -f 'ftpget.c' || echo '$(srcdir)/'`ftpget.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo $(DEPDIR)/esgf_dashboard_ip-ftpget.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ftpget.c' object='esgf_dashboard_ip-ftpget.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-ftpget.o `test -f 'ftpget.c' || echo '$(srcdir)/'`ftpget.c
+
+esgf_dashboard_ip-ftpget.obj: ftpget.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-ftpget.obj -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo -c -o esgf_dashboard_ip-ftpget.obj `if test -f 'ftpget.c'; then $(CYGPATH_W) 'ftpget.c'; else $(CYGPATH_W) '$(srcdir)/ftpget.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/esgf_dashboard_ip-ftpget.Tpo $(DEPDIR)/esgf_dashboard_ip-ftpget.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ftpget.c' object='esgf_dashboard_ip-ftpget.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -c -o esgf_dashboard_ip-ftpget.obj `if test -f 'ftpget.c'; then $(CYGPATH_W) 'ftpget.c'; else $(CYGPATH_W) '$(srcdir)/ftpget.c'; fi`
 
 esgf_dashboard_ip-esgf-dashboard-insert-dw.o: esgf-dashboard-insert-dw.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(esgf_dashboard_ip_CFLAGS) $(CFLAGS) -MT esgf_dashboard_ip-esgf-dashboard-insert-dw.o -MD -MP -MF $(DEPDIR)/esgf_dashboard_ip-esgf-dashboard-insert-dw.Tpo -c -o esgf_dashboard_ip-esgf-dashboard-insert-dw.o `test -f 'esgf-dashboard-insert-dw.c' || echo '$(srcdir)/'`esgf-dashboard-insert-dw.c

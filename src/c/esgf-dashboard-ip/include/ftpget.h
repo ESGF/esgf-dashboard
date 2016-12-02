@@ -1,4 +1,5 @@
- struct FtpFile {
+#define FED_DIR "./.fed" 
+struct FtpFile {
   char *URL;
   char *filename;
   int id_query;

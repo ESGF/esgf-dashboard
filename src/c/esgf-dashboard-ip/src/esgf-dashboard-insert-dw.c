@@ -23,7 +23,9 @@
 #define HAST_TABLE_CROSS_DIM_PROJECT		16
 #define HAST_TABLE_CROSS_BRIDGE_PROJECT		64	
 #define HAST_TABLE_CROSS_BRIDGE_PROJECT_TMP	64	
-#define HAST_TABLE_CROSS_DOWNLOAD		64
+#define HAST_TABLE_CROSS_DOWNLOAD		300
+#define HAST_TABLE_OBS4MIPS_DOWNLOAD		300
+#define HAST_TABLE_CMIP5_DOWNLOAD		300
 #define HAST_TABLE_CROSS_DMART_PROJECT_HOST_GEOLOCATION	64
 
 // HashTables dimensions - Obs4MIPS Project
@@ -116,6 +118,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
   HASHTBL *hashtbl_cross_bridge_project;
   HASHTBL *hashtbl_cross_bridge_project_tmp;
   HASHTBL *hashtbl_cross_fact_download;
+  HASHTBL *hashtbl_obs4mips_fact_download;
+  HASHTBL *hashtbl_cmip5_fact_download;
 
   /* obs4mips project */
   HASHTBL *hashtbl_obs_dim_file;
@@ -496,6 +500,33 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_cross_fact_download);
 		  //continue;
 		}
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS4MIPS DOWNLOAD\n");
+	      if (!(hashtbl_obs4mips_fact_download = hashtbl_create (HAST_TABLE_OBS4MIPS_DOWNLOAD, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
+		  //continue;
+		}
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP5 DOWNLOAD\n");
+	      if (!(hashtbl_cmip5_fact_download = hashtbl_create (HAST_TABLE_CMIP5_DOWNLOAD, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_fact_download);
+		  //continue;
+		}
 
             }
 
@@ -781,27 +812,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              //devo controllare se esiste già il gruppo
          }
          free(array_idproj);
-
-                  char fact_row[2048] = { '\0' };
-          int fact_id=0;
-          sprintf(fact_row, "%d:%d:%s:%s:%s:%s:%d:%d:%ld:%d:%d", size_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, atoi(buf3),atoi(buf4), project_group_key, geo_id, date_id);
-          //printf("fact_row %s\n", fact_row);
-
-          //if (hashtbl_result = hashtbl_get (hashtbl_cross_fact_download, fact_row))
-          //{
-          //   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
-          //   fact_id = atol (hashtbl_result);
-	  //   success_lookup[0]++;
-          //}
-          //else
-	  //{		// add host entry in DB (and hashtable too) without geolocation information
-
-             char cross_bridge_project_id_str[128] = { '\0' };
-             char fact_id_str[128] = { '\0' };
-             char insert_cross_bridge_project[2048] = { '\0' };
-             char select_id_cross_bridge_project[2048] = { '\0' };
-
-             success_lookup[1]++;
              if(!replica)
              {
                 if(res_rep==0)
@@ -809,13 +819,51 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 else
                 {
                   replica=strdup("false");
-                  printf("replica is %s\n", replica);
+                  //printf("replica is %s\n", replica);
                 }
              }
+             char *str_succ=NULL;
+             if(strcmp(success_row,"t")==0)
+                  str_succ=strdup("true");
+             else
+                  str_succ=("false");
+
+          char fact_row[2048] = { '\0' };
+          long int fact_id=0;
+          sprintf(fact_row, "%d:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d", size_row, str_succ, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
+          //printf("fact_row %s\n", fact_row);
+          free(str_succ);
+          str_succ=NULL;
+          if (hashtbl_result = hashtbl_get (hashtbl_cross_fact_download, fact_row))
+          {
+             pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
+             fact_id = atol (hashtbl_result);
+	     success_lookup[0]++;
+          }
+          else
+	  {		// add host entry in DB (and hashtable too) without geolocation information
+
+             char cross_bridge_project_id_str[128] = { '\0' };
+             char fact_id_str[128] = { '\0' };
+             char insert_cross_bridge_project[2048] = { '\0' };
+             char select_id_cross_bridge_project[2048] = { '\0' };
+             char select_id_fact_query[2048] = { '\0' };
+
+             success_lookup[1]++;
              snprintf (insert_cross_bridge_project, sizeof (insert_cross_bridge_project), QUERY_INSERT_CROSS_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, project_group_key, geo_id, date_id);
 
 
 	     submit_query (conn, insert_cross_bridge_project);
+	     snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_FACT_ROW,  size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
+
+             //printf("select_id_fact_query vale %s\n", select_id_fact_query);
+             fact_id=get_foreign_key_value(conn, select_id_fact_query);
+             sprintf (fact_id_str, "%ld", fact_id);
+             //printf("FACT ID %ld", fact_id);
+             hashtbl_insert (hashtbl_cross_fact_download,fact_row,fact_id_str);
+             //printf("hashtable [%s]*****[%s]\n",fact_row,fact_id_str);
+             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_row,fact_id_str);
+          }
 
 
          for(size2=0; (*datasetproj)[cnt]->first[size2]!=NULL; size2++)
@@ -828,7 +876,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             if(strcmp(proj_name, "OBS4MIPS")==0)
             {
               create_populate_done=2;       
-	      pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+	      //pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
 	      if (!(hashtbl_obs_dim_file = hashtbl_create (HAST_TABLE_OBS_DIM_FILE, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
@@ -1383,6 +1431,40 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
 		  //continue;
 		}
+	      if (!(hashtbl_obs4mips_fact_download = hashtbl_create (HAST_TABLE_OBS4MIPS_DOWNLOAD, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_obs_dim_file);
+		  hashtbl_destroy (hashtbl_obs_dim_institute);
+		  hashtbl_destroy (hashtbl_obs_dim_variable);
+		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+		  hashtbl_destroy (hashtbl_obs_dim_index);
+		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+		  hashtbl_destroy (hashtbl_obs_dim_realm);
+		  hashtbl_destroy (hashtbl_obs_dim_dataset);
+		  hashtbl_destroy (hashtbl_obs_bridge_institute);
+		  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_variable);
+		  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+		  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_processing_level);
+		  hashtbl_destroy (hashtbl_obs_bridge_processing_level_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_realm);
+		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_date);
+		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
+             }
 
             if(strcmp(proj_name, "CMIP5")==0)
             {
@@ -1420,6 +1502,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  //continue;
 		}
@@ -1456,6 +1539,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
 		  //continue;
@@ -1493,6 +1577,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
 		}
@@ -1529,6 +1614,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
@@ -1566,6 +1652,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
@@ -1604,13 +1691,52 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
 		  hashtbl_destroy (hashtbl_obs_dim_date);
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
 		  hashtbl_destroy (hashtbl_cmip5_dim_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
 		}
+	      if (!(hashtbl_cmip5_fact_download = hashtbl_create (HAST_TABLE_CMIP5_DOWNLOAD, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_obs_dim_file);
+		  hashtbl_destroy (hashtbl_obs_dim_institute);
+		  hashtbl_destroy (hashtbl_obs_dim_variable);
+		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+		  hashtbl_destroy (hashtbl_obs_dim_index);
+		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+		  hashtbl_destroy (hashtbl_obs_dim_realm);
+		  hashtbl_destroy (hashtbl_obs_dim_dataset);
+		  hashtbl_destroy (hashtbl_obs_bridge_institute);
+		  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_variable);
+		  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+		  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_processing_level);
+		  hashtbl_destroy (hashtbl_obs_bridge_processing_level_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
+		  hashtbl_destroy (hashtbl_obs_bridge_realm);
+		  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_date);
+		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
+		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_model);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
+		  hashtbl_destroy (hashtbl_cmip5_fact_download);
              }
+           }
 
 
               if(strcmp(proj_name, "OBS4MIPS")==0)
@@ -1661,6 +1787,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 				   &hashtbl_obs_dim_date);
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS_DIM_GEOLOCATION,
 				   &hashtbl_obs_dim_geolocation);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS4MIPS_DOWNLOAD,
+				   &hashtbl_obs4mips_fact_download);
 	        }
               if(strcmp(proj_name, "CMIP5")==0)
               {
@@ -1706,6 +1834,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 				   &hashtbl_cmip5_bridge_experiment);
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP5_BRIDGE_EXPERIMENT_TMP,
 				   &hashtbl_cmip5_bridge_experiment_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP5_DOWNLOAD,
+				   &hashtbl_cmip5_fact_download);
 	        }
           }
 	  else
@@ -3084,19 +3214,78 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
         {
           if(strcmp(proj_name, "OBS4MIPS")==0)
           {
-             char insert_obs4mips_fact_download[2048] = { '\0' };
-             snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
-	     submit_query (conn, insert_obs4mips_fact_download);
+             char *str_succ=NULL;
+             if(strcmp(success_row,"t")==0)
+                  str_succ=strdup("true");
+             else
+                 str_succ=strdup("false");
+             char fact_obs_row[2048] = { '\0' };
+             long int fact_obs_id=0;
+             sprintf(fact_obs_row, "%d:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+             free(str_succ);
+             //printf("*************fact_obs_row*****%s\n", fact_obs_row); 
+             if (hashtbl_result = hashtbl_get (hashtbl_obs4mips_fact_download, fact_obs_row))
+             {
+               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
+               fact_obs_id = atol (hashtbl_result);
+	        success_lookup[0]++;
+             }
+             else
+	     {		// add host entry in DB (and hashtable too) without geolocation information
+
+                char insert_obs4mips_fact_download[2048] = { '\0' };
+                char select_id_fact_query[2048] = { '\0' };
+                char fact_obs_id_str[256] = { '\0' };
+                snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+	        submit_query (conn, insert_obs4mips_fact_download);
+
+                snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+
+                //printf("select_id_fact_query vale %s\n", select_id_fact_query);
+                fact_obs_id=get_foreign_key_value(conn, select_id_fact_query);
+                sprintf (fact_obs_id_str, "%ld", fact_obs_id);
+                hashtbl_insert (hashtbl_obs4mips_fact_download,fact_obs_row,fact_obs_id_str);
+                //printf("hashtable [%s]*****[%s]\n",fact_obs_row,fact_obs_id_str);
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_obs_row,fact_obs_id_str);
+             }
           }
           else
           {
-             char insert_cmip5_fact_download[2048] = { '\0' };
-             char fact1_row[2048] = { '\0' };
-          sprintf(fact1_row, "%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
-             //printf("fact1_row %s\n", fact1_row);
-             snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
-             //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
-	     submit_query (conn, insert_cmip5_fact_download);
+             char *str_succ=NULL;
+             if(strcmp(success_row,"t")==0)
+                  str_succ=strdup("true");
+             else
+                 str_succ=strdup("false");
+             char fact_cmip_row[2048] = { '\0' };
+             long int fact_cmip_id=0;
+             sprintf(fact_cmip_row,"%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key); 
+             free(str_succ);
+             if (hashtbl_result = hashtbl_get (hashtbl_cmip5_fact_download, fact_cmip_row))
+             {
+               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
+               fact_cmip_id = atol (hashtbl_result);
+	        success_lookup[0]++;
+             }
+             else
+	     {		// add host entry in DB (and hashtable too) without geolocation information
+                 char insert_cmip5_fact_download[2048] = { '\0' };
+                 char select_id_fact_query[2048] = { '\0' };
+                 char fact_cmip_id_str[256] = { '\0' };
+                 char fact1_row[2048] = { '\0' };
+                 sprintf(fact1_row, "%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                  //printf("fact1_row %s\n", fact1_row);
+                  snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                 //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
+	         submit_query (conn, insert_cmip5_fact_download);
+                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_CMIP5_ROW, size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+
+                //printf("select_id_fact_query vale %s\n", select_id_fact_query);
+                fact_cmip_id=get_foreign_key_value(conn, select_id_fact_query);
+                sprintf (fact_cmip_id_str, "%ld", fact_cmip_id);
+                hashtbl_insert (hashtbl_cmip5_fact_download,fact_cmip_row,fact_cmip_id_str);
+                printf("hashtable [%s]*****[%s]\n",fact_cmip_row,fact_cmip_id_str);
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_cmip_row,fact_cmip_id_str);
+              }
 
           }
         }
@@ -3192,6 +3381,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
       hashtbl_destroy (hashtbl_obs_dim_date);
       hashtbl_destroy (hashtbl_obs_dim_geolocation);
+      hashtbl_destroy (hashtbl_obs4mips_fact_download);
       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Releasing memory for hashtables [%d] \n",create_populate_done); 
       }
       else
@@ -3204,6 +3394,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
            hashtbl_destroy (hashtbl_cmip5_dim_experiment);
            hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
            hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+           hashtbl_destroy (hashtbl_cmip5_fact_download);
         }
       }
     }

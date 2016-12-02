@@ -787,11 +787,11 @@ void print_element(xmlNode * a_node, int *res)
                      char *tmp_str=strstr(content, "8982");
                      if(tmp_str)
                      {
-                        printf("content %s\n", content);
+                        //printf("content %s\n", content);
                         *res=1;
                      }
-                     else
-                        printf("content %s\n", "no found");
+                     //else
+                        //printf("content %s\n", "no found");
                 }
               }
               xmlFree(prop);
@@ -837,8 +837,138 @@ void print_element_replica(xmlNode * a_node, int *res)
               xmlFree(prop);
            }
         }
-        print_element(cur_node->children, res);
+        print_element_replica(cur_node->children, res);
    }
 }
+int read_config_feder(char *configName)
+{
+    int i=0;
+    int res=0;
+    xmlDocPtr doc;
+    xmlNode *root_element = NULL;
+    /*parse the file and get the DOM */
+    doc = xmlReadFile(configName, NULL, 0);
+    if (doc == NULL)
+    {
+      fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, configName);
+      return NULL;
+    }
 
+    
+    /*Get the root element node */
+    root_element = xmlDocGetRootElement(doc);
 
+    xmlNode *cur_node = NULL;
+    xmlNode *a_node = NULL;
+    xmlChar *prop = NULL;
+    char *ip=NULL;
+    print_element_config_feder(root_element,res, ip);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    xmlMemoryDump();
+    return res;
+}
+void print_element_config_feder(xmlNode * a_node, int res, char *ip)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+    
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+          if(xmlStrcasecmp(cur_node->name, (xmlChar *)"node")==0) {
+              prop = xmlGetProp(cur_node, (xmlChar *)"ipNodeAddress");
+              if(prop)
+              {
+                  if(ip)
+                    free(ip);
+                 ip=NULL;
+                 ip=strdup(prop);               
+                 //printf("content %s\n", prop);
+              }
+              xmlFree(prop);
+           }
+          if(xmlStrcasecmp(cur_node->name, (xmlChar *)"datamart")==0) {
+              prop = xmlGetProp(cur_node, (xmlChar *)"path");
+              if(prop)
+              {
+                char buff[1024] = { 0 };
+                sprintf(buff, "%s/%s_%d", FED_DIR, ip, res);
+                get_download_federated(FED_DIR, buff, ip, prop); 
+              }
+              xmlFree(prop);
+           }
+           
+        }
+        res++;
+        print_element_config_feder(cur_node->children, res, ip);
+   }
+}
+int read_dmart_feder(char *dmartName)
+{
+    int i=0;
+    int res=0;
+    xmlDocPtr doc;
+    xmlNode *root_element = NULL;
+    /*parse the file and get the DOM */
+    doc = xmlReadFile(dmartName, NULL, 0);
+    if (doc == NULL)
+    {
+      fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, dmartName);
+      return NULL;
+    }
+
+    
+    /*Get the root element node */
+    root_element = xmlDocGetRootElement(doc);
+
+    xmlNode *cur_node = NULL;
+    xmlNode *a_node = NULL;
+    xmlChar *prop = NULL;
+    print_element_dmart_feder(root_element,res);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    xmlMemoryDump();
+    return res;
+}
+int print_element_dmart_feder(xmlNode * a_node, int res)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+    xmlChar *prop1 = NULL;
+    
+    int prj=0;
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE){
+	if(xmlStrcasecmp(cur_node->name, (xmlChar *)"table")==0) {
+	    prop = xmlGetProp(cur_node, (xmlChar *)"name");
+            printf("tabella vale %s\n", prop);
+	    if(prop)
+	    {
+		if(xmlStrcasecmp(prop, (xmlChar *)"obs4mips_dmart_dataset_host_time")==0)
+		{
+                   a_node=cur_node->children;
+                   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+                      if(xmlStrcasecmp(cur_node->name, (xmlChar *)"field")==0)
+                      {
+                         prop1 = xmlGetProp(cur_node, (xmlChar *)"name");
+                         if(prop1)
+                         {
+                            xmlChar* content=xmlNodeGetContent(cur_node);
+                            printf("content %s\n", content);
+                            xmlFree(content);
+                            content=NULL;
+                         }
+                         xmlFree(prop1);
+                      }
+                   }
+                 }
+
+            }
+            xmlFree(prop);
+	  }
+        }
+    }
+    return 0;
+}
