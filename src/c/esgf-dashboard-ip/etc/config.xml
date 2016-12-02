@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <configuration>
-	<node ipNodeAddress = "localhost">
+	<node ipNodeAddress = "esgf-fedtest.dkrz.de" port="8080">
 		<datamart name = "cross_dmart_project_host_time" path="crossproject/projecttime" timestamp = "0"/>
 		<datamart name = "cross_dmart_project_host_geolocation" path="crossproject/projectgeolocation" timestamp = "0"/>
 		<datamart name = "obs4mips_dmart_clients_host_time_geolocation" path="obs4mips/clients" timestamp = "0"/>
@@ -14,7 +14,7 @@
 		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/dataset" timestamp = "0"/>
 		<datamart name = "cmip5_dmart_clients_host_time_geolocation" path="cmip5/clients" timestamp = "0"/>
 	</node>
-	<node ipNodeAddress = "esgf-node.jpl.nasa.gov">
+	<node ipNodeAddress = "esgf-data.jpl.nasa.gov" port="0">
 		<datamart name = "cross_dmart_project_host_time" path="crossproject/projecttime" timestamp = "0"/>
 		<datamart name = "cross_dmart_project_host_geolocation" path="crossproject/projectgeolocation" timestamp = "0"/>
 		<datamart name = "obs4mips_dmart_clients_host_time_geolocation" path="obs4mips/clients" timestamp = "0"/>

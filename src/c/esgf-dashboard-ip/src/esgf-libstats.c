@@ -1216,7 +1216,7 @@ int get_download_shards(char *path_xml, char *file_dest)
 
  return 0;
 }
-int get_download_federated(char *path_xml, char *file_dest, char *hostname, char *datamart)
+int get_download_federated(char *path_xml, char *file_dest, char *hostname, char *datamart, int port)
 {
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
@@ -1235,7 +1235,7 @@ int get_download_federated(char *path_xml, char *file_dest, char *hostname, char
   long long int num_rec;
   int right_url;
 
-  sprintf(buffer1, "http://%s:8080/esgf-reststats/%s/xml", hostname,datamart);
+  sprintf(buffer1, "http://%s:%d/esgf-reststats/%s/xml", hostname, port, datamart);
   snprintf (url_action, sizeof (url_action),buffer1);
   sprintf (tmp_file, "%s/%s", path_xml, "xml_tmp.xml");
   remove(tmp_file);

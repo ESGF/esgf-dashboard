@@ -862,13 +862,14 @@ int read_config_feder(char *configName)
     xmlNode *a_node = NULL;
     xmlChar *prop = NULL;
     char *ip=NULL;
-    print_element_config_feder(root_element,res, ip);
+    int port=0;
+    print_element_config_feder(root_element,res, ip, port);
     xmlFreeDoc(doc);
     xmlCleanupParser();
     xmlMemoryDump();
     return res;
 }
-void print_element_config_feder(xmlNode * a_node, int res, char *ip)
+void print_element_config_feder(xmlNode * a_node, int res, char *ip, int port)
 {
     xmlNode *cur_node = NULL;
     xmlChar *prop = NULL;
@@ -887,6 +888,12 @@ void print_element_config_feder(xmlNode * a_node, int res, char *ip)
                  //printf("content %s\n", prop);
               }
               xmlFree(prop);
+              prop = xmlGetProp(cur_node, (xmlChar *)"port");
+              if(prop)
+              {
+                 port=atoi(prop);
+              }
+              xmlFree(prop);
            }
           if(xmlStrcasecmp(cur_node->name, (xmlChar *)"datamart")==0) {
               prop = xmlGetProp(cur_node, (xmlChar *)"path");
@@ -894,14 +901,14 @@ void print_element_config_feder(xmlNode * a_node, int res, char *ip)
               {
                 char buff[1024] = { 0 };
                 sprintf(buff, "%s/%s_%d", FED_DIR, ip, res);
-                get_download_federated(FED_DIR, buff, ip, prop); 
+                get_download_federated(FED_DIR, buff, ip, port, prop); 
               }
               xmlFree(prop);
            }
            
         }
         res++;
-        print_element_config_feder(cur_node->children, res, ip);
+        print_element_config_feder(cur_node->children, res, ip, port);
    }
 }
 int read_dmart_feder(char *dmartName)

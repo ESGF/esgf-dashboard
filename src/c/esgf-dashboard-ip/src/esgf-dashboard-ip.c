@@ -571,17 +571,23 @@ main (int argc, char **argv)
   DIR* pDir = opendir(WORK_DIR);
   struct dirent *pFile;
   char file_n[128] = { '\0' };
-  while ((pFile = readdir(pDir))) {
+  if(pDir!=NULL)
+  {
+     while ((pFile = readdir(pDir))) {
        sprintf(file_n, "%s/%s",WORK_DIR,pFile->d_name);
        unlink(file_n);
-   }
-  closedir(pDir);
+     }
+     closedir(pDir);
+  }
   DIR* pDir2 = opendir(FED_DIR);
-  while ((pFile = readdir(pDir2))) {
+  if(pDir2!=NULL)
+  {
+    while ((pFile = readdir(pDir2))) {
        sprintf(file_n, "%s/%s",FED_DIR,pFile->d_name);
        unlink(file_n);
-   }
-  closedir(pDir2);
+    }
+    closedir(pDir2);
+  }
   
   struct stat st = {0};
   rmdir(WORK_DIR);
@@ -611,6 +617,7 @@ main (int argc, char **argv)
  
   pthread_mutex_unlock(&plana_mutex);
 
+  //compute_federation();
 #if 0  
   pthread_mutex_init(&plana_feder, NULL);
   pthread_mutex_lock(&plana_feder);
