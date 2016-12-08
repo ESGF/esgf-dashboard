@@ -619,8 +619,6 @@ main (int argc, char **argv)
   //read_dmart_feder("./xml"); 
   //return 0;
 
-  printf("la variabile vale %s\n", ALLOW_FEDERATION);
-  return 0;
   DIR* pDir = opendir(WORK_DIR);
   struct dirent *pFile;
   char file_n[128] = { '\0' };
