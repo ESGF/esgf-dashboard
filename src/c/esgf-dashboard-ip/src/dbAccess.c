@@ -1113,17 +1113,71 @@ int compute_federation()
     int i;
 
     read_config_feder(CONFIG_FILE_NAME);
-        struct dirent *entry;
+    struct dirent *entry;
     int ret = 1;
     DIR *dir;
-    dir = opendir (FED_DIR);
     char path_feder[2048] = { '\0' };
+    PGconn * conn;
+    PGresult *res2;
+    char conninfo[1024] = {'\0'};
+    char query[2048] = {'\0'};
+
+#if 0
+    /* Connect to database */
+    snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+    conn = PQconnectdb ((const char *) conninfo);
+
+    if (PQstatus(conn) != CONNECTION_OK)
+    {
+       pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+       PQfinish(conn);
+       return -1;
+     }
+     res2 = PQexec(conn, QUERY8);
+     if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+     {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+      }
+      sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
+
+      res2 = PQexec(conn, query);
+      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+      {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        //PQclear(res2);
+        //PQfinish(conn);
+        //return -2;
+       }
+       PQclear(res2);
+       res2 = PQexec(conn, QUERY4);
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+       {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+         PQclear(res2);
+         PQfinish(conn);
+         return -2;
+        }
+        PQclear(res2);
+         PQfinish(conn);
+#endif
+    dir = opendir (FED_DIR);
     while ((entry = readdir (dir)) != NULL) {
-        sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
-        read_dmart_feder(path_feder);
+      if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
+      {
+        continue;
+      } else {
+          sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
+          read_dmart_feder(path_feder);
+      }
         //printf("\n%s",entry->d_name);
     }
-       
+    closedir(dir);
+    return 0; 
 }
 
 //PLANA START
@@ -1302,16 +1356,22 @@ int compute_solr_process_planA(int shards)
           /*parse the file and get the DOM */
           char tmp_file[2048] = {'\0'};
           sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
-
-          doc = xmlReadFile(tmp_file, NULL, 0);
-          if (doc == NULL)
-          {
+          struct stat st = {0};
+          if (stat(tmp_file, &st) == -1) {
             size_eff++;
           }
-          xmlFreeDoc(doc);
-          xmlCleanupCharEncodingHandlers();
-          xmlCleanupParser();
-          xmlMemoryDump();
+          else
+          {
+            doc = xmlReadFile(tmp_file, NULL, 0);
+            if (doc == NULL)
+            {
+              size_eff++;
+            }
+            xmlFreeDoc(doc);
+            xmlCleanupCharEncodingHandlers();
+            xmlCleanupParser();
+            xmlMemoryDump();
+          }
         }
         size_eff=size-size_eff;
         //printf("size_eff vale %d\n", size_eff);
@@ -1331,17 +1391,24 @@ int compute_solr_process_planA(int shards)
         {
           char tmp_file[2048] = {'\0'};
           sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
-          doc = xmlReadFile(tmp_file, NULL, 0);
-          if (doc != NULL)
-          {
-             //fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-             queryid[i]=strdup(id_query[cnt]);
-             i++;
+          struct stat st = {0};
+          if (stat(tmp_file, &st) == -1) {
+            size_eff++;
           }
-          xmlFreeDoc(doc);
-          xmlCleanupCharEncodingHandlers();
-          xmlCleanupParser();
-          xmlMemoryDump();
+          else
+          {
+            doc = xmlReadFile(tmp_file, NULL, 0);
+            if (doc != NULL)
+            {
+               //fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+               queryid[i]=strdup(id_query[cnt]);
+               i++;
+            }
+            xmlFreeDoc(doc);
+            xmlCleanupCharEncodingHandlers();
+            xmlCleanupParser();
+            xmlMemoryDump();
+          }
         }
         struct dataset_project **datasetproj;
         datasetproj=calloc(size_eff+1, sizeof(struct dataset_project*));

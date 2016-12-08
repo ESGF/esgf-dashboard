@@ -72,6 +72,7 @@ CREATE TABLE esgf_dashboard.cross_dmart_project_host_time (
   year smallint
 );
 ALTER TABLE esgf_dashboard.cross_dmart_project_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cross_dmart_project_host_time add constraint cross_dmart_project_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, month, year);
  
  
 CREATE TABLE esgf_dashboard.cross_dmart_project_host_geolocation (
@@ -88,6 +89,8 @@ CREATE TABLE esgf_dashboard.cross_dmart_project_host_geolocation (
    longitude numeric(14,11)
 );
 ALTER TABLE esgf_dashboard.cross_dmart_project_host_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude);
+
 /* DIMENSION TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_geolocation CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_date CASCADE;
@@ -259,6 +262,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation (
   host_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_clients_time_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation add constraint obs4mips_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -275,6 +279,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_variable_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.obs4mips_dmart_variable_host_time add constraint obs4mips_dmart_variable_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, host_name, variable_code, variable_long_name, cf_standard_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_source_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -289,6 +294,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_source_host_time (
   source_id_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_source_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.obs4mips_dmart_source_host_time add constraint obs4mips_dmart_source_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, host_name, source_id_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_realm_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -303,7 +309,8 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_realm_host_time (
   realm_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_realm_host_time OWNER TO dbsuper;
- 
+ALTER table esgf_dashboard.obs4mips_dmart_realm_host_time add constraint obs4mips_dmart_realm_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, host_name, realm_name); 
+
 CREATE TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time (
   dmart_key bigserial PRIMARY KEY,
   total_size bigint,
@@ -320,6 +327,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time (
   datetime_stop character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.obs4mips_dmart_dataset_host_time add constraint obs4mips_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop); 
 /* DIMENSION TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_geolocation CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_date CASCADE;
@@ -484,6 +492,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
   host_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_clients_time_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_clients_host_time_geolocation add constraint cmip5_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude,host_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -499,6 +508,8 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (
   model_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_model_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_model_host_time add constraint cmip5_dmart_model_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, model_name);
+
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_experiment_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -514,6 +525,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_experiment_host_time (
   experiment_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_experiment_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_experiment_host_time add constraint cmip5_dmart_experiment_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, experiment_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_variable_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -531,6 +543,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_variable_host_time (
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_variable_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_variable_host_time add constraint cmip5_dmart_variable_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, variable_code, variable_long_name,cf_standard_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_dataset_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -549,6 +562,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_dataset_host_time (
   datetime_stop character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_dataset_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_dataset_host_time add constraint cmip5_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop);
 
 DROP TABLE IF EXISTS esgf_dashboard.registry;
 CREATE TABLE esgf_dashboard.registry (

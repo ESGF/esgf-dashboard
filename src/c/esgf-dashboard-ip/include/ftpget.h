@@ -31,4 +31,15 @@ struct dataset_project{
   //char **project;   //project read from the solr for dashboard datawarehouse
   struct project **first;
 };
+struct table_dmart{
+  char *table;
+  struct field_entry **first;
+  int size;
+}; 
+struct field_entry {
+   char *entry_name;
+   char *entry_value;
+   int size;
+};
+
 //typedef struct dataset_project *dataset_project;

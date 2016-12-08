@@ -251,10 +251,27 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 void * data_federA(void *arg)
 {
      int res=0;
+     DIR *dir;
+     char path_feder[2048] = { '\0' };
+     struct dirent *entry;
+
      while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
      {
-           res=compute_federation();
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+          dir = opendir (FED_DIR);
+          while ((entry = readdir (dir)) != NULL) {
+            if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
+            {
+              continue;
+            } else {
+              sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
+              unlink(path_feder);
+            }
+            //printf("\n%s",entry->d_name);
+         }
+         closedir(dir);
+         res=compute_federation();
+	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	 sleep(120);
      }
      return NULL;
 }
@@ -269,7 +286,6 @@ void * data_planA(void *arg)
         char conninfo[1024] = {'\0'};
 
         /* Connect to database */
-
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
         conn = PQconnectdb ((const char *) conninfo);
 
@@ -279,13 +295,41 @@ void * data_planA(void *arg)
                 PQfinish(conn);
                 return -1;
         }
-        
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY8);
+        res2 = PQexec(conn, QUERY8);
+        if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res2);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res2);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+
         char update_query[2048] = { '\0' };
  
         sprintf(update_query, "%s", QUERY_UPDATE_REGISTRY_INIT);        
 
         res2 = PQexec(conn, update_query);
         PQclear(res2);
+
+        res2 = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res2);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res2);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+
         PQfinish(conn);
         
 	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
@@ -295,11 +339,16 @@ void * data_planA(void *arg)
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with success\n");
             else
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with unsuccess\n");
+            
             res1=read_shards("./.work/shards.xml");
             fprintf(stderr, "START PLANA");
+
 	    // skip the first time, because the process is called once before this loop	
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	    {
+               if(res1==-1)
+	         break;
+                  
                res=compute_solr_process_planA(res1);
                if(res==-25)
 	       {
@@ -567,7 +616,11 @@ main (int argc, char **argv)
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
- 
+  //read_dmart_feder("./xml"); 
+  //return 0;
+
+  printf("la variabile vale %s\n", ALLOW_FEDERATION);
+  return 0;
   DIR* pDir = opendir(WORK_DIR);
   struct dirent *pFile;
   char file_n[128] = { '\0' };
@@ -579,6 +632,9 @@ main (int argc, char **argv)
      }
      closedir(pDir);
   }
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
   DIR* pDir2 = opendir(FED_DIR);
   if(pDir2!=NULL)
   {
@@ -588,47 +644,50 @@ main (int argc, char **argv)
     }
     closedir(pDir2);
   }
+}
   
   struct stat st = {0};
   rmdir(WORK_DIR);
-  rmdir(FED_DIR);
   if (stat(WORK_DIR, &st) == -1) {
             mkdir(WORK_DIR, 0700);
   }
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  rmdir(FED_DIR);
   if (stat(FED_DIR, &st) == -1) {
             mkdir(FED_DIR, 0700);
   }
-
-
-  //compute_federation(); 
-
-  pthread_mutex_t plana_mutex;
-  pthread_mutex_t plana_feder;
+}
+  
   ptr_mng         ptr_handle = NULL;
+  pthread_mutex_t plana_feder;
 
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  pthread_mutex_init(&plana_feder, NULL);
+}
+  pthread_mutex_t plana_mutex;
   pthread_mutex_init(&plana_mutex, NULL);
+  
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+  ptr_register(&ptr_handle, (void **) &plana_feder, 0);
+
+  ptr_register(&ptr_handle, (void **) &plana_mutex, 0);
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  // start thread PLANA
+  pthread_mutex_lock(&plana_feder);
+  pthread_create (&pth_feder, NULL, &data_federA,NULL);
+  pthread_mutex_unlock(&plana_feder);
+}
+  //compute_federation();
 
   pthread_mutex_lock(&plana_mutex);
-  ptr_register(&ptr_handle, (void **) &plana_mutex, 6);
-
   // start thread PLANA
+  //compute_solr_process_planA(1);
   pthread_create (&pth_planA, NULL, &data_planA,NULL);
-  //compute_solr_process_planA(1);
- 
   pthread_mutex_unlock(&plana_mutex);
-
-  //compute_federation();
-#if 0  
-  pthread_mutex_init(&plana_feder, NULL);
-  pthread_mutex_lock(&plana_feder);
-  ptr_register(&ptr_handle, (void **) &plana_feder, 6);
-
-  // start thread PLANA
-  pthread_create (&pth_feder, NULL, &data_federA,NULL);
-  //compute_solr_process_planA(1);
- 
-  pthread_mutex_unlock(&plana_feder);
-#endif 
 
   compute_remote_clients_data_mart();
 
@@ -719,12 +778,14 @@ main (int argc, char **argv)
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
-#if 0  
+  
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
   if (pthread_join (pth_feder, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join FEDERATION error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data federation thread joined the master for PLANA!\n");
-#endif
+}		
   
   // end of thread pool for sensors	
   //if (num_sensors!=-1)
@@ -1099,4 +1160,3 @@ int ptr_register (ptr_mng* reg, void ** ptr, int type)
 
   return 0;
 }
-   

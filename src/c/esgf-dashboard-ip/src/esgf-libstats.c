@@ -1235,7 +1235,11 @@ int get_download_federated(char *path_xml, char *file_dest, char *hostname, char
   long long int num_rec;
   int right_url;
 
-  sprintf(buffer1, "http://%s:%d/esgf-reststats/%s/xml", hostname, port, datamart);
+  if(port!=0)
+     sprintf(buffer1, "http://%s:%d/esgf-reststats/%s/xml", hostname, port, datamart);
+  else
+     sprintf(buffer1, "http://%s/esgf-reststats/%s/xml", hostname, datamart);
+  //printf("url to be access %s\n", buffer1);
   snprintf (url_action, sizeof (url_action),buffer1);
   sprintf (tmp_file, "%s/%s", path_xml, "xml_tmp.xml");
   remove(tmp_file);
@@ -1243,7 +1247,7 @@ int get_download_federated(char *path_xml, char *file_dest, char *hostname, char
   tmp=fopen(tmp_file, "w");
   if(tmp==NULL)
         {
-         printf("file null %s\n", tmp_file);
+         //printf("file null %s\n", tmp_file);
          pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
          return -2;
         }

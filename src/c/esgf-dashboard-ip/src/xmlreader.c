@@ -4,7 +4,7 @@
  *  Author: University of Salento and CMCC 
  *     
  */
-
+#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -15,6 +15,10 @@
 #include "ftpget.h"
 #include <error.h>
 #include <sys/time.h>
+#include "libpq-fe.h"
+#include "../include/config.h"
+#include "../include/dbAccess.h"
+#include "../include/debug.h"
 
 /**
  * print_element_names:
@@ -361,7 +365,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
-       //printf("URL vale %s\n", URL[cnt]);
+       printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
          //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
@@ -379,6 +383,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
          filename=strrchr(str_1, '/');
          //printf("filename vale %s\n", filename+1);
          free(str_1);
+         
        }
         
        char *str=NULL;
@@ -407,7 +412,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        //free(filename);
        filename=NULL;
        filename=strdup(str_2);
-       //printf("filename**** vale %s\n", filename);
+       printf("filename**** vale %s\n", filename);
        ftpfile[cnt]->filename = strdup(filename);
        free(filename);
        filename=NULL;
@@ -750,11 +755,17 @@ int read_shards(char *shardsName)
     xmlDocPtr doc;
     xmlNode *root_element = NULL;
     /*parse the file and get the DOM */
+    int size=getFilesize(shardsName); 
+    if(size==0)
+    {
+      return -1;
+    }
+
     doc = xmlReadFile(shardsName, NULL, 0);
     if (doc == NULL)
     {
       fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, shardsName);
-      return NULL;
+      return -1;
     }
 
     
@@ -861,8 +872,10 @@ int read_config_feder(char *configName)
     xmlNode *cur_node = NULL;
     xmlNode *a_node = NULL;
     xmlChar *prop = NULL;
-    char *ip=NULL;
+    char ip[128] = { '\0' };
     int port=0;
+    char datanode[128] = { '\0' };
+    delete_element_config_feder(root_element,res, ip, port, datanode);
     print_element_config_feder(root_element,res, ip, port);
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -881,10 +894,11 @@ void print_element_config_feder(xmlNode * a_node, int res, char *ip, int port)
               prop = xmlGetProp(cur_node, (xmlChar *)"ipNodeAddress");
               if(prop)
               {
-                  if(ip)
-                    free(ip);
-                 ip=NULL;
-                 ip=strdup(prop);               
+                  //if(ip)
+                    //free(ip);
+                 //ip=NULL;
+                 //ip=strdup(prop);
+                 sprintf(ip, "%s", prop);               
                  //printf("content %s\n", prop);
               }
               xmlFree(prop);
@@ -901,7 +915,7 @@ void print_element_config_feder(xmlNode * a_node, int res, char *ip, int port)
               {
                 char buff[1024] = { 0 };
                 sprintf(buff, "%s/%s_%d", FED_DIR, ip, res);
-                get_download_federated(FED_DIR, buff, ip, port, prop); 
+                get_download_federated(FED_DIR, buff, ip, prop, port); 
               }
               xmlFree(prop);
            }
@@ -922,7 +936,7 @@ int read_dmart_feder(char *dmartName)
     if (doc == NULL)
     {
       fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, dmartName);
-      return NULL;
+      return -1;
     }
 
     
@@ -932,12 +946,195 @@ int read_dmart_feder(char *dmartName)
     xmlNode *cur_node = NULL;
     xmlNode *a_node = NULL;
     xmlChar *prop = NULL;
-    print_element_dmart_feder(root_element,res);
+    char *tableName=NULL;
+
+    PGconn * conn;
+    PGresult *res2;
+    char conninfo[1024] = {'\0'};
+    char query[2048] = {'\0'};
+
+    /* Connect to database */
+    snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+    conn = PQconnectdb ((const char *) conninfo);
+
+    if (PQstatus(conn) != CONNECTION_OK)
+    {
+       pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+       PQfinish(conn);
+       return -1;
+     }
+     res2 = PQexec(conn, QUERY8);
+     if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+     {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+      }
+
+#if 0
+      sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
+
+      res2 = PQexec(conn, query);
+      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+      {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+       }
+       PQclear(res2);
+#endif
+
+       print_element_dmart_feder_names(root_element, tableName, conn);
+       res2 = PQexec(conn, QUERY4);
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+       {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+         PQclear(res2);
+         PQfinish(conn);
+         return -2;
+        }
+        PQclear(res2);
+
+    PQfinish(conn);
     xmlFreeDoc(doc);
     xmlCleanupParser();
     xmlMemoryDump();
     return res;
 }
+void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn * conn2)
+{
+    xmlNode *cur_node = NULL;
+    struct table_dmart datasetproj;
+    int num_metadata=0;
+    int cnt=0;
+    int i=0;
+    int kind_dmart=0; 
+    char **fields=NULL;
+    char **values=NULL;
+    fields=(char **)calloc (2, sizeof(char*));
+    values=(char **)calloc (2, sizeof(char*));
+    xmlChar *prop=NULL; 
+    char query[2048]={'\0'};
+//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time;   
+                            PGresult *res2;
+                            PGresult *res3;
+    
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+            if(xmlStrcasecmp(cur_node->name, (xmlChar *)"table")==0)
+	    {
+               prop = xmlGetProp(cur_node, (xmlChar *)"name");
+               if(prop)
+	       {
+                 tableName=strdup(prop);
+               }
+               xmlFree(prop);
+            }
+            if(xmlStrcasecmp(cur_node->name, (xmlChar *)"row")==0)
+            {
+                    //printf("******* %s**********\n","row");
+                    read_elem_fed(cur_node->children, tableName, fields, values);
+                    char *str_c=strrchr(fields[0],',');
+                    if (str_c)
+                      *str_c=0;
+                    str_c=strrchr(values[0],',');
+                    if (str_c)
+                      *str_c=0;
+                    
+                    //printf("****fields %s\n****",fields[0]);
+                    //printf("****values %s\n****",values[0]);
+                    //if(strcmp(tableName, "obs4mips_dmart_clients_host_time_geolocation")==0)
+                    //{
+
+                            /* Connect to database */
+
+                            res2 = PQexec(conn2, QUERY8);
+                            if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+                            {
+                              pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+                              PQclear(res2);
+                              free(fields[0]);
+                              free(values[0]);
+                              fields[0]=NULL;
+                              values[0]=NULL;
+                              free(fields); 
+                              free(values);
+                              return -2;
+                            }
+                            PQclear(res2);
+
+                      if(strcmp(tableName, "cmip5_dmart_experiment_host_time")==0)
+                      {
+                         char str_tmp[2048]={'\0'};
+                         sprintf(str_tmp, "%s", "total_size, number_of_downloads,number_of_successful_downloads,average_duration, number_of_users, number_of_replica_downloads, month, year, experiment_name, host_name");
+                         free(fields[0]);
+                         fields[0]=NULL;
+                         fields[0]=strdup(str_tmp);
+                      }
+                      sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
+                      //printf("query vale %s\n", query);
+                              res3 = PQexec(conn2, query);
+                            if ((!res3) || (PQresultStatus (res3) != PGRES_COMMAND_OK))
+                            {
+                              pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed query\n");
+                              printf("******++++%s++++********\n", "Duplicated row");
+                              PQclear(res3);
+                              free(fields[0]);
+                              free(values[0]);
+                              fields[0]=NULL;
+                              values[0]=NULL;
+                              free(fields); 
+                              free(values);
+                              return -2;
+                            }
+                            PQclear(res3);
+                            res2 = PQexec(conn2, QUERY4);
+                            pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+                            pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+                            if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+                            {
+                              pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+                              printf("******++++%s++++********\n", "Close transaction failed");
+                              PQclear(res2);
+                              free(fields[0]);
+                              free(values[0]);
+                              fields[0]=NULL;
+                              values[0]=NULL;
+                              free(fields); 
+                              free(values);
+                              return -2;
+                             }
+                             PQclear(res2);
+                    //}      
+                    free(fields[0]);
+                    free(values[0]);
+                    fields[0]=NULL;
+                    values[0]=NULL;
+                    free(fields); 
+                    free(values);
+                        
+            }      
+		  //if(xmlStrcasecmp(prop, (xmlChar *)"obs4mips_dmart_clients_host_time_geolocation")==0)
+	          //{
+                    //sprintf(query, "INSERT INTO esgf_dashboard.%s(total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name) values (%d, %d, %d, %d, %d, '%s', '%s', %14.11f, %14.11f, '%s');",  
+                  //}
+               
+                 //printf("****%s****\n", cur_node->name);
+            //if(xmlStrcasecmp(cur_node->name, (xmlChar *)"row")==0)
+            //{
+            //   printf("******* %s**********\n","row");
+            //   read_elem_fed(cur_node->children, tableName, datasetproj, num_metadata, cnt, i);
+            //}
+        }
+        print_element_dmart_feder_names(cur_node->children, tableName, conn2);
+    }
+}
+
+#if 0
 int print_element_dmart_feder(xmlNode * a_node, int res)
 {
     xmlNode *cur_node = NULL;
@@ -950,10 +1147,9 @@ int print_element_dmart_feder(xmlNode * a_node, int res)
         if (cur_node->type == XML_ELEMENT_NODE){
 	if(xmlStrcasecmp(cur_node->name, (xmlChar *)"table")==0) {
 	    prop = xmlGetProp(cur_node, (xmlChar *)"name");
-            printf("tabella vale %s\n", prop);
 	    if(prop)
 	    {
-		if(xmlStrcasecmp(prop, (xmlChar *)"obs4mips_dmart_dataset_host_time")==0)
+		if(xmlStrcasecmp(prop, (xmlChar *)"obs4mips_dmart_clients_host_time_geolocation")==0)
 		{
                    a_node=cur_node->children;
                    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -977,5 +1173,345 @@ int print_element_dmart_feder(xmlNode * a_node, int res)
 	  }
         }
     }
+    return 0;
+}
+#endif
+int getFilesize(const char* filename) {
+    struct stat st;
+    if(stat(filename, &st) != 0) {
+        return 0;
+    }
+    return st.st_size;   
+}
+int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **values)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+    xmlChar *prop1 = NULL;
+    
+    int res, prj=0;
+    int k=0;
+    char str_field[2056] = { '\0' };
+    char str_value[2056] = { '\0' };
+    strcpy(str_field, "");
+    strcpy(str_value, "");
+
+                        for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+                          if(xmlStrcasecmp(cur_node->name, (xmlChar *)"field")==0)
+                          {
+                            prop1 = xmlGetProp(cur_node, (xmlChar *)"name");
+                            if(prop1)
+                            {
+                               xmlChar* content=xmlNodeGetContent(cur_node);
+                               //printf("name vale %s\n", prop1);
+                               strcat(str_field, prop1);
+                               strcat(str_field, ",");
+                               //printf("value vale %s\n", content);
+                               if(strcmp(tableName, "obs4mips_dmart_clients_host_time_geolocation")==0)
+                               {
+                                  if(k==5)
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cross_dmart_project_host_time")==0)
+                               {
+                                  if((k==6)||(k==7))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cross_dmart_project_host_geolocation")==0)
+                               {
+                                  if((k==6)||(k==7))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "obs4mips_dmart_variable_host_time")==0)
+                               {
+                                  if((k==5)||(k==8)||(k==9)||(k==10))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "obs4mips_dmart_source_host_time")==0)
+                               {
+                                  if((k==5)||(k==8))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "obs4mips_dmart_realm_host_time")==0)
+                               {
+                                  if((k==5)||(k==8))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "obs4mips_dmart_dataset_host_time")==0)
+                               {
+                                  if((k==5)||(k==8)||(k==10)||(k==11))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip5_dmart_experiment_host_time")==0)
+                               {
+                                  if((k==8)||(k==9))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip5_dmart_model_host_time")==0)
+                               {
+                                  if((k==8)||(k==9))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip5_dmart_variable_host_time")==0)
+                               {
+                                  if((k==8)||(k==9)||(k==10)||(k==11))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip5_dmart_dataset_host_time")==0)
+                               {
+                                  if((k==8)||(k==9)||(k==11)||(k==12))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip5_dmart_clients_host_time_geolocation")==0)
+                               {
+                                  if(k==8)
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                             
+                               xmlFree(content);
+                               content=NULL;
+                               k++;
+                            }
+                            xmlFree(prop1);
+                         }
+                      }
+                      fields[0]=strdup(str_field);
+                      fields[1]=NULL;
+                      values[0]=strdup(str_value);
+                      values[1]=NULL;
+
+    return 0;
+ //}
+ }
+void delete_element_config_feder(xmlNode * a_node, int res, char *ip, int port, char *datanode)
+{
+    xmlNode *cur_node = NULL;
+    xmlChar *prop = NULL;
+    //int res1=0;   
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+          if(xmlStrcasecmp(cur_node->name, (xmlChar *)"node")==0) {
+              prop = xmlGetProp(cur_node, (xmlChar *)"ipNodeAddress");
+              if(prop)
+              {
+                  //if(ip)
+                    //free(ip);
+                 //ip=NULL;
+                 //ip=strdup(prop);    
+                 sprintf(ip, "%s", prop);           
+                 //printf("content %s\n", prop);
+              }
+              xmlFree(prop);
+              prop = xmlGetProp(cur_node, (xmlChar *)"port");
+              if(prop)
+              {
+                 port=atoi(prop);
+              }
+              xmlFree(prop);
+              prop = xmlGetProp(cur_node, (xmlChar *)"datanode");
+              if(prop)
+              {
+                 //if(datanode)
+                 //  free(datanode);
+                 //datanode=NULL;
+                 //datanode=strdup(prop);
+                 sprintf(datanode, "%s", prop);           
+              }
+              xmlFree(prop);
+           }
+          if(xmlStrcasecmp(cur_node->name, (xmlChar *)"datamart")==0) {
+              prop = xmlGetProp(cur_node, (xmlChar *)"name");
+              if(prop)
+              {
+                //printf( "hostname=%s, datamart=%s datanode=%s\n", ip, prop,datanode);
+                if(strcmp(ip, datanode)==0)
+                   res=delete_federated(ip, prop);
+                else
+                {
+                  res=delete_federated(ip, prop);
+                  //printf("query delete with hostname=%s, datamart=%s\n", ip, prop); 
+                  res=delete_federated(datanode, prop);
+                  //printf("query delete with datanode=%s, datamart=%s\n", datanode, prop); 
+                }
+              }
+              xmlFree(prop);
+           }
+           
+        }
+        res++;
+        delete_element_config_feder(cur_node->children, res, ip, port, datanode);
+   }
+}
+int delete_federated(char *hostname, char *datamart)
+{
+    PGconn * conn;
+    PGresult *res2;
+    char conninfo[1024] = {'\0'};
+    char query[2048] = {'\0'};
+
+    /* Connect to database */
+    snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+    conn = PQconnectdb ((const char *) conninfo);
+
+    if (PQstatus(conn) != CONNECTION_OK)
+    {
+       pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+       PQfinish(conn);
+       return -1;
+     }
+     res2 = PQexec(conn, QUERY8);
+     if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+     {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+     }
+     sprintf(query, "delete from esgf_dashboard.%s where host_name='%s';", datamart, hostname);
+     
+      //printf("query vale %s\n", query);
+      res2 = PQexec(conn, query);
+      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+      {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+       }
+       PQclear(res2);
+
+       res2 = PQexec(conn, QUERY4);
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+       {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+         PQclear(res2);
+         PQfinish(conn);
+         return -2;
+        }
+        PQclear(res2);
+    PQfinish(conn);
     return 0;
 }
