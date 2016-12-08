@@ -221,7 +221,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = . src
-sysconf_DATA = etc/conf.xml
+sysconf_DATA = etc/conf.xml etc/config.xml
 #include_HEADERS=include/config.h include/ping.h include/dbAccess.h
 dist_bin_SCRIPTS = bin/ip.service #bin/ip.service.local
 all: config.h
