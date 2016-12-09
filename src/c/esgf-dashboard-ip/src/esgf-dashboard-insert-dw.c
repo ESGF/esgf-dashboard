@@ -2041,7 +2041,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                    ap += sprintf(ap, ",%d,", array_id_inst[i]);
              
          }
-         printf("inst_key %s\n", inst_key);
+         //printf("inst_key %s\n", inst_key);
          if(miss_inst==1)
          {
             PGresult   *res2;
