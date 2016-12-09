@@ -270,8 +270,9 @@ void * data_federA(void *arg)
          }
          closedir(dir);
          res=compute_federation();
-	    //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
-	 sleep(120);
+	 //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	 sleep(3*3600); // PRODUCTION_ once a day
+	 //sleep(120);
      }
      return NULL;
 }
@@ -667,10 +668,10 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   pthread_mutex_t plana_mutex;
   pthread_mutex_init(&plana_mutex, NULL);
   
-if(strcmp(ALLOW_FEDERATION, "yes")==0)
-  ptr_register(&ptr_handle, (void **) &plana_feder, 0);
+//if(strcmp(ALLOW_FEDERATION, "yes")==0)
+//  ptr_register(&ptr_handle, (void **) &plana_feder, 0);
 
-  ptr_register(&ptr_handle, (void **) &plana_mutex, 0);
+//  ptr_register(&ptr_handle, (void **) &plana_mutex, 0);
 
 if(strcmp(ALLOW_FEDERATION, "yes")==0)
 {
@@ -776,13 +777,16 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
-  
+
+  pthread_mutex_destroy(&plana_mutex);
+ 
 if(strcmp(ALLOW_FEDERATION, "yes")==0)
 {
   if (pthread_join (pth_feder, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join FEDERATION error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data federation thread joined the master for PLANA!\n");
+     pthread_mutex_destroy(&plana_feder);
 }		
   
   // end of thread pool for sensors	

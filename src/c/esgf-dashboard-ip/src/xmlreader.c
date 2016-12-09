@@ -219,6 +219,9 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
               {
                 prop1 = xmlNodeGetContent(cur_node);
                 (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
+                (*datasetproj)[cnt]->dataset_id=strdup(prop1);
+
+#if 0
                 char *tmp_str=strstr(prop1, "|");
                 char *tmp_str1=strstr(prop1, "|");
                 if(tmp_str)
@@ -237,6 +240,7 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
                 char *tmp_str1=strstr(prop1, ".v");
                 if(tmp_str1)
                   (*datasetproj)[cnt]->version=strdup(tmp_str1+2);*/
+#endif
                 xmlFree(prop1);
               }
               if(xmlStrcasecmp(prop, (xmlChar *)"project")==0)
@@ -373,6 +377,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
 	 free_struct_FtpFile(ftpfile);
 	 return STRDUP_ERROR;
        }
+#if 0
        char *filename=NULL;
        char *str_1=NULL;
 
@@ -416,6 +421,13 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        ftpfile[cnt]->filename = strdup(filename);
        free(filename);
        filename=NULL;
+#endif
+       char str_2[100]={'\0'};;
+       struct timeval tv;
+       gettimeofday(&tv,NULL);
+       sprintf(str_2, "file_%ld", tv.tv_usec);           
+       ftpfile[cnt]->filename = strdup(str_2);
+
        if(!ftpfile[cnt]->filename)
        {
          //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
