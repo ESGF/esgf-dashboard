@@ -422,7 +422,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "size")==0)
                   {
                     for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    {
                       size_file=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
+                      size_row=atoi(size_file);
+                      if(size_row>0)
+                        size_row=size_row/(1024*1024*1024);
+                    }
                   }
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "datetime_start")==0)
                   {

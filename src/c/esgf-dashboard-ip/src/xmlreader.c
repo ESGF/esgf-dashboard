@@ -85,7 +85,7 @@ int count_tag(xmlDocPtr * doc, char *tag)
 		{  
 			node = result->nodesetval->nodeTab[i];
 			num_children = child_node_count(node);
-			printf("num_children %d\n",num_children);
+			//printf("num_children %d\n",num_children);
 	        }      
         
 		xmlXPathFreeObject(result);
@@ -850,11 +850,11 @@ void print_element_replica(xmlNode * a_node, int *res)
                      char *tmp_str=strstr(content, "false");
                      if(tmp_str)
                      {
-                        printf("content %s\n", content);
+                        //printf("content %s\n", content);
                         *res=1;
                      }
-                     else
-                        printf("content %s\n", "no found");
+                     //else
+                        //printf("content %s\n", "no found");
                 }
               }
               xmlFree(prop);
