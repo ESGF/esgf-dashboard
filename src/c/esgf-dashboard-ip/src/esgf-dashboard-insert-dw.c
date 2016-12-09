@@ -589,7 +589,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	     // add entry to hash table
 	     sprintf (date_id_str, "%ld", date_id);
              hashtbl_insert (hashtbl_cross_dim_date, buf, date_id_str);
-	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",date_id, date_id_str);
+	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%d] [%s]\n",date_id, date_id_str);
           }
           if(remote_addr)
           {
@@ -1873,7 +1873,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	     // add entry to hash table
 	     sprintf (date_obs_id_str, "%ld", date_obs_id);
              hashtbl_insert (hashtbl_obs_dim_date, buf, date_obs_id_str);
-	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",date_obs_id, date_obs_id_str);
+	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable query=%s [%d] [%s]\n",select_id_date_query, date_obs_id, date_obs_id_str);
           }
           if(remote_addr)
           {
@@ -3171,7 +3171,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              // add entry to hash table
               sprintf (file_id_str, "%ld", file_id);
              hashtbl_insert (hashtbl_obs_dim_file, filen, file_id_str);
-             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",file_id, file_id_str);
+             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%d] [%s]\n",file_id, file_id_str);
           }
 
          }
@@ -3207,7 +3207,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              // add entry to hash table
               sprintf (dataset_id_str, "%ld", dataset_id_key);
              hashtbl_insert (hashtbl_obs_dim_dataset, dataset_name, dataset_id_str);
-             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",dataset_id_key, dataset_id_str);
+             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%d] [%s]\n",dataset_id_key, dataset_id_str);
           }
         }
         if((strcmp(proj_name, "OBS4MIPS")==0) || (strcmp(proj_name, "CMIP5")==0))
