@@ -223,7 +223,7 @@
 // QUERY_INSERT_CROSS_BRIDGE_PROJECT adds a new project related to the downloaded file in the database
 #define QUERY_INSERT_CROSS_BRIDGE_PROJECT "INSERT into esgf_dashboard.cross_bridge_project(project_key,project_group_key) values(%d,%d);"
 // QUERY_INSERT_CROSS_FACT_DOWNLOAD adds a new fact related to the downloaded file in the database
-#define QUERY_INSERT_CROSS_FACT_DOWNLOAD "INSERT into esgf_dashboard.cross_fact_download(size,success,duration,replica,user_id_hash,host_name, user_idp,hour, minute, project_group_key, geolocation_key,date_key) values(%d,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d);"
+#define QUERY_INSERT_CROSS_FACT_DOWNLOAD "INSERT into esgf_dashboard.cross_fact_download(size,success,duration,replica,user_id_hash,host_name, user_idp,hour, minute, project_group_key, geolocation_key,date_key) values(%ld,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d);"
 // Get list of CROSS DIM DATE
 #define QUERY_GET_LIST_OF_CROSS_DIM_DATE "SELECT download_date,date_key from esgf_dashboard.cross_dim_date;"
 // Get list of CROSS DIM GEOLOCATION 
@@ -252,11 +252,11 @@
 //Select the project_id starting from its name 
 #define QUERY_GET_PROJ_ID "SELECT project_key from esgf_dashboard.cross_dim_project where project_name='%s';"
 //Select the fact row starting from fact row 
-#define QUERY_GET_FACT_ROW "SELECT download_key from esgf_dashboard.cross_fact_download where size=%d and success='%s' and duration=%d and replica='%s' and user_id_hash='%s' and host_name='%s' and user_idp='%s' and hour='%s' and minute='%s' and project_group_key=%d and geolocation_key=%d and date_key=%d;"
+#define QUERY_GET_FACT_ROW "SELECT download_key from esgf_dashboard.cross_fact_download where size=%ld and success='%s' and duration=%d and replica='%s' and user_id_hash='%s' and host_name='%s' and user_idp='%s' and hour='%s' and minute='%s' and project_group_key=%d and geolocation_key=%d and date_key=%d;"
 //Select the obs4mips row starting from obs4mips row 
-#define QUERY_GET_OBS_ROW "SELECT download_key from esgf_dashboard.obs4mips_fact_download where size=%d and success='%s' and duration=%d and user_id_hash='%s' and host_name='%s' and user_idp='%s' and hour='%s' and minute='%s' and index_node_name='%s' and dataset_key=%d and file_key=%d and geolocation_key=%d and date_key=%d and institute_group_key=%d and variable_group_key=%d and time_frequency_group_key=%d and processing_level_group_key=%d and source_id_group_key=%d and realm_group_key=%d;"
+#define QUERY_GET_OBS_ROW "SELECT download_key from esgf_dashboard.obs4mips_fact_download where size=%ld and success='%s' and duration=%d and user_id_hash='%s' and host_name='%s' and user_idp='%s' and hour='%s' and minute='%s' and index_node_name='%s' and dataset_key=%d and file_key=%d and geolocation_key=%d and date_key=%d and institute_group_key=%d and variable_group_key=%d and time_frequency_group_key=%d and processing_level_group_key=%d and source_id_group_key=%d and realm_group_key=%d;"
 //Select the cmip5 row starting from cmip5 row 
-#define QUERY_GET_CMIP5_ROW "SELECT download_key from esgf_dashboard.obs4mips_cmip5_download where size=%d and success='%s' and duration=%d and replica='%s' and host_name='%s' and hour='%s' and minute='%s' and use_id_hash='%s' and user_idp='%s' and date_key=%d and geolocation_key=%d and dataset_key=%d and time_frequency_group_key=%d and variable_group_key=%d and experiment_group_key=%d and model_group_key=%d and realm_group_key=%d and institute_group_key=%d;"
+#define QUERY_GET_CMIP5_ROW "SELECT download_key from esgf_dashboard.obs4mips_cmip5_download where size=%ld and success='%s' and duration=%d and replica='%s' and host_name='%s' and hour='%s' and minute='%s' and use_id_hash='%s' and user_idp='%s' and date_key=%d and geolocation_key=%d and dataset_key=%d and time_frequency_group_key=%d and variable_group_key=%d and experiment_group_key=%d and model_group_key=%d and realm_group_key=%d and institute_group_key=%d;"
 
 //Select the max group id from cross_bridge_project 
 #define QUERY_GET_MAX_GROUP_ID "SELECT MAX(project_group_key) AS max_bridge_proj from esgf_dashboard.cross_bridge_project;"
@@ -315,9 +315,9 @@
 #define QUERY_GET_LIST_OF_OBS_DIM_REALM "SELECT realm_name, realm_key from esgf_dashboard.obs4mips_dim_realm;"
 #define QUERY_GET_LIST_OF_OBS_DIM_INDEX "SELECT index_node_name, index_node_key from esgf_dashboard.obs4mips_dim_index_node;"
 // Insert new file adds a new file in the database
-#define QUERY_INSERT_NEW_FILE "INSERT into esgf_dashboard.obs4mips_dim_file(file_name,file_size) values('%s',%d);"
+#define QUERY_INSERT_NEW_FILE "INSERT into esgf_dashboard.obs4mips_dim_file(file_name,file_size) values('%s',%ld);"
 // Retrieve the id value of a specific file
-#define QUERY_GET_FILE_ID "SELECT file_key from esgf_dashboard.obs4mips_dim_file where file_name='%s' and file_size=%d;"
+#define QUERY_GET_FILE_ID "SELECT file_key from esgf_dashboard.obs4mips_dim_file where file_name='%s' and file_size=%ld;"
 // Insert new dataset adds a new dataset in the database
 #define QUERY_INSERT_NEW_DATASET_OBS "INSERT into esgf_dashboard.obs4mips_dim_dataset(dataset_name,dataset_version,datetime_start,datetime_stop) values('%s',%d,'%s','%s');"
 // Insert new index_node adds a new index_node in the database
@@ -400,7 +400,7 @@
 // QUERY_INSERT_OBS_BRIDGE_REALM adds a new realm related to the downloaded file in the database
 #define QUERY_INSERT_OBS_BRIDGE_REALM "INSERT into esgf_dashboard.obs4mips_bridge_realm(realm_key,realm_group_key) values(%d,%d);"
 // QUERY_INSERT_OBS_FACT_DOWNLOAD adds a new fact related to the downloaded file in the database
-#define QUERY_INSERT_OBS_FACT_DOWNLOAD "INSERT into esgf_dashboard.obs4mips_fact_download(size,success,duration,user_id_hash,host_name, user_idp,hour, minute, index_node_name, dataset_key, file_key, geolocation_key,date_key, institute_group_key, variable_group_key, time_frequency_group_key, processing_level_group_key, source_id_group_key, realm_group_key) values(%d,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d);"
+#define QUERY_INSERT_OBS_FACT_DOWNLOAD "INSERT into esgf_dashboard.obs4mips_fact_download(size,success,duration,user_id_hash,host_name, user_idp,hour, minute, index_node_name, dataset_key, file_key, geolocation_key,date_key, institute_group_key, variable_group_key, time_frequency_group_key, processing_level_group_key, source_id_group_key, realm_group_key) values(%ld,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d);"
 // Get list of OBS DIM DATE
 #define QUERY_GET_LIST_OF_OBS_DIM_DATE "SELECT download_date,date_key from esgf_dashboard.obs4mips_dim_date;"
 // Get list of OBS DIM GEOLOCATION 
@@ -539,7 +539,7 @@
 // Retrieve the id value of a specific dataset
 #define QUERY_GET_DATASET_CMIP5_ID "SELECT dataset_key from esgf_dashboard.cmip5_dim_dataset where dataset_name='%s';"
 // QUERY_INSERT_CMIP5_FACT_DOWNLOAD adds a new fact related to the downloaded file in the database
-#define QUERY_INSERT_CMIP5_FACT_DOWNLOAD "INSERT into esgf_dashboard.cmip5_fact_download(size,success,duration,replica, host_name, hour, minute, user_id_hash, user_idp, date_key, geolocation_key, dataset_key, time_frequency_group_key, variable_group_key, experiment_group_key, model_group_key, realm_group_key, institute_group_key) values(%d,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d,%d,%d,%d,%d,%d,%d);"
+#define QUERY_INSERT_CMIP5_FACT_DOWNLOAD "INSERT into esgf_dashboard.cmip5_fact_download(size,success,duration,replica, host_name, hour, minute, user_id_hash, user_idp, date_key, geolocation_key, dataset_key, time_frequency_group_key, variable_group_key, experiment_group_key, model_group_key, realm_group_key, institute_group_key) values(%ld,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d,%d,%d,%d,%d,%d,%d);"
 //NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION
 #define QUERY_SELECT_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION "DELETE FROM esgf_dashboard.cmip5_dmart_clients_host_time_geolocation; INSERT INTO esgf_dashboard.cmip5_dmart_clients_host_time_geolocation(total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude, host_name) SELECT SUM(size) AS total_size, COUNT(*) AS number_of_downloads, COUNT(CASE WHEN success THEN 1 END) AS number_of_successful_downloads, ROUND(AVG(CASE WHEN success THEN duration ELSE 0 END)) AS average_duration, COUNT(distinct user_id_hash) AS number_of_users, COUNT(CASE WHEN replica THEN 1 END) AS number_of_replica_downloads, date.month, date.year, geo.latitude, geo.longitude, fact.host_name FROM esgf_dashboard.cmip5_fact_download AS fact JOIN esgf_dashboard.cmip5_dim_date AS date ON fact.date_key = date.date_key JOIN esgf_dashboard.cmip5_dim_geolocation AS geo ON fact.geolocation_key = geo.geolocation_key WHERE size <> -1 GROUP BY host_name, date.month, date.year, geo.latitude, geo.longitude ORDER BY date.year, date.month ASC;"
 #define QUERY_UPDATE_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION "update esgf_dashboard.cmip5_dmart_clients_host_time_geolocation b set total_size = a.total_size, number_of_downloads = a.number_of_downloads, number_of_successful_downloads = a.number_of_successful_downloads, average_duration=a.average_duration, number_of_users=a.number_of_users, number_of_replica_downloads=a.number_of_replica_downloads, month=a.month, year=a.year, latitude = a.latitude, longitude=a.longitude, host_name = a.host_name FROM (SELECT SUM(size) AS total_size, COUNT(*) AS number_of_downloads, COUNT(CASE WHEN success THEN 1 END) AS number_of_successful_downloads, ROUND(AVG(CASE WHEN success THEN duration ELSE 0 END)) AS average_duration, COUNT(distinct user_id_hash) AS number_of_users, COUNT(CASE WHEN replica THEN 1 END) AS number_of_replica_downloads, date.month as month, date.year as year, geo.latitude as latitude, geo.longitude as longitude,fact.host_name as host_name FROM esgf_dashboard.obs4mips_fact_download AS fact JOIN esgf_dashboard.obs4mips_dim_date AS date ON fact.date_key = date.date_key JOIN esgf_dashboard.obs4mips_dim_geolocation AS geo ON fact.geolocation_key = geo.geolocation_key WHERE size <> -1 and date.month=%d and date.year=%d and geo.latitude=%s and geo.longitude=%s GROUP BY host_name, month, year, latitude, longitude ORDER BY date.year, date.month ASC) AS a WHERE b.month=%d and b.year=%d and b.latitude=%s and b.longitude=%s;"

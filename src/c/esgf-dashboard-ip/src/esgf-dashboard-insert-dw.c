@@ -205,7 +205,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
     int timestamp;
     char *remote_addr=NULL;
     //float size_row;
-    int size_row;
+    long int size_row;
     int duration_row=0;
     char *user_id_hash_row=NULL;
     char *user_idp_row=NULL;
@@ -268,9 +268,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
                    //printf("size %s\n", PQgetvalue(res1, i, 2));
                    //printf("size %.0f\n", atof(PQgetvalue(res1, i, 2)));
-                   size_row= atoi(PQgetvalue(res1, i, 2));
-                   if(size_row>0)
-                      size_row=size_row/(1024*1024*1024);
+                   //size_row= atoi(PQgetvalue(res1, i, 2));
+                   //if(size_row>0)
+                      //size_row=size_row/(1024*1024*1024);
                    //printf("size %d\n", size_row);
                    //printf("success %s\n", PQgetvalue(res1, i, 3));
                    success_row=strdup(PQgetvalue(res1, i, 3));
@@ -424,9 +424,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                     for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                     {
                       size_file=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
-                      size_row=atoi(size_file);
-                      if(size_row>0)
-                        size_row=size_row/(1024*1024*1024);
+                      size_row=atol(size_file);
+                      //if(size_row>0)
+                        //size_row=size_row/(1024*1024*1024);
                     }
                   }
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "datetime_start")==0)
@@ -835,7 +835,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
           char fact_row[2048] = { '\0' };
           long int fact_id=0;
-          sprintf(fact_row, "%d:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d", size_row, str_succ, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
+          sprintf(fact_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d", size_row, str_succ, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
           //printf("fact_row %s\n", fact_row);
           free(str_succ);
           str_succ=NULL;
@@ -3226,7 +3226,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  str_succ=strdup("false");
              char fact_obs_row[2048] = { '\0' };
              long int fact_obs_id=0;
-             sprintf(fact_obs_row, "%d:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+             sprintf(fact_obs_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
              free(str_succ);
              //printf("*************fact_obs_row*****%s\n", fact_obs_row); 
              if (hashtbl_result = hashtbl_get (hashtbl_obs4mips_fact_download, fact_obs_row))
@@ -3263,7 +3263,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  str_succ=strdup("false");
              char fact_cmip_row[2048] = { '\0' };
              long int fact_cmip_id=0;
-             sprintf(fact_cmip_row,"%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key); 
+             sprintf(fact_cmip_row,"%ld,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key); 
              free(str_succ);
              if (hashtbl_result = hashtbl_get (hashtbl_cmip5_fact_download, fact_cmip_row))
              {
@@ -3277,7 +3277,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  char select_id_fact_query[2048] = { '\0' };
                  char fact_cmip_id_str[256] = { '\0' };
                  char fact1_row[2048] = { '\0' };
-                 sprintf(fact1_row, "%d,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                 sprintf(fact1_row, "%ld,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
                   //printf("fact1_row %s\n", fact1_row);
                   snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
                  //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
