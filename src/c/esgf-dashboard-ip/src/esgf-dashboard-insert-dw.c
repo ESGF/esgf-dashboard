@@ -831,7 +831,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              if(strcmp(success_row,"t")==0)
                   str_succ=strdup("true");
              else
-                  str_succ=("false");
+                  str_succ=strdup("false");
 
           char fact_row[2048] = { '\0' };
           long int fact_id=0;
