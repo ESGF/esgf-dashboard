@@ -1425,8 +1425,43 @@ int compute_solr_process_planA(int shards)
           doc = xmlReadFile(tmp_file, NULL, 0);
           if (doc == NULL)
           {
-            fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-            flag=1;
+            int res=0;
+            res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+            
+            if(res==0) 
+            {
+               doc = xmlReadFile(tmp_file, NULL, 0);
+               if (doc == NULL)
+               {
+                 fprintf(stderr, "\n[%s:%d] Error: could not parse %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+                 flag=1;
+                 char buffer[2056]={'\0'};
+                 pFile = fopen ("myfile.csv", "a+");
+                 sprintf(buffer, "%s;%s;noparse",queryid[cnt],ftpfile[cnt]->URL);
+                 char *str=NULL;
+                 str=strdup(buffer);
+                 fprintf (pFile, "%s\n", str);
+                 free(str);
+                 str=NULL;
+                 fclose (pFile);
+                   
+               }
+            }
+            else
+            {
+                 fprintf(stderr, "\n[%s:%d] Error: could not download %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+                 flag=1;
+                 char buffer[2056]={'\0'};
+                 pFile = fopen ("myfile.csv", "a+");
+                 sprintf(buffer, "%s;%s;nodownload",queryid[cnt],ftpfile[cnt]->URL);
+                 char *str=NULL;
+                 str=strdup(buffer);
+                 fprintf (pFile, "%s\n", str);
+                 free(str);
+                 str=NULL;
+                 fclose (pFile);
+               
+            }
           }
           if(flag==0)
           {
@@ -1477,9 +1512,9 @@ int compute_solr_process_planA(int shards)
                datasetid[cnt2] = strdup(str_url);
                //printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
                cnt2++;
-         }
-         else
-         {
+          }
+          else
+          {
            
            if(SOLR_LOG==1)  
            {
@@ -1493,6 +1528,7 @@ int compute_solr_process_planA(int shards)
               str=NULL;
               fclose (pFile);
            }
+          }
            char update_dashboard_queue[2048] = { '\0' };
            if(queryid[cnt]!=NULL)
            {
@@ -1501,8 +1537,6 @@ int compute_solr_process_planA(int shards)
               if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
                 return -1;
            }
-
-        }
       }
       flag=0;
       xmlFreeDoc(doc);

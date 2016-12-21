@@ -650,6 +650,7 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   if (stat(WORK_DIR, &st) == -1) {
             mkdir(WORK_DIR, 0700);
   }
+
 if(strcmp(ALLOW_FEDERATION, "yes")==0)
 {
   rmdir(FED_DIR);
