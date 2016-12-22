@@ -223,7 +223,7 @@
 // QUERY_INSERT_CROSS_BRIDGE_PROJECT adds a new project related to the downloaded file in the database
 #define QUERY_INSERT_CROSS_BRIDGE_PROJECT "INSERT into esgf_dashboard.cross_bridge_project(project_key,project_group_key) values(%d,%d);"
 // QUERY_INSERT_CROSS_FACT_DOWNLOAD adds a new fact related to the downloaded file in the database
-#define QUERY_INSERT_CROSS_FACT_DOWNLOAD "INSERT into esgf_dashboard.cross_fact_download(size,success,duration,replica,user_id_hash,host_name, user_idp,hour, minute, project_group_key, geolocation_key,date_key) values(%ld,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d);"
+#define QUERY_INSERT_CROSS_FACT_DOWNLOAD "INSERT into esgf_dashboard.cross_fact_download(size,success,duration,replica,user_id_hash,host_name, user_idp,hour, minute, project_group_key, geolocation_key,date_key,id_query) values(%ld,'%s',%d,'%s','%s','%s','%s','%s','%s',%d,%d,%d,%d);"
 // Get list of CROSS DIM DATE
 #define QUERY_GET_LIST_OF_CROSS_DIM_DATE "SELECT download_date,date_key from esgf_dashboard.cross_dim_date;"
 // Get list of CROSS DIM GEOLOCATION 

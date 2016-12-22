@@ -855,7 +855,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              char select_id_fact_query[2048] = { '\0' };
 
              success_lookup[1]++;
-             snprintf (insert_cross_bridge_project, sizeof (insert_cross_bridge_project), QUERY_INSERT_CROSS_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, project_group_key, geo_id, date_id);
+             snprintf (insert_cross_bridge_project, sizeof (insert_cross_bridge_project), QUERY_INSERT_CROSS_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, project_group_key, geo_id, date_id, (*datasetproj)[cnt]->id_query);
 
 
 	     submit_query (conn, insert_cross_bridge_project);
