@@ -243,9 +243,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 int size_model=0;
                 int size_exp=0;
     
-        // SELECT START 
+        // SELECT START
+                  //printf("ID vale %d and flag vale %d\n", (*datasetproj)[cnt]->id_query, (*datasetproj)[cnt]->flag);
 
-            
+                //continue; 
                 snprintf (select_query, sizeof (select_query), QUERY_SELECT_DASHBOARD_QUEUE, (*datasetproj)[cnt]->id_query);
         res1 = PQexec(conn,select_query);
 
@@ -835,7 +836,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
           char fact_row[2048] = { '\0' };
           long int fact_id=0;
-          sprintf(fact_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d", size_row, str_succ, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
+          sprintf(fact_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d", size_row, str_succ, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id,(*datasetproj)[cnt]->id_query);
           //printf("fact_row %s\n", fact_row);
           free(str_succ);
           str_succ=NULL;
@@ -859,7 +860,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
 
 	     submit_query (conn, insert_cross_bridge_project);
-	     snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_FACT_ROW,  size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id);
+	     snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_FACT_ROW,  size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id,(*datasetproj)[cnt]->id_query);
 
              //printf("select_id_fact_query vale %s\n", select_id_fact_query);
              fact_id=get_foreign_key_value(conn, select_id_fact_query);
@@ -3226,7 +3227,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  str_succ=strdup("false");
              char fact_obs_row[2048] = { '\0' };
              long int fact_obs_id=0;
-             sprintf(fact_obs_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+             sprintf(fact_obs_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
              free(str_succ);
              //printf("*************fact_obs_row*****%s\n", fact_obs_row); 
              if (hashtbl_result = hashtbl_get (hashtbl_obs4mips_fact_download, fact_obs_row))
@@ -3241,10 +3242,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char insert_obs4mips_fact_download[2048] = { '\0' };
                 char select_id_fact_query[2048] = { '\0' };
                 char fact_obs_id_str[256] = { '\0' };
-                snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+                snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 	        submit_query (conn, insert_obs4mips_fact_download);
 
-                snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key);
+                snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 
                 //printf("select_id_fact_query vale %s\n", select_id_fact_query);
                 fact_obs_id=get_foreign_key_value(conn, select_id_fact_query);
@@ -3263,7 +3264,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  str_succ=strdup("false");
              char fact_cmip_row[2048] = { '\0' };
              long int fact_cmip_id=0;
-             sprintf(fact_cmip_row,"%ld,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key); 
+             sprintf(fact_cmip_row,"%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query); 
              free(str_succ);
              if (hashtbl_result = hashtbl_get (hashtbl_cmip5_fact_download, fact_cmip_row))
              {
@@ -3277,18 +3278,18 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  char select_id_fact_query[2048] = { '\0' };
                  char fact_cmip_id_str[256] = { '\0' };
                  char fact1_row[2048] = { '\0' };
-                 sprintf(fact1_row, "%ld,%s,%d,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                 sprintf(fact1_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
                   //printf("fact1_row %s\n", fact1_row);
-                  snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                  snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
                  //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
 	         submit_query (conn, insert_cmip5_fact_download);
-                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_CMIP5_ROW, size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key);
+                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_CMIP5_ROW, size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
 
                 //printf("select_id_fact_query vale %s\n", select_id_fact_query);
                 fact_cmip_id=get_foreign_key_value(conn, select_id_fact_query);
                 sprintf (fact_cmip_id_str, "%ld", fact_cmip_id);
                 hashtbl_insert (hashtbl_cmip5_fact_download,fact_cmip_row,fact_cmip_id_str);
-                printf("hashtable [%s]*****[%s]\n",fact_cmip_row,fact_cmip_id_str);
+                //printf("hashtable [%s]*****[%s]\n",fact_cmip_row,fact_cmip_id_str);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_cmip_row,fact_cmip_id_str);
               }
 
@@ -3520,7 +3521,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      //free(timestamp);
      //timestamp=NULL;
      struct tm * ptm = gmtime(&realtime);
-     printf ("The UTC time is: %s", asctime(ptm));
+     //printf ("The UTC time is: %s", asctime(ptm));
      char buf[30];
      char buf1[30];
      char buf2[30];

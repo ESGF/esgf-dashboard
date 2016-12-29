@@ -1190,6 +1190,8 @@ int compute_solr_process_planA(int shards)
         char **id_query=NULL;
         char **datasetid=NULL;
         char **queryid=NULL;
+        char **flagid=NULL;
+        int cnt_qid=0;
 
         int i=0;
         int res=0;
@@ -1202,6 +1204,7 @@ int compute_solr_process_planA(int shards)
         str_url[0]='\0';
 
         LIBXML_TEST_VERSION
+        xmlInitParser();
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Process planA START\n");
 
@@ -1269,6 +1272,7 @@ int compute_solr_process_planA(int shards)
 
         URL=(char**) calloc (size+1, sizeof(char *));
         id_query=(char**) calloc (size+1, sizeof(char *));
+        flagid=(char**) calloc (size+1, sizeof(char *));
 
         char url_comp1[2056]={'\0'};
         char url_comp[2056]={'\0'};
@@ -1282,14 +1286,13 @@ int compute_solr_process_planA(int shards)
         for (i = 0; i < PQntuples(res1); i++)
         {
           str_url1=strdup(PQgetvalue(res1, i, 0));
-          str_u=strstr(str_url1,"esg_dataroot/");
-          if(str_u)
-          {
+          //str_u=strstr(str_url1,"esg_dataroot/");
+          //if(str_u)
+          //{
             //printf("url vale %s\n", str_u+13);
-            sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*esg_dataroot/%s*", ESGF_NODE_SOLR, str_u+13);
            
-          }
-          else
+          //}
+          //else
             sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
           if(shards==0)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
@@ -1299,10 +1302,12 @@ int compute_solr_process_planA(int shards)
           free(str_url1);
           URL[i]=strdup(url_comp);
           id_query[i]=strdup(PQgetvalue(res1, i, 1));
+          flagid[i]=strdup("0");
         }
         size=PQntuples(res1);
         URL[i]=NULL;
         id_query[i]=NULL;
+        flagid[i]=NULL;
 
 
         // stop transaction
@@ -1327,15 +1332,17 @@ int compute_solr_process_planA(int shards)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
           pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
           return ERROR_CALLOC;
         }
 
-        res=alloca_struct_FtpFile(ftpfile, URL, id_query, size);
+        res=alloca_struct_FtpFile(ftpfile, URL, id_query, flagid, size);
         if(res!=SUCCESS)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
           free_struct_FtpFile(ftpfile);
           return res;
         }
@@ -1379,6 +1386,7 @@ int compute_solr_process_planA(int shards)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
           free_struct_FtpFile(ftpfile);
           return -25; //sleep mode
         }
@@ -1387,6 +1395,7 @@ int compute_solr_process_planA(int shards)
         i=0;
         datasetid=calloc(size_eff+1, sizeof(char*));
         queryid=calloc(size_eff+1, sizeof(char*));
+        flagid=calloc(size_eff+1, sizeof(char*));
         for (cnt=0; cnt < size_eff; cnt++)
         {
           char tmp_file[2048] = {'\0'};
@@ -1449,7 +1458,7 @@ int compute_solr_process_planA(int shards)
             }
             else
             {
-                 fprintf(stderr, "\n[%s:%d] Error: could not download %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+                 fprintf(stderr, "\n[%s:%d] Error: could not download %s *** %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename,ftpfile[cnt]->URL);
                  flag=1;
                  char buffer[2056]={'\0'};
                  pFile = fopen ("myfile.csv", "a+");
@@ -1474,19 +1483,22 @@ int compute_solr_process_planA(int shards)
                {
                   char buffer[2056]={'\0'};
                   pFile = fopen ("myfile.csv", "a+");
-                  sprintf(buffer, "%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL);
+                  sprintf(buffer, "%s;%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL, ftpfile[cnt]->filename);
                   char *str=NULL;
                   str=strdup(buffer);
                   fprintf (pFile, "%s\n", str);
+                  if(queryid[cnt])
+                    flagid[cnt_qid]=strdup(queryid[cnt]);
                   free(str);
                   str=NULL;
                   fclose (pFile);
+                  cnt_qid++;
                }
                int res1=0;
 
                datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
                datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
-               res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, queryid);
+               res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, flagid);
                datasetproj[cnt2]->first[res]=NULL;
                res1=read_conf_project(filename_conf,&datasetproj, cnt2);
               
@@ -1552,7 +1564,7 @@ int compute_solr_process_planA(int shards)
 
     ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
 
-    res=alloca_struct_FtpFile(ftpfile, datasetid, queryid, cnt2);
+    res=alloca_struct_FtpFile(ftpfile, datasetid, queryid, flagid, cnt2);
     if(res!=SUCCESS)
     {
       free_struct_FtpFile(ftpfile);
@@ -1568,6 +1580,7 @@ int compute_solr_process_planA(int shards)
     } 
     free_datasetid(datasetid);
     free_datasetid(queryid);
+    free_datasetid(flagid);
      
     int k=0;
       

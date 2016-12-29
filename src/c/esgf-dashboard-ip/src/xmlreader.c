@@ -220,6 +220,7 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
                 prop1 = xmlNodeGetContent(cur_node);
                 (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1);
+                //printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
 
 #if 0
                 char *tmp_str=strstr(prop1, "|");
@@ -348,7 +349,7 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
   return res;
 }
 
-int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query, int size)
+int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query, char** flagid, int size)
 {
     int res, cnt, j=0;
 
@@ -369,7 +370,8 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
-       printf("URL vale %s\n", URL[cnt]);
+       ftpfile[cnt]->flag = strdup(flagid[cnt]);
+       //printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
          //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
@@ -425,7 +427,8 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        char str_2[100]={'\0'};;
        struct timeval tv;
        gettimeofday(&tv,NULL);
-       sprintf(str_2, "file_%ld", tv.tv_usec);           
+       //sprintf(str_2, "file_%ld", tv.tv_usec);           
+       sprintf(str_2, "%s.xml", id_query[cnt]);           
        ftpfile[cnt]->filename = strdup(str_2);
 
        if(!ftpfile[cnt]->filename)
@@ -1093,7 +1096,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                             if ((!res3) || (PQresultStatus (res3) != PGRES_COMMAND_OK))
                             {
                               pmesg(LOG_ERROR,__FILE__,__LINE__,"Failed query\n");
-                              printf("******++++%s++++********\n", "Duplicated row");
+                              //printf("******++++%s++++********\n", "Duplicated row");
                               PQclear(res3);
                               free(fields[0]);
                               free(values[0]);
@@ -1110,7 +1113,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                             if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
                             {
                               pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
-                              printf("******++++%s++++********\n", "Close transaction failed");
+                              //printf("******++++%s++++********\n", "Close transaction failed");
                               PQclear(res2);
                               free(fields[0]);
                               free(values[0]);

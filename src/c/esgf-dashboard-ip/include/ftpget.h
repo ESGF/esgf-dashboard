@@ -3,6 +3,7 @@ struct FtpFile {
   char *URL;
   char *filename;
   int id_query;
+  int flag;
   FILE *stream;
   int res_down;
 };
@@ -28,6 +29,7 @@ struct dataset_project{
   char *dataset_id; //dataset_id read from the solr for dashboard datawarehouse --> parsing before | 
   char *version; //prendere l'ultimo valore dopo il punto v1 --> considerare 1
   int size; //numero di projects
+  int flag;
   //char **project;   //project read from the solr for dashboard datawarehouse
   struct project **first;
 };

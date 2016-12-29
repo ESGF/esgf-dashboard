@@ -234,7 +234,7 @@ submit_query (PGconn * conn, char *query)
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     {
-      pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query failed\n");
+      //pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query=%s failed\n", query);
       PQclear (res);
       return -1;
     }
