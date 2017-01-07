@@ -1034,7 +1034,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
     values=(char **)calloc (2, sizeof(char*));
     xmlChar *prop=NULL; 
     char query[2048]={'\0'};
-//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time;   
+//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time; 12 - cross_dmart_isenes_kpis;   
                             PGresult *res2;
                             PGresult *res3;
     
@@ -1253,6 +1253,21 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                   }
                                }
                                if(strcmp(tableName, "cross_dmart_project_host_geolocation")==0)
+                               {
+                                  if((k==6)||(k==7))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cross_dmart_isenes_kpis")==0)
                                {
                                   if((k==6)||(k==7))
                                   {

@@ -3501,6 +3501,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      int i=0;
      int dmart_id=0;
      time_t realtime;
+     char *project_name=NULL;
      //char *timestamp=NULL;
      char timestamp[2048] = { '\0' };
      //timestamp=(char *)calloc (17, sizeof(char ));
@@ -3566,26 +3567,35 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            //{
            if(PQntuples(res1)!=0)
            {
-             month=atoi(PQgetvalue(res1, 0, 0));
-             year=atoi(PQgetvalue(res1, 0, 1));
+            month=atoi(PQgetvalue(res1, 0, 0));
+            year=atoi(PQgetvalue(res1, 0, 1));
+
+            snprintf (select_query, sizeof (select_query), QUERY_SELECT_CROSS_DMART_PROJECT_HOST_P, month, year);
+            int res_query=submit_query_res (conn, select_query,&res2);
+
+            for (i=0; i < PQntuples(res2); i++)
+            {
+             project_name=strdup(PQgetvalue(res2, i, 0));
              //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
              //sprintf(key_dmart_cros_proj_hos_time_id, "%d:%d", month, year);
-             snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST, month, year, month, year);
+             snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST, month, year, project_name, month, year, project_name);
              submit_query(conn,insert_dmart_project_host);
-             
+             free(project_name);
+             project_name=NULL;
+            }
+            PQclear (res2);
              
              snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_UPDATE, month, year);
              submit_query (conn,update_dmart_project_host);
-
 
 	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
              dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
              snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
              submit_query (conn, update_registry);
+           }
              //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
              //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
              //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
-           }
            PQclear (res1);
         }
      }
@@ -3608,11 +3618,12 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            int res_query=submit_query_res (conn, select_id_dmart_query, &res1);
            if(PQntuples(res1)!=0)
            {
-             dmart_id=atoi(PQgetvalue(res1, 0, 0));
-             lat=atof(PQgetvalue(res1, 0, 1));
-             lon=atof(PQgetvalue(res1, 0, 2));
-           }
-           PQclear (res1);
+            for (i=0; i < PQntuples(res1); i++)
+            {
+             dmart_id=atoi(PQgetvalue(res1, i, 0));
+             lat=atof(PQgetvalue(res1, i, 1));
+             lon=atof(PQgetvalue(res1, i, 2));
+             project_name=strdup(PQgetvalue(res1, i, 3));
 
            sprintf(str1_geo, "%14.11f",lat);
            sprintf(str_geo, "%14.11f",lon);
@@ -3629,10 +3640,14 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              submit_query (conn, update_registry);
            }
            char key_dmart_cros_proj_hos_pos_id[2048]= { '\0' };
-           sprintf(key_dmart_cros_proj_hos_pos_id, "%s:%s", str1_geo, str_geo);
-           
+           sprintf(key_dmart_cros_proj_hos_pos_id, "%s:%s:%s", str1_geo, str_geo, project_name);
+           free(project_name);
+           project_name=NULL;
            hashtbl_insert (hashtbl_cross_dmart_project_host_geolocation,key_dmart_cros_proj_hos_pos_id,dmart_id_str);
            pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_pos_id, dmart_id_str);
+           }
+          }
+           PQclear (res1);
         }
         else
         {
@@ -3645,6 +3660,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
          {
            lat=atof(PQgetvalue(res1, i, 0));
            lon=atof(PQgetvalue(res1, i, 1));
+           project_name=strdup(PQgetvalue(res1, i, 2));
            sprintf(str1_geo, "%14.11f",lat);
            sprintf(str_geo, "%14.11f",lon);
            if (*str1_geo==' ')
@@ -3654,20 +3670,20 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            char key_geo[2048]= { '\0' };
            //devo controllare se esiste già nella hash, se esiste faccio update del dmart. Se non esiste faccio l'inserimento
 
-           sprintf(key_geo, "%s:%s",str1_geo,str_geo);
+           sprintf(key_geo, "%s:%s:%s",str1_geo,str_geo,project_name);
            int geo_id=0;
 
            if (hashtbl_result = hashtbl_get (hashtbl_cross_dmart_project_host_geolocation, key_geo))
            {
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",key_geo, hashtbl_result);
               geo_id = atol (hashtbl_result);
-              snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS, str1_geo, str_geo, str1_geo, str_geo);
+              snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS, str1_geo, str_geo, project_name, str1_geo, str_geo, project_name);
               //printf("QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS %s\n", insert_dmart_project_host);
               submit_query (conn,insert_dmart_project_host);
            }
            else
            {
-             snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS_UP, str1_geo, str_geo);
+             snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS_UP, str1_geo, str_geo, project_name);
              submit_query (conn,insert_dmart_project_host);
               //printf("QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS_UP %s\n", insert_dmart_project_host);
 
@@ -3678,15 +3694,85 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
              submit_query (conn, update_registry);
              char key_dmart_cros_proj_hos_pos_id[2048]= { '\0' };
-             sprintf(key_dmart_cros_proj_hos_pos_id, "%s:%s", str1_geo, str_geo);
+             sprintf(key_dmart_cros_proj_hos_pos_id, "%s:%s:%s", str1_geo, str_geo,project_name);
            
              hashtbl_insert (hashtbl_cross_dmart_project_host_geolocation,key_dmart_cros_proj_hos_pos_id,dmart_id_str);
              pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_pos_id, dmart_id_str);
           }
+          free(project_name);
+          project_name=NULL;
          }
          PQclear (res1);
         }//chiude else
      }
+
+     if(strcmp(datamart, "esgf_dashboard.cross_dmart_isenes_kpis")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_ISENES_KPIS);
+           submit_query_res (conn,insert_dmart_project_host,&res1);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CROSS_DMART_ISENES_KPIS, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+           //for (int i=0; i < PQntuples(res1); i++)
+           //{
+           if(PQntuples(res1)!=0)
+           {
+            month=atoi(PQgetvalue(res1, 0, 0));
+            year=atoi(PQgetvalue(res1, 0, 1));
+            char *eu=NULL;
+            snprintf (select_query, sizeof (select_query), QUERY_SELECT_CROSS_DMART_ISENES_KPIS_P, month, year);
+            int res_query=submit_query_res (conn, select_query,&res2);
+
+            for (i=0; i < PQntuples(res2); i++)
+            {
+             eu=strdup(PQgetvalue(res2, i, 0));
+             //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%d:%d", month, year);
+             snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_ISENES_KPIS, month, year, eu, month, year, eu);
+             submit_query(conn,insert_dmart_project_host);
+             free(eu);
+             eu=NULL;
+            }
+            PQclear (res2);
+             
+             snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_ISENES_KPIS_UPDATE, month, year);
+             submit_query (conn,update_dmart_project_host);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           PQclear (res1);
+        }
+     }
+
+
+
+
      if(strcmp(datamart, "esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation")==0)
      {  
         if(dmart_key==0)
@@ -3750,6 +3836,14 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              
              submit_query(conn,insert_dmart_project_host);
              PQclear (res2);
+
+             snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+
+           }
+
              
              snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
              submit_query (conn,update_dmart_project_host);
@@ -3762,7 +3856,6 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
              //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
              //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
-           }
            PQclear (res1);
         }
       }

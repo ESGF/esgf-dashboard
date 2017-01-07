@@ -1266,6 +1266,7 @@ int compute_solr_process_planA(int shards)
           }
           PQclear(res1);
           pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+          insert_dmart_cross_project(conn);
           return -25;
     	}
           
@@ -1595,7 +1596,16 @@ int compute_solr_process_planA(int shards)
       {
         fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
         //free_struct_FtpFile(ftpfile);
-        continue;
+        int res=0;
+        res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+        if(res==0)
+        {
+          doc = xmlReadFile(tmp_file, NULL, 0);
+          if (doc == NULL)
+          {
+            continue;
+          }
+        }
       }
       /*Get the root element node */
       root_element = xmlDocGetRootElement(doc);
