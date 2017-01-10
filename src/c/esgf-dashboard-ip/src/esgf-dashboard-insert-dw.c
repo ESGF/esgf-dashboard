@@ -3540,7 +3540,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -3609,7 +3609,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
 
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS, ESGF_HOSTNAME);
            submit_query(conn,insert_dmart_project_host);
            //devo prendere, lat, lon e dmart_key
 
@@ -3710,7 +3710,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_ISENES_KPIS);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_ISENES_KPIS, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -3777,7 +3777,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -3863,7 +3863,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_VARIABLE_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_VARIABLE_HOST_TIME, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -3941,7 +3941,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_SOURCE_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_SOURCE_HOST_TIME, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4015,7 +4015,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_REALM_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_REALM_HOST_TIME, ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4089,7 +4089,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_DATASET_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_OBS4MIPS_DMART_DATASET_HOST_TIME,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4169,7 +4169,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4248,7 +4248,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_DATASET_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_DATASET_HOST_TIME,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4328,7 +4328,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_VARIABLE_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_VARIABLE_HOST_TIME,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4406,7 +4406,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_MODEL_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_MODEL_HOST_TIME,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */
@@ -4480,7 +4480,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
      {  
         if(dmart_key==0)
         {  
-           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_EXPERIMENT_HOST_TIME);
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_EXPERIMENT_HOST_TIME,ESGF_HOSTNAME);
            submit_query_res (conn,insert_dmart_project_host,&res1);
 
            /* update registry */

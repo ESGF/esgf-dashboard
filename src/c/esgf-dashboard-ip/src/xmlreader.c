@@ -1082,6 +1082,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                             }
                             PQclear(res2);
 
+#if 0
                       if(strcmp(tableName, "cmip5_dmart_experiment_host_time")==0)
                       {
                          char str_tmp[2048]={'\0'};
@@ -1090,6 +1091,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                          fields[0]=NULL;
                          fields[0]=strdup(str_tmp);
                       }
+#endif
                       sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
                       //printf("query vale %s\n", query);
                               res3 = PQexec(conn2, query);
