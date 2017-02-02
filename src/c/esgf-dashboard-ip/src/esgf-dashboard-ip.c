@@ -348,7 +348,8 @@ void * data_planA(void *arg)
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	    {
                if(res1==-1)
-	         break;
+                 res1=0;
+	         //break;
                   
                res=compute_solr_process_planA(res1);
                if(res==-25)

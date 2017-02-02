@@ -1380,6 +1380,10 @@ _automatic_registration_xml_feed (char *registration_xml_file)
   xmlNode *root_element = NULL;
   int result;
 
+  result=parseFunc(registration_xml_file);
+  if(result==-1)
+   return -1;
+
   /*parse the file and get the DOM */
   doc = xmlReadFile (registration_xml_file, NULL, 0);
 

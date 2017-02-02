@@ -53,6 +53,7 @@ int ftp_download_file(struct FtpFile **file, int size)
 			/* Switch on full protocol/debug output */
 			//curl_easy_setopt(curl, CURLOPT_STDERR, respfile[cnt]);
 			curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, "FALSE");
 			res = curl_easy_perform(curl);
                         if(res==0)
                         {

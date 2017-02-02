@@ -1144,6 +1144,8 @@ int get_download_registration(char *path_xml, char *file_dest)
   curl_easy_setopt(curl, CURLOPT_URL, url_action);
   //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, "FALSE");
   curl_res = curl_easy_perform(curl);
 
   if(curl_res)
@@ -1198,6 +1200,7 @@ int get_download_shards(char *path_xml, char *file_dest)
   curl_easy_setopt(curl, CURLOPT_URL, url_action);
   //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, "FALSE");
   curl_res = curl_easy_perform(curl);
 
   if(curl_res)

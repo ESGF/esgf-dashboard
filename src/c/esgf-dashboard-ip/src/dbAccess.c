@@ -1281,19 +1281,29 @@ int compute_solr_process_planA(int shards)
         char *str_url1=NULL;
         char *str_u=NULL;
         char *str_u1=NULL;
+        char *str_u2=NULL;
         char *str_replica=NULL;
         int ch=0;
         /* next, print out the rows */
         for (i = 0; i < PQntuples(res1); i++)
         {
           str_url1=strdup(PQgetvalue(res1, i, 0));
-          //str_u=strstr(str_url1,"esg_dataroot/");
-          //if(str_u)
-          //{
-            //printf("url vale %s\n", str_u+13);
-           
-          //}
-          //else
+
+          str_u=strstr(str_url1, ".nc");
+          if(str_u)
+          {
+            str_u1=strstr(str_url1,":2811//");
+            if(str_u1)
+            {
+              str_u2=strdup(str_u1+7);
+              free(str_url1);
+              str_url1=NULL;
+              str_url1=strdup(str_u2);
+              free(str_u2);
+              str_u2=NULL; 
+            }
+          }
+          
             sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
           if(shards==0)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
@@ -1361,6 +1371,7 @@ int compute_solr_process_planA(int shards)
 
         for (cnt=0; cnt < size; cnt++)
         {
+          int res=0;
           /*parse the file and get the DOM */
           char tmp_file[2048] = {'\0'};
           sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
@@ -1370,15 +1381,22 @@ int compute_solr_process_planA(int shards)
           }
           else
           {
-            doc = xmlReadFile(tmp_file, NULL, 0);
-            if (doc == NULL)
-            {
-              size_eff++;
-            }
-            xmlFreeDoc(doc);
-            xmlCleanupCharEncodingHandlers();
-            xmlCleanupParser();
-            xmlMemoryDump();
+            //res=parseFunc(tmp_file);
+            //if(res==-1)
+            //  continue;
+            //else
+            //{
+              //to see again
+              doc = xmlReadFile(tmp_file, NULL, 0);
+              if (doc == NULL)
+              {
+                size_eff++;
+              }
+              xmlFreeDoc(doc);
+              xmlCleanupCharEncodingHandlers();
+              xmlCleanupParser();
+              xmlMemoryDump();
+            //}
           }
         }
         size_eff=size-size_eff;
@@ -1533,7 +1551,8 @@ int compute_solr_process_planA(int shards)
            {
               char buffer[2056]={'\0'};
               pFile = fopen ("myfile.csv", "a+");
-              sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
+              if((queryid[cnt]!=NULL)&&(ftpfile[cnt]->URL)!=NULL)
+                sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
               char *str=NULL;
               str=strdup(buffer);
               fprintf (pFile, "%s\n", str);
@@ -1591,19 +1610,26 @@ int compute_solr_process_planA(int shards)
       //printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
       char tmp_file[2048] = {'\0'};
       sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
-      doc = xmlReadFile(tmp_file, NULL, 0);
-      if (doc == NULL)
+      struct stat st = {0};
+      if (stat(tmp_file, &st) == -1) {
+         continue;
+      }
+      else
       {
-        fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-        //free_struct_FtpFile(ftpfile);
-        int res=0;
-        res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
-        if(res==0)
+        doc = xmlReadFile(tmp_file, NULL, 0);
+        if (doc == NULL)
         {
-          doc = xmlReadFile(tmp_file, NULL, 0);
-          if (doc == NULL)
+          fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+          //free_struct_FtpFile(ftpfile);
+          int res=0;
+          res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+          if(res==0)
           {
-            continue;
+            doc = xmlReadFile(tmp_file, NULL, 0);
+            if (doc == NULL)
+            {
+              continue;
+            }
           }
         }
       }
@@ -2312,6 +2338,36 @@ int realtime_mem_get_stats(void)
   rotate_realtime_stats(REALTIME_MEM_SWAP, REALTIME_MEM_SWAP_TEMP, swapstr);
   return 0;
 }
+int parseFunc(const char *filename) {
+    int res=0;
+    xmlParserCtxtPtr ctxt; /* the parser context */
+    xmlDocPtr doc; /* the resulting document tree */
+
+    /* create a parser context */
+    ctxt = xmlNewParserCtxt();
+    if (ctxt == NULL) {
+        fprintf(stderr, "Failed to allocate parser context\n");
+	return -1;
+    }
+    /* parse the file, activating the DTD validation option */
+    doc = xmlCtxtReadFile(ctxt, filename, NULL, 0);
+    /* check if parsing suceeded */
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse %s\n", filename);
+        return -1;
+    } else {
+	/* check if validation suceeded */
+        if (ctxt->valid == 0)
+            res=-1;
+      
+	/* free up the resulting document */
+	xmlFreeDoc(doc);
+    }
+    /* free up the parser context */
+    xmlFreeParserCtxt(ctxt);
+    return res;
+}
+
 #if 0
 int myfree_array(char **arr, int size1)
 {
