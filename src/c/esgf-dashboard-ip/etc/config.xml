@@ -1,45 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <configuration>
 	<node ipNodeAddress = "esgf-fedtest.dkrz.de" port="8080" datanode="esgf-data.dkrz.de">
-		<datamart name = "cross_dmart_project_host_time" path="crossproject/projecttime" timestamp = "0"/>
-		<datamart name = "cross_dmart_project_host_geolocation" path="crossproject/projectgeolocation" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_clients_host_time_geolocation" path="obs4mips/clients" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/variable" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/source" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/realm" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/experiment" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/model" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/variable" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_clients_host_time_geolocation" path="cmip5/clients" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_time" path="cross-project/stats-by-time" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_geolocation" path="cross-project/stats-by-space" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/stats-by-variable" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/stats-by-source" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/stats-by-realm" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/stats-by-experiment" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/stats-by-model" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/stats-by-variable" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "all_data_usage" path="historical-stats/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage" path="historical-stats/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage" path="historical-stats/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage" path="historical-stats/cordex-project" timestamp = "0"/>
+		<datamart name = "all_data_usage_continent" path="historical-stats-by-continent/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage_continent" path="historical-stats-by-continent/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage_continent" path="historical-stats-by-continent/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage_continent" path="historical-stats-by-continent/cordex-project" timestamp = "0"/>
 	</node>
 	<node ipNodeAddress = "esgf-data.jpl.nasa.gov" port="0" datanode="esgf-data.jpl.nasa.gov">
-		<datamart name = "cross_dmart_project_host_time" path="crossproject/projecttime" timestamp = "0"/>
-		<datamart name = "cross_dmart_project_host_geolocation" path="crossproject/projectgeolocation" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_clients_host_time_geolocation" path="obs4mips/clients" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/variable" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/source" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/realm" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/experiment" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/model" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/variable" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_clients_host_time_geolocation" path="cmip5/clients" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_time" path="cross-project/stats-by-time" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_geolocation" path="cross-project/stats-by-space" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/stats-by-variable" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/stats-by-source" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/stats-by-realm" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/stats-by-experiment" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/stats-by-model" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/stats-by-variable" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "all_data_usage" path="historical-stats/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage" path="historical-stats/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage" path="historical-stats/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage" path="historical-stats/cordex-project" timestamp = "0"/>
+		<datamart name = "all_data_usage_continent" path="historical-stats-by-continent/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage_continent" path="historical-stats-by-continent/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage_continent" path="historical-stats-by-continent/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage_continent" path="historical-stats-by-continent/cordex-project" timestamp = "0"/>
 	</node>
 	<node ipNodeAddress = "pcmdi11.llnl.gov" port="8080" datanode="pcmdi11.llnl.gov">
-		<datamart name = "cross_dmart_project_host_time" path="crossproject/projecttime" timestamp = "0"/>
-		<datamart name = "cross_dmart_project_host_geolocation" path="crossproject/projectgeolocation" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_clients_host_time_geolocation" path="obs4mips/clients" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/variable" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/source" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/realm" timestamp = "0"/>
-		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/experiment" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/model" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/variable" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/dataset" timestamp = "0"/>
-		<datamart name = "cmip5_dmart_clients_host_time_geolocation" path="cmip5/clients" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_time" path="cross-project/stats-by-time" timestamp = "0"/>
+		<datamart name = "cross_dmart_project_host_geolocation" path="cross-project/stats-by-space" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/stats-by-variable" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_source_host_time" path="obs4mips/stats-by-source" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_realm_host_time" path="obs4mips/stats-by-realm" timestamp = "0"/>
+		<datamart name = "obs4mips_dmart_dataset_host_time" path="obs4mips/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_experiment_host_time" path="cmip5/stats-by-experiment" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_model_host_time" path="cmip5/stats-by-model" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_variable_host_time" path="cmip5/stats-by-variable" timestamp = "0"/>
+		<datamart name = "cmip5_dmart_dataset_host_time" path="cmip5/stats-by-dataset" timestamp = "0"/>
+		<datamart name = "all_data_usage" path="historical-stats/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage" path="historical-stats/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage" path="historical-stats/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage" path="historical-stats/cordex-project" timestamp = "0"/>
+		<datamart name = "all_data_usage_continent" path="historical-stats-by-continent/all-projects" timestamp = "0"/>
+		<datamart name = "cmip5_data_usage_continent" path="historical-stats-by-continent/cmip5-project" timestamp = "0"/>
+		<datamart name = "obs4mips_data_usage_continent" path="historical-stats-by-continent/obs4mips-project" timestamp = "0"/>
+		<datamart name = "cordex_data_usage_continent" path="historical-stats-by-continent/cordex-project" timestamp = "0"/>
 	</node>
 </configuration>

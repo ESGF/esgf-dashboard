@@ -1269,7 +1269,7 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                     strcat(str_value, ",");
                                   }
                                }
-                               if(strcmp(tableName, "cross_dmart_isenes_kpis")==0)
+                               if(strcmp(tableName, "all_data_usage")==0)
                                {
                                   if((k==6)||(k==7))
                                   {

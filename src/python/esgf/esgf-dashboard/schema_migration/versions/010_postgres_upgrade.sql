@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS esgf_dashboard.cross_bridge_project CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cross_dim_project CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_isenes_kpis CASCADE;
  
  
 CREATE TABLE esgf_dashboard.cross_dim_date (
@@ -92,23 +91,6 @@ CREATE TABLE esgf_dashboard.cross_dmart_project_host_geolocation (
 );
 ALTER TABLE esgf_dashboard.cross_dmart_project_host_geolocation OWNER TO dbsuper;
 ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude);
-
-CREATE TABLE esgf_dashboard.cross_dmart_isenes_kpis (
-  dmart_key bigserial PRIMARY KEY,
-  total_size bigint,
-  number_of_downloads bigint,
-  number_of_successful_downloads bigint,
-  number_of_replica_downloads bigint,
-  average_duration integer,
-  number_of_users integer,
-  host_name character varying(64),
-  eu boolean,
-  month smallint,
-  year smallint
-);
-
-ALTER TABLE esgf_dashboard.cross_dmart_isenes_kpis OWNER TO dbsuper;
-ALTER table esgf_dashboard.cross_dmart_isenes_kpis add constraint cross_dmart_isenes_kpis_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, eu, month, year);
 
 /* DIMENSION TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_geolocation CASCADE;
@@ -593,7 +575,6 @@ CREATE TABLE esgf_dashboard.registry (
 );
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_geolocation',0,0);
-insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_isenes_kpis',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_variable_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_source_host_time',0,0);
