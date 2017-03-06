@@ -14,12 +14,15 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/inotify.h>
-
+#include <sys/stat.h>
+#include "libpq-fe.h"
+#include <dirent.h>
 #include "../include/ping.h"
 #include "../include/stats.h"
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/debug.h"
+#include "../include/ftpget.h"
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
@@ -245,7 +248,123 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 	return NULL;
 }
 
+void * data_federA(void *arg)
+{
+     int res=0;
+     DIR *dir;
+     char path_feder[2048] = { '\0' };
+     struct dirent *entry;
 
+     while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+     {
+          dir = opendir (FED_DIR);
+          while ((entry = readdir (dir)) != NULL) {
+            if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
+            {
+              continue;
+            } else {
+              sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
+              unlink(path_feder);
+            }
+            //printf("\n%s",entry->d_name);
+         }
+         closedir(dir);
+         res=compute_federation();
+	 //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	 sleep(1800); // PRODUCTION_ once a day
+	 //sleep(120);
+     }
+     return NULL;
+}
+
+void * data_planA(void *arg)
+{
+        int res=0;
+        int res1=0;
+
+        PGconn * conn;
+        PGresult *res2;
+        char conninfo[1024] = {'\0'};
+
+        /* Connect to database */
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -1;
+        }
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY8);
+        res2 = PQexec(conn, QUERY8);
+        if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res2);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res2);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+
+        char update_query[2048] = { '\0' };
+ 
+        sprintf(update_query, "%s", QUERY_UPDATE_REGISTRY_INIT);        
+
+        res2 = PQexec(conn, update_query);
+        PQclear(res2);
+
+        res2 = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res2);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res2);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+
+        PQfinish(conn);
+        
+	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	{
+            res=get_download_shards(".work", ".work/shards.xml");
+            if(res==0)
+              pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with success\n");
+            else
+              pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with unsuccess\n");
+            
+            res1=read_shards("./.work/shards.xml");
+            fprintf(stderr, "START PLANA");
+
+	    // skip the first time, because the process is called once before this loop	
+	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
+	    {
+               if(res1==-1)
+                 res1=0;
+	         //break;
+                  
+               res=compute_solr_process_planA(res1);
+               if(res==-25)
+	       {
+                 fprintf(stderr, "There is no entries to be processed");
+                 break;
+	       }
+	    }
+            	
+	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+            fprintf(stderr, "DONE PLANA");
+	}
+
+	return NULL;
+}
 
 int compute_aggregate_data_user_metrics()
 {
@@ -336,6 +455,8 @@ main (int argc, char **argv)
 {
   pthread_t pth;		// this is our thread identifier
   pthread_t pth_realtime;		// this is our thread identifier
+  pthread_t pth_planA;		// this is our thread identifier
+  pthread_t pth_feder;		// this is our thread identifier
   char *esgf_properties = NULL;
   char esgf_properties_default_path[1024] = { '\0' };
   char esgf_registration_xml_path[1024] = { '\0' };
@@ -435,6 +556,7 @@ main (int argc, char **argv)
       	  myfree (REGISTRATION_XML_PATH);
       	  myfree (REGISTRATION_XML_URL);
       	  myfree (ESGF_HOSTNAME);
+      	  myfree (ESGF_NODE_SOLR);
 	  return 0;
 	}
       // check on non-mandatory properties
@@ -455,6 +577,7 @@ main (int argc, char **argv)
       myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
+      myfree (ESGF_NODE_SOLR);
       return 0;
     }
 
@@ -471,6 +594,7 @@ main (int argc, char **argv)
       myfree (REGISTRATION_XML_URL);
       myfree (DASHBOARD_SERVICE_PATH);
       myfree (ESGF_HOSTNAME);
+      myfree (ESGF_NODE_SOLR);
       myfree (POSTGRES_PASSWD);
       return 0;
     }
@@ -494,6 +618,79 @@ main (int argc, char **argv)
   // at the beginning of the information provider	
   num_sensors = read_sensors_list_from_file(esgf_properties,&sens_struct[0]);
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
+  //read_dmart_feder("./xml"); 
+  //return 0;
+
+  DIR* pDir = opendir(WORK_DIR);
+  struct dirent *pFile;
+  char file_n[128] = { '\0' };
+  if(pDir!=NULL)
+  {
+     while ((pFile = readdir(pDir))) {
+       sprintf(file_n, "%s/%s",WORK_DIR,pFile->d_name);
+       unlink(file_n);
+     }
+     closedir(pDir);
+  }
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  DIR* pDir2 = opendir(FED_DIR);
+  if(pDir2!=NULL)
+  {
+    while ((pFile = readdir(pDir2))) {
+       sprintf(file_n, "%s/%s",FED_DIR,pFile->d_name);
+       unlink(file_n);
+    }
+    closedir(pDir2);
+  }
+}
+  
+  struct stat st = {0};
+  rmdir(WORK_DIR);
+  if (stat(WORK_DIR, &st) == -1) {
+            mkdir(WORK_DIR, 0700);
+  }
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  rmdir(FED_DIR);
+  if (stat(FED_DIR, &st) == -1) {
+            mkdir(FED_DIR, 0700);
+  }
+}
+  
+  ptr_mng         ptr_handle = NULL;
+  pthread_mutex_t plana_feder;
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  pthread_mutex_init(&plana_feder, NULL);
+}
+  pthread_mutex_t plana_mutex;
+  pthread_mutex_init(&plana_mutex, NULL);
+  
+//if(strcmp(ALLOW_FEDERATION, "yes")==0)
+//  ptr_register(&ptr_handle, (void **) &plana_feder, 0);
+
+//  ptr_register(&ptr_handle, (void **) &plana_mutex, 0);
+
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  // start thread PLANA
+  pthread_mutex_lock(&plana_feder);
+  pthread_create (&pth_feder, NULL, &data_federA,NULL);
+  pthread_mutex_unlock(&plana_feder);
+}
+  //compute_federation();
+
+  pthread_mutex_lock(&plana_mutex);
+  // start thread PLANA
+  //compute_solr_process_planA(1);
+  pthread_create (&pth_planA, NULL, &data_planA,NULL);
+  pthread_mutex_unlock(&plana_mutex);
+
+  compute_remote_clients_data_mart();
 
   compute_remote_clients_data_mart();
 
@@ -512,6 +709,7 @@ main (int argc, char **argv)
 
   if (ENABLE_REALTIME)
   	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  
 
   // enabling threads pool for sensors
   //if (num_sensors!=-1)
@@ -579,7 +777,22 @@ main (int argc, char **argv)
   	else
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
+  if (pthread_join (pth_planA, NULL))
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
 
+  pthread_mutex_destroy(&plana_mutex);
+ 
+if(strcmp(ALLOW_FEDERATION, "yes")==0)
+{
+  if (pthread_join (pth_feder, NULL))
+  	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join FEDERATION error!!!\n");
+  else
+  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data federation thread joined the master for PLANA!\n");
+     pthread_mutex_destroy(&plana_feder);
+}		
+  
   // end of thread pool for sensors	
   //if (num_sensors!=-1)
   	//thread_manager_stop (&threads[0],&sens_struct,num_sensors);
@@ -601,6 +814,7 @@ main (int argc, char **argv)
   myfree (REGISTRATION_XML_PATH);
   myfree (REGISTRATION_XML_URL);
   myfree (ESGF_HOSTNAME);
+  myfree (ESGF_NODE_SOLR);
   myfree (DASHBOARD_SERVICE_PATH);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
@@ -704,7 +918,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
   ENABLE_REALTIME=0;		// realtime time stats enabled=1 or disabled=0. Default enabled! 
   IDP_TYPE=1; 			// default 1=classic idp node ; 0=external identity provider
   *notfound = 20;		// number of total properties to be retrieved from the esgf.properties file
-  *mandatory_properties = 8;	// number of mandatory properties to be retrieved from the esgf.properties file
+  *mandatory_properties = 9;	// number of mandatory properties to be retrieved from the esgf.properties file
 
   while ((*notfound))
     {
@@ -778,6 +992,14 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	  if (!(strcmp (buffer, "dashboard.ip.app.home")))
 	    {
 	      strcpy (DASHBOARD_SERVICE_PATH =
+		      (char *) malloc (strlen (value_buffer) + 1),
+		      value_buffer);
+	      (*notfound)--;
+	      (*mandatory_properties)--;
+	    }
+	  if (!(strcmp (buffer, "esgf.index.peer")))
+	    {
+	      strcpy (ESGF_NODE_SOLR =
 		      (char *) malloc (strlen (value_buffer) + 1),
 		      value_buffer);
 	      (*notfound)--;
@@ -906,5 +1128,41 @@ ESGF_node_type (char *esgf_passwd_path)
   //strcpy (POSTGRES_PASSWD = (char *) malloc (strlen (buffer) + 1), buffer);
 
   fclose (file);
+  return 0;
+}
+int ptr_register (ptr_mng* reg, void ** ptr, int type)
+{
+  void ****tmp;
+  int *tmp_i;
+
+  if (!(*reg)){
+    *reg = (ptr_mng) calloc (1, sizeof(struct _ptr_mng));
+        if (!*reg)
+           return -1;
+
+        (*reg)->len = 0;
+        (*reg)->ptr = (void****)calloc (1, sizeof(void*));
+    if (!(*reg)->ptr)
+      return -1;
+        (*reg)->type = (int*)calloc(1, sizeof(int));
+    if (!(*reg)->type)
+      return -1;
+  }
+
+  (*reg)->len++;
+  tmp = (void****) realloc((*reg)->ptr, (*reg)->len * sizeof(void*));
+  if (!tmp)
+        return -1;
+  (*reg)->ptr = tmp;
+
+  tmp_i = (int*) realloc((*reg)->type, (*reg)->len * sizeof(int));
+  if (!tmp_i)
+        return -1;
+  (*reg)->type = tmp_i;
+
+  (*reg)->ptr[(*reg)->len - 1] = (void***) ptr;
+
+  (*reg)->type[(*reg)->len - 1] = type;
+
   return 0;
 }

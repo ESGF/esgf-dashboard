@@ -1,0 +1,20 @@
+#define SUCCESS 0
+#define ERROR_CALLOC -4
+#define ERROR_REALLOC -5
+#define ERROR_MALLOC -6
+#define VARIABILE_NULL -7
+#define INVALID_ARG -8
+#define UNRECOGNIZED_OPT -9
+#define DB_PATH_ERROR -10
+#define STRTOK_ERROR -11
+#define INVALID_TAG -12
+#define DB_NAME_ERROR -13
+#define SQL_ERROR -14
+#define INVALID_OPERATION -16
+#define STRDUP_ERROR -17
+#define FOPEN_ERROR -18
+#define FCLOSE_ERROR -19
+#define FSEEK_ERROR -20
+#define INVALID_FORMAT -21
+#define NO_RECORDS -22
+

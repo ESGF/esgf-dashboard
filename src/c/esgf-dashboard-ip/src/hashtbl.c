@@ -108,7 +108,7 @@ int hashtbl_insert(HASHTBL *hashtbl, const char *key, void *data)
 			//sprintf(node->data,"%s",data); // added 
 			
 			// this new code does nothing is the key already exists
-			fprintf(stderr,"Key already existing: [key=%s] [data=%s] [skip add element]",node->key, node->data); // added 
+			//fprintf(stderr,"Key already existing: [key=%s] [data=%s] [skip add element]",node->key, node->data); // added 
 			return 0;
 		}
 		node=node->next;

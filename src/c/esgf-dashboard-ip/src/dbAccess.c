@@ -15,6 +15,13 @@
 #include "../include/dbAccess.h"
 #include "../include/config.h"
 #include "../include/debug.h"
+#include "../include/error.h"
+#include "../include/ftpget.h"
+#include <libxml/xpathInternals.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/tree.h>
+#include <dirent.h>
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
@@ -22,6 +29,11 @@
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
 #define TOP_FILE ".top.txt"
 #define TOP_COMMAND "/usr/bin/top -b -n 1 i "
+char ipNodeAddress[max_num_node][ipLength]; //IP Addresses of Data Nodes
+char datamart[max_num_node][max_num_datamart][100]; //Name of datamarts associated of each Data Node
+char timestamp[max_num_node][max_num_datamart][50]; //Timestamps associated to each datamart of each Data Node
+char url[max_num_node][max_num_datamart][1000]; //Url generate from the component "Query Generator"
+char new_timestamp[max_num_node][max_num_datamart][50]; //New timestamps associated to each datamart of each Data Node
 
 int retrieve_localhost_metrics()
 {
@@ -1095,6 +1107,572 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Reconciliation process planB END\n");
  	return 0;
 }
+int compute_federation()
+{
+    //struct fileXML config; //Structure for storing some information of the configuration file
+    int i;
+
+    read_config_feder(CONFIG_FILE_NAME);
+    struct dirent *entry;
+    int ret = 1;
+    DIR *dir;
+    char path_feder[2048] = { '\0' };
+    PGconn * conn;
+    PGresult *res2;
+    char conninfo[1024] = {'\0'};
+    char query[2048] = {'\0'};
+
+#if 0
+    /* Connect to database */
+    snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+    conn = PQconnectdb ((const char *) conninfo);
+
+    if (PQstatus(conn) != CONNECTION_OK)
+    {
+       pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
+       PQfinish(conn);
+       return -1;
+     }
+     res2 = PQexec(conn, QUERY8);
+     if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+     {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        PQclear(res2);
+        PQfinish(conn);
+        return -2;
+      }
+      sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
+
+      res2 = PQexec(conn, query);
+      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+      {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+        //PQclear(res2);
+        //PQfinish(conn);
+        //return -2;
+       }
+       PQclear(res2);
+       res2 = PQexec(conn, QUERY4);
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
+       {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+         PQclear(res2);
+         PQfinish(conn);
+         return -2;
+        }
+        PQclear(res2);
+         PQfinish(conn);
+#endif
+    dir = opendir (FED_DIR);
+    while ((entry = readdir (dir)) != NULL) {
+      if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
+      {
+        continue;
+      } else {
+          sprintf(path_feder, "%s/%s", FED_DIR, entry->d_name);
+          read_dmart_feder(path_feder);
+      }
+        //printf("\n%s",entry->d_name);
+    }
+    closedir(dir);
+    return 0; 
+}
+
+//PLANA START
+int compute_solr_process_planA(int shards)
+{
+  	char select_query_dashboard[2048] = { '\0' };
+        int         nFields;
+        int size=0;
+        char **URL=NULL;
+        char **id_query=NULL;
+        char **datasetid=NULL;
+        char **queryid=NULL;
+        char **flagid=NULL;
+        int cnt_qid=0;
+
+        int i=0;
+        int res=0;
+        int res_rep=0;
+        int cnt=0;
+        xmlDoc *doc = NULL;
+        xmlNode *root_element = NULL;
+        char *filename_conf="../etc/conf.xml";
+        char str_url[256];
+        str_url[0]='\0';
+
+        LIBXML_TEST_VERSION
+        xmlInitParser();
+
+ 	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Process planA START\n");
+
+	snprintf (select_query_dashboard, sizeof (select_query_dashboard),QUERY_PLANA_SELECT_URL);
+
+        PGconn *conn;
+        PGresult *res1;
+        int numTuples;
+        char conninfo[1024] = {'\0'};
+
+        snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
+        conn = PQconnectdb ((const char *) conninfo);
+
+        if (PQstatus(conn) != CONNECTION_OK)
+        {
+                pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s\n", PQerrorMessage(conn));
+                PQfinish(conn);
+                return -2;
+        }
+        // start transaction
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying open transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY8);
+        res1 = PQexec(conn, QUERY8); 
+        if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+        {
+           pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
+           PQclear(res1);
+           PQfinish(conn);
+           return -2;
+        }
+        PQclear(res1);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
+	// SELECT START 
+	res1 = PQexec(conn,select_query_dashboard);
+
+	if ((!res1) || (PQresultStatus(res1) != PGRES_TUPLES_OK))
+    	{
+	        pmesg(LOG_ERROR,__FILE__,__LINE__,"%s\n", select_query_dashboard);
+	        PQclear(res1);
+		PQfinish(conn);
+		return -2;
+    	}
+        nFields = PQnfields(res1);
+        size=PQntuples(res1);
+
+        if(size==0)
+    	{
+          //there are not entries in the dashboard_queue with processed=0
+          // stop transaction
+          res1 = PQexec(conn, QUERY4);
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+          if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+          {
+             pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+             PQclear(res1);
+             PQfinish(conn);
+             return -2;
+          }
+          PQclear(res1);
+          pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+          insert_dmart_cross_project(conn);
+          return -25;
+    	}
+          
+
+        URL=(char**) calloc (size+1, sizeof(char *));
+        id_query=(char**) calloc (size+1, sizeof(char *));
+        flagid=(char**) calloc (size+1, sizeof(char *));
+
+        char url_comp1[2056]={'\0'};
+        char url_comp[2056]={'\0'};
+
+        char *str_url1=NULL;
+        char *str_u=NULL;
+        char *str_u1=NULL;
+        char *str_u2=NULL;
+        char *str_replica=NULL;
+        int ch=0;
+        /* next, print out the rows */
+        for (i = 0; i < PQntuples(res1); i++)
+        {
+          str_url1=strdup(PQgetvalue(res1, i, 0));
+
+          str_u=strstr(str_url1, ".nc");
+          if(str_u)
+          {
+            str_u1=strstr(str_url1,":2811//");
+            if(str_u1)
+            {
+              str_u2=strdup(str_u1+7);
+              free(str_url1);
+              str_url1=NULL;
+              str_url1=strdup(str_u2);
+              free(str_u2);
+              str_u2=NULL; 
+            }
+          }
+          
+            sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
+          if(shards==0)
+            sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
+          else
+            sprintf(url_comp, "%s&shards=localhost:8983/solr/files,localhost:8982/solr/files", url_comp1);
+
+          free(str_url1);
+          URL[i]=strdup(url_comp);
+          id_query[i]=strdup(PQgetvalue(res1, i, 1));
+          flagid[i]=strdup("0");
+        }
+        size=PQntuples(res1);
+        URL[i]=NULL;
+        id_query[i]=NULL;
+        flagid[i]=NULL;
+
+
+        // stop transaction
+        res1 = PQexec(conn, QUERY4);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
+        if ((!res1) || (PQresultStatus (res1) != PGRES_COMMAND_OK))
+        {
+          pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
+          PQclear(res1);
+          PQfinish(conn);
+          return -2;
+        }
+        PQclear(res1);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+        //myfree_array(URL,size+1);
+        //myfree_array(id_query,size+1);
+
+        struct FtpFile **ftpfile=NULL;
+        ftpfile=calloc (size+2, sizeof(struct FtpFile *));
+        if(!ftpfile)
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
+          pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+          return ERROR_CALLOC;
+        }
+
+        res=alloca_struct_FtpFile(ftpfile, URL, id_query, flagid, size);
+        if(res!=SUCCESS)
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
+          free_struct_FtpFile(ftpfile);
+          return res;
+        }
+        //printf("%s\n", "entro in download");
+        res=ftp_download_file(ftpfile,size);
+        //printf("%s\n", "esco in download");
+        int size_eff=0;
+
+        if(res!=SUCCESS)
+        {
+           printf("%s\n", "Error in download files");
+           size_eff++;
+           pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
+        }
+
+        for (cnt=0; cnt < size; cnt++)
+        {
+          int res=0;
+          /*parse the file and get the DOM */
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+          struct stat st = {0};
+          if (stat(tmp_file, &st) == -1) {
+            size_eff++;
+          }
+          else
+          {
+            //res=parseFunc(tmp_file);
+            //if(res==-1)
+            //  continue;
+            //else
+            //{
+              //to see again
+              doc = xmlReadFile(tmp_file, NULL, 0);
+              if (doc == NULL)
+              {
+                size_eff++;
+              }
+              xmlFreeDoc(doc);
+              xmlCleanupCharEncodingHandlers();
+              xmlCleanupParser();
+              xmlMemoryDump();
+            //}
+          }
+        }
+        size_eff=size-size_eff;
+        //printf("size_eff vale %d\n", size_eff);
+        if(size_eff==0)  //no downloads
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          myfree_array(flagid,size+1);
+          free_struct_FtpFile(ftpfile);
+          return -25; //sleep mode
+        }
+
+        int num_metadata=0;
+        i=0;
+        datasetid=calloc(size_eff+1, sizeof(char*));
+        queryid=calloc(size_eff+1, sizeof(char*));
+        flagid=calloc(size_eff+1, sizeof(char*));
+        for (cnt=0; cnt < size_eff; cnt++)
+        {
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+          struct stat st = {0};
+          if (stat(tmp_file, &st) == -1) {
+            size_eff++;
+          }
+          else
+          {
+            doc = xmlReadFile(tmp_file, NULL, 0);
+            if (doc != NULL)
+            {
+               //fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+               queryid[i]=strdup(id_query[cnt]);
+               i++;
+            }
+            xmlFreeDoc(doc);
+            xmlCleanupCharEncodingHandlers();
+            xmlCleanupParser();
+            xmlMemoryDump();
+          }
+        }
+        struct dataset_project **datasetproj;
+        datasetproj=calloc(size_eff+1, sizeof(struct dataset_project*));
+
+        int query_kind=0;
+        int cnt2=0;
+        int flag=0;
+        FILE *pFile;
+        for (cnt=0; cnt < size_eff; cnt++)
+        {
+           /*parse the file and get the DOM */
+          char tmp_file[2048] = {'\0'};
+          sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+          doc = xmlReadFile(tmp_file, NULL, 0);
+          if (doc == NULL)
+          {
+            int res=0;
+            res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+            
+            if(res==0) 
+            {
+               doc = xmlReadFile(tmp_file, NULL, 0);
+               if (doc == NULL)
+               {
+                 fprintf(stderr, "\n[%s:%d] Error: could not parse %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+                 flag=1;
+                 char buffer[2056]={'\0'};
+                 pFile = fopen ("myfile.csv", "a+");
+                 sprintf(buffer, "%s;%s;noparse",queryid[cnt],ftpfile[cnt]->URL);
+                 char *str=NULL;
+                 str=strdup(buffer);
+                 fprintf (pFile, "%s\n", str);
+                 free(str);
+                 str=NULL;
+                 fclose (pFile);
+                   
+               }
+            }
+            else
+            {
+                 fprintf(stderr, "\n[%s:%d] Error: could not download %s *** %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+                 flag=1;
+                 char buffer[2056]={'\0'};
+                 pFile = fopen ("myfile.csv", "a+");
+                 sprintf(buffer, "%s;%s;nodownload",queryid[cnt],ftpfile[cnt]->URL);
+                 char *str=NULL;
+                 str=strdup(buffer);
+                 fprintf (pFile, "%s\n", str);
+                 free(str);
+                 str=NULL;
+                 fclose (pFile);
+               
+            }
+          }
+          if(flag==0)
+          {
+             /*Get the root element node */
+             root_element = xmlDocGetRootElement(doc);
+             res=count_tag(doc,"//arr[@name='project']");
+             if(res!=0)
+             {
+               if(SOLR_LOG==1)  
+               {
+                  char buffer[2056]={'\0'};
+                  pFile = fopen ("myfile.csv", "a+");
+                  sprintf(buffer, "%s;%s;%s;yes",queryid[cnt],ftpfile[cnt]->URL, ftpfile[cnt]->filename);
+                  char *str=NULL;
+                  str=strdup(buffer);
+                  fprintf (pFile, "%s\n", str);
+                  if(queryid[cnt])
+                    flagid[cnt_qid]=strdup(queryid[cnt]);
+                  free(str);
+                  str=NULL;
+                  fclose (pFile);
+                  cnt_qid++;
+               }
+               int res1=0;
+
+               datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
+               datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
+               res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, flagid);
+               datasetproj[cnt2]->first[res]=NULL;
+               res1=read_conf_project(filename_conf,&datasetproj, cnt2);
+              
+               int size1,size2, size3,size4;
+               for(size2=0; datasetproj[cnt2]->first[size2]!=NULL; size2++)
+               {
+                 int num_metadata=datasetproj[cnt2]->first[size2]->size;
+                 if(num_metadata>0)
+                   res = get_metadata_solr(doc, root_element, &datasetproj, cnt2, size2, num_metadata, query_kind);
+                 else
+                   res_rep=get_replica(doc, root_element);
+               }
+               if(shards==0)
+                 sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
+               else
+                 sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets,localhost:8982/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
+               //printf("str_url second query to solr %s\n", str_url);
+               if(datasetid[cnt2]!=NULL)
+               {
+                 free(datasetid[cnt2]);
+                 datasetid[cnt2]=NULL;
+               }
+               datasetid[cnt2] = strdup(str_url);
+               //printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
+               cnt2++;
+          }
+          else
+          {
+           
+           if(SOLR_LOG==1)  
+           {
+              char buffer[2056]={'\0'};
+              pFile = fopen ("myfile.csv", "a+");
+              if((queryid[cnt]!=NULL)&&(ftpfile[cnt]->URL)!=NULL)
+                sprintf(buffer, "%s;%s;no",queryid[cnt],ftpfile[cnt]->URL);
+              char *str=NULL;
+              str=strdup(buffer);
+              fprintf (pFile, "%s\n", str);
+              free(str);
+              str=NULL;
+              fclose (pFile);
+           }
+          }
+           char update_dashboard_queue[2048] = { '\0' };
+           if(queryid[cnt]!=NULL)
+           {
+            
+              snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,atoi(queryid[cnt]));
+              if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
+                return -1;
+           }
+      }
+      flag=0;
+      xmlFreeDoc(doc);
+      xmlCleanupCharEncodingHandlers();
+      xmlCleanupParser();
+      xmlMemoryDump();
+      res=remove(tmp_file);
+    }
+    datasetid[cnt2]=NULL;
+    datasetproj[cnt2]=NULL;
+    myfree_array(URL,size+1);
+    free_struct_FtpFile(ftpfile);
+
+    ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
+
+    res=alloca_struct_FtpFile(ftpfile, datasetid, queryid, flagid, cnt2);
+    if(res!=SUCCESS)
+    {
+      free_struct_FtpFile(ftpfile);
+      return res;
+    }
+    myfree_array(id_query,size+1);
+
+    res=ftp_download_file(ftpfile,cnt2);
+
+    if(res!=SUCCESS)
+    {
+      pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
+    } 
+    free_datasetid(datasetid);
+    free_datasetid(queryid);
+    free_datasetid(flagid);
+     
+    int k=0;
+      
+    for (cnt=0; ftpfile[cnt]->filename!=NULL; cnt++)
+    {
+      /*parse the file and get the DOM */
+      //printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
+      char tmp_file[2048] = {'\0'};
+      sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+      struct stat st = {0};
+      if (stat(tmp_file, &st) == -1) {
+         continue;
+      }
+      else
+      {
+        doc = xmlReadFile(tmp_file, NULL, 0);
+        if (doc == NULL)
+        {
+          fprintf(stderr, "\n[%s:%d] Error: could not parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
+          //free_struct_FtpFile(ftpfile);
+          int res=0;
+          res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
+          if(res==0)
+          {
+            doc = xmlReadFile(tmp_file, NULL, 0);
+            if (doc == NULL)
+            {
+              continue;
+            }
+          }
+        }
+      }
+      /*Get the root element node */
+      root_element = xmlDocGetRootElement(doc);
+      int size1,size2, size3,size4;
+      for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
+      {
+          int num_metadata=datasetproj[cnt]->first[size2]->size;
+          int query_kind=1;
+          if(num_metadata>0)
+          {
+             for(size3=0; datasetproj[cnt]->first[size2]->first[size3]!=NULL; size3++)
+             {
+               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
+               {
+                 if((datasetproj[cnt]->first[size2]->first[size3]->name)&&(datasetproj[cnt]->first[size2]->first[size3]->size==0))
+                 {
+                    res = get_metadata_solr(doc, root_element, &datasetproj, cnt, size2, size3, query_kind);
+                 }
+               } 
+             }
+          }
+      }
+      datasetproj[cnt]->size=size2; //number of projects 
+
+      res=remove(tmp_file);
+      xmlFreeDoc(doc);
+      xmlCleanupCharEncodingHandlers();
+      xmlCleanupParser();
+      xmlMemoryDump();
+    }
+    check_cross_project(conn, &datasetproj,ESGF_HOSTNAME, res_rep);
+    insert_dmart_cross_project(conn);
+    free_struct_datasetproj(datasetproj);
+
+    free_struct_FtpFile(ftpfile);
+    PQfinish(conn);
+
+    return 0;
+}
+
+//PLANA STOP
 
 int compute_remote_clients_data_mart()
 {
@@ -1760,4 +2338,161 @@ int realtime_mem_get_stats(void)
   rotate_realtime_stats(REALTIME_MEM_SWAP, REALTIME_MEM_SWAP_TEMP, swapstr);
   return 0;
 }
+int parseFunc(const char *filename) {
+    int res=0;
+    xmlParserCtxtPtr ctxt; /* the parser context */
+    xmlDocPtr doc; /* the resulting document tree */
 
+    /* create a parser context */
+    ctxt = xmlNewParserCtxt();
+    if (ctxt == NULL) {
+        fprintf(stderr, "Failed to allocate parser context\n");
+	return -1;
+    }
+    /* parse the file, activating the DTD validation option */
+    doc = xmlCtxtReadFile(ctxt, filename, NULL, 0);
+    /* check if parsing suceeded */
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse %s\n", filename);
+        return -1;
+    } else {
+	/* check if validation suceeded */
+        if (ctxt->valid == 0)
+            res=-1;
+      
+	/* free up the resulting document */
+	xmlFreeDoc(doc);
+    }
+    /* free up the parser context */
+    xmlFreeParserCtxt(ctxt);
+    return res;
+}
+
+#if 0
+int myfree_array(char **arr, int size1)
+{
+   if(arr!=NULL)
+   {
+     int size;
+     for(size=0; arr[size]!=NULL; size++)
+     {
+        free(arr[size]);
+        arr[size]=NULL;
+     }
+     free(arr);
+     arr=NULL;
+    }
+    return 0;
+}
+
+int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query, int size)
+{
+    int res, cnt, j=0;
+
+    for (cnt=0; cnt < size; cnt++)
+    {
+       ftpfile[cnt] = calloc (1, sizeof(struct FtpFile));
+
+       if(!ftpfile[cnt])
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+         for(j=cnt-1; j>=0; j--)
+         {
+           if(ftpfile[j])
+             free(ftpfile[j]);
+         }
+         free(ftpfile);
+         return ERROR_CALLOC;
+       }
+       ftpfile[cnt]->id_query=atoi(id_query[cnt]);
+       ftpfile[cnt]->URL = strdup(URL[cnt]);
+       if(!ftpfile[cnt]->URL)
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
+         fprintf(stderr, "\n[%s:%d] Not enough memory. Error in strdup()\n", __FILE__, __LINE__);
+         free_struct_FtpFile(ftpfile);
+         return STRDUP_ERROR;
+       }
+       char *str_1=NULL;
+       char *filename=NULL;
+       str_1=strdup(URL[cnt]);
+       filename=strdup(basename(str_1));
+       free(str_1);
+
+       char *str=NULL;
+       str=strrchr(filename, '*');
+       if(str!=NULL)
+         *str='\0';
+       str=strstr(filename, "id:");
+       if(str!=NULL)
+       {
+         str_1=strrchr(str, '|');
+         if(str_1!=NULL)
+           *str_1='\0';
+       }
+       struct timeval tv;
+       gettimeofday(&tv,NULL);
+       char str_2[2048] = { '\0' };
+       if(str!=NULL)
+       {
+         sprintf(str_2, ".work/%s_%ld", str+3, tv.tv_usec);
+       }
+       else
+       {
+         sprintf(str_2, ".work/%s_%ld", filename, tv.tv_usec);
+       }
+       free(filename);
+       filename=NULL;
+       filename=strdup(str_2);
+       ftpfile[cnt]->filename = strdup(filename);
+       free(filename);
+       filename=NULL;
+       if(!ftpfile[cnt]->filename)
+       {
+         pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
+         fprintf(stderr, "\n[%s:%d] Not enough memory. Error in strdup()\n", __FILE__, __LINE__);
+         free_struct_FtpFile(ftpfile);
+         return STRDUP_ERROR;
+       }
+    }
+
+    ftpfile[size] = calloc (1, sizeof(struct FtpFile));
+    if(!ftpfile[size])
+    {
+       pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
+       return ERROR_CALLOC;
+    }
+    ftpfile[size]->URL=NULL;
+    ftpfile[size]->filename=NULL;
+    return SUCCESS;
+}
+
+int free_struct_FtpFile(struct FtpFile **ftp)
+{
+        if(ftp!=NULL)
+        {
+                int size;
+                for(size=0; ftp[size]!=NULL; size++)
+                {
+                        if(ftp[size]->URL!=NULL)
+                        {
+                                free(ftp[size]->URL);
+                                ftp[size]->URL=NULL;
+                        }
+                        if(ftp[size]->filename!=NULL)
+                        {
+                                free(ftp[size]->filename);
+                                ftp[size]->filename=NULL;
+                        }
+                        free(ftp[size]);
+                        ftp[size]=NULL;
+                }
+                free(ftp[size]);
+                ftp[size]=NULL;
+                free(ftp);
+                ftp=NULL;
+        }
+    return 0;
+}
+
+#endif

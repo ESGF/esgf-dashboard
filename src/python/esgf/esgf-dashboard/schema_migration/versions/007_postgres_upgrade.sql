@@ -295,4 +295,27 @@ INSERT INTO esgf_dashboard.country VALUES ('246', 'ZW', 'Zimbabwe', 'AF');
 INSERT INTO esgf_dashboard.country VALUES ('247', 'EU', 'No country', 'EU');
 INSERT INTO esgf_dashboard.country VALUES ('248', 'AP', 'No country', 'AS');
 
+ALTER TABLE esgf_dashboard.continent ADD COLUMN latitude numeric(14,11);
+ALTER TABLE esgf_dashboard.continent ADD COLUMN longitude numeric(14,11);
+
+UPDATE esgf_dashboard.continent set latitude = 7.18805555556 WHERE continent_code='AF';
+UPDATE esgf_dashboard.continent set longitude = 21.0936111111 WHERE continent_code='AF';
+
+UPDATE esgf_dashboard.continent set latitude = 29.8405555556 WHERE continent_code='AS';
+UPDATE esgf_dashboard.continent set longitude = 89.2966666667 WHERE continent_code='AS';
+
+UPDATE esgf_dashboard.continent set latitude = 48.6908333333 WHERE continent_code='EU';
+UPDATE esgf_dashboard.continent set longitude = 9.14055555556 WHERE continent_code='EU';
+
+UPDATE esgf_dashboard.continent set latitude = 46.0730555556 WHERE continent_code='NA';
+UPDATE esgf_dashboard.continent set longitude = -100.546666667 WHERE continent_code='NA';
+
+UPDATE esgf_dashboard.continent set latitude = -18.3127777778 WHERE continent_code='OC';
+UPDATE esgf_dashboard.continent set longitude = 138.515555556 WHERE continent_code='OC';
+
+UPDATE esgf_dashboard.continent set latitude = -14.6047222222 WHERE continent_code='SA';
+UPDATE esgf_dashboard.continent set longitude = -57.6561111111 WHERE continent_code='SA';
+
+UPDATE esgf_dashboard.continent set latitude = -83.3594444444 WHERE continent_code='AN';
+UPDATE esgf_dashboard.continent set longitude = 16.5233333333 WHERE continent_code='AN';
 SET search_path = public, pg_catalog;

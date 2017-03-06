@@ -606,6 +606,7 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
 INSTALLATION_PATH
+ALLOW_FEDERATION
 GEOIP_PREFIX_PATH
 XML2_CONFIG
 pq_LIB_FILE
@@ -699,6 +700,7 @@ with_postgres_path
 enable_postgresql
 with_xml2_config
 with_geoip_prefix_path
+with_allow_federation
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1347,6 +1349,7 @@ Optional Packages:
   --with-postgres-path=PATH                 Location of postgresql
   --with-xml2-config      libxml2 config program
   --with-geoip-prefix-path=PATH          Location of GeoIP
+  --with-allow-federation="no"          yes - to allow the federation, no default
 
 Some influential environment variables:
   CC          C compiler command
@@ -4738,6 +4741,20 @@ fi
 
 
 GEOIP_PREFIX_PATH=$"${geoip_prefix_path}"
+
+
+# Check whether --with-allow_federation was given.
+if test "${with_allow_federation+set}" = set; then
+  withval=$with_allow_federation;
+                allow_federation="$withval"
+
+fi
+
+if test $allow_federation; then
+  ALLOW_FEDERATION="$withval"
+else
+  ALLOW_FEDERATION="no"
+fi
 
 
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")

@@ -17,6 +17,7 @@
 
 #ACLOCAL_AMFLAGS = -I #m4
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -72,7 +73,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sysconfdir)"
 SCRIPTS = $(dist_bin_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
@@ -83,6 +84,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
+DATA = $(sysconf_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -128,6 +130,7 @@ GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
+ALLOW_FEDERATION = @ALLOW_FEDERATION@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -218,7 +221,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = . src
-
+sysconf_DATA = etc/conf.xml etc/config.xml
 #include_HEADERS=include/config.h include/ping.h include/dbAccess.h
 dist_bin_SCRIPTS = bin/ip.service #bin/ip.service.local
 all: config.h
@@ -312,6 +315,26 @@ uninstall-dist_binSCRIPTS:
 	test -n "$$list" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(bindir)" && rm -f $$files
+install-sysconfDATA: $(sysconf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(sysconfdir)" || $(MKDIR_P) "$(DESTDIR)$(sysconfdir)"
+	@list='$(sysconf_DATA)'; test -n "$(sysconfdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(sysconfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(sysconfdir)" || exit $$?; \
+	done
+
+uninstall-sysconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sysconf_DATA)'; test -n "$(sysconfdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(sysconfdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(sysconfdir)" && rm -f $$files
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -625,10 +648,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(SCRIPTS) config.h
+all-am: Makefile $(SCRIPTS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sysconfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -683,7 +706,7 @@ install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-dist_binSCRIPTS
+install-exec-am: install-dist_binSCRIPTS install-sysconfDATA
 
 install-html: install-html-recursive
 
@@ -723,7 +746,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dist_binSCRIPTS
+uninstall-am: uninstall-dist_binSCRIPTS uninstall-sysconfDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all \
 	ctags-recursive install-am install-strip tags-recursive
@@ -739,11 +762,11 @@ uninstall-am: uninstall-dist_binSCRIPTS
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
 	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags \
-	tags-recursive uninstall uninstall-am \
-	uninstall-dist_binSCRIPTS
+	install-strip install-sysconfDATA installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-dist_binSCRIPTS uninstall-sysconfDATA
 
 
 #EXTRA_DIST = bin/esgf-dashboard-ip.sh

@@ -1,4 +1,3 @@
-/*fare il merge di questa funzione nel file dbAccess.c, dove c'e' gia' il collegamento con il DB e tutte le variabili sono ok */
 
 #include <stdio.h>
 #include <string.h>
@@ -235,7 +234,7 @@ submit_query (PGconn * conn, char *query)
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     {
-      pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query failed\n");
+      //pmesg(LOG_ERROR,__FILE__,__LINE__,"Submit query=%s failed\n", query);
       PQclear (res);
       return -1;
     }
@@ -1380,6 +1379,10 @@ _automatic_registration_xml_feed (char *registration_xml_file)
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
   int result;
+
+  result=parseFunc(registration_xml_file);
+  if(result==-1)
+   return -1;
 
   /*parse the file and get the DOM */
   doc = xmlReadFile (registration_xml_file, NULL, 0);

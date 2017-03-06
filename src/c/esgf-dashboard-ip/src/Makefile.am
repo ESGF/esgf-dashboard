@@ -2,8 +2,10 @@ bin_PROGRAMS = esgf-dashboard-ip esgf-iplookup esgf-getrawstats
 
 AM_CFLAGS = $(OPT) -I../include -Wall
 
-esgf_dashboard_ip_SOURCES=esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c esgf-libstats.c
-esgf_dashboard_ip_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" 
+DEFINE =-DALLOW_FEDERATION=\"$(ALLOW_FEDERATION)\"
+
+esgf_dashboard_ip_SOURCES=esgf-dashboard-ip.c dbAccess.c ping.c esgf-dashboard-parser.c esgf-libiplookup.c hashtbl.c debug.c esgf-libstats.c xmlreader.c ftpget.c esgf-dashboard-insert-dw.c 
+esgf_dashboard_ip_CFLAGS=-O2 $(postgres_CFLAGS) $(CFLAGS) -I. -I../include  `$(XML2_CONFIG) --cflags` -I$(GEOIP_PREFIX_PATH)/include -DGEOIP_DATA_PATH=\"$(GEOIP_PREFIX_PATH)\" $(DEFINE) 
 esgf_dashboard_ip_LDFLAGS=-O2 $(pq_LDFLAGS) -L/usr/local/curl-no-ssl/lib -lcurl -lpq -lz -lpthread -lm -lpthread -L/usr/lib64 -lssl -lcrypto  `$(XML2_CONFIG) --libs` -L$(GEOIP_PREFIX_PATH)/lib -lGeoIP 
 
 esgf_iplookup_SOURCES=esgf-iplookup.c esgf-libiplookup.c debug.c 

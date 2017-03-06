@@ -1,0 +1,31 @@
+<projects>
+ <project name="obs4MIPs">
+  <metadata occ="str">institute</metadata>
+  <metadata occ="str">cf_standard_name</metadata>
+  <metadata occ="str">variable</metadata>
+  <metadata occ="str">variable_long_name</metadata>
+  <metadata occ="str">time_frequency</metadata>
+  <metadata occ="str">index_node</metadata>
+  <metadata occ="str">processing_level</metadata>
+  <metadata occ="str">source_id</metadata>
+  <metadata occ="str">realm</metadata>
+  <metadata occ="long">size</metadata>
+  <metadata occ="bool">replica</metadata>
+  <metadata occ="date">datetime_start</metadata>
+  <metadata occ="date">datetime_stop</metadata>
+ </project>
+ <project name="CMIP5">
+  <metadata occ="str">model</metadata>
+  <metadata occ="str">experiment</metadata>
+  <metadata occ="str">cf_standard_name</metadata>
+  <metadata occ="str">variable</metadata>
+  <metadata occ="str">variable_long_name</metadata>
+  <metadata occ="str">realm</metadata>
+  <metadata occ="str">time_frequency</metadata>
+  <metadata occ="str">institute</metadata>
+  <metadata occ="bool">replica</metadata>
+  <metadata occ="date">datetime_start</metadata>
+  <metadata occ="date">datetime_stop</metadata>
+  <metadata occ="long">size</metadata>
+ </project>
+</projects>

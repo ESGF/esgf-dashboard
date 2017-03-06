@@ -86,6 +86,17 @@ AC_ARG_WITH(geoip_prefix_path,
 
 GEOIP_PREFIX_PATH=$"${geoip_prefix_path}"
 AC_SUBST(GEOIP_PREFIX_PATH)
+AC_ARG_WITH(allow_federation,
+           [  --with-allow-federation="no"          yes - to allow the federation, no default],
+           [
+                allow_federation="$withval"
+           ])
+if test $allow_federation; then
+  ALLOW_FEDERATION="$withval"
+else
+  ALLOW_FEDERATION="no"
+fi
+AC_SUBST(ALLOW_FEDERATION)
 
 #AM_CONDITIONAL(DBMS_POSTGRES, test "x$postgresql" = "xyes")
 

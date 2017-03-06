@@ -1122,15 +1122,183 @@ int get_download_registration(char *path_xml, char *file_dest)
   double c_length;
   FILE *tmp;
   FILE *file;
-  char buffer[10024];
-  char url_action[10024];
-  char tmp_file[1024];
+  char buffer[10024]={ '\0' };
+  char url_action[10024]={ '\0' };
+  char tmp_file[1024]={ '\0' };
   long int i;
   long long int num_rec;
   int right_url;
 
   snprintf (url_action, sizeof (url_action),REGISTRATION_XML_URL);
   sprintf (tmp_file, "%s/%s", path_xml, "registration_tmp.xml");
+  remove(tmp_file);
+
+  tmp=fopen(tmp_file, "w");
+  if(tmp==NULL)
+        {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, "FALSE");
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
+        remove(tmp_file);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  rename(tmp_file, file_dest);
+  remove(tmp_file);
+
+ return 0;
+}
+int get_download_shards(char *path_xml, char *file_dest)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024]={ '\0' };
+  char buffer1[10024]={ '\0' };
+  char url_action[10024]={ '\0' };
+  char tmp_file[1024]={ '\0' };
+  long int i;
+  long long int num_rec;
+  int right_url;
+
+  sprintf(buffer1, "http://%s/esg-search/search/?type=File&latest=true&distrib=true&format=application%ssolr%sxml", ESGF_NODE_SOLR,"%%2F","%2B");
+  snprintf (url_action, sizeof (url_action),buffer1);
+  //printf("url action vale %s\n", url_action);
+  sprintf (tmp_file, "%s/%s", path_xml, "shards_tmp.xml");
+  remove(tmp_file);
+
+  tmp=fopen(tmp_file, "w");
+  if(tmp==NULL)
+        {
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, "FALSE");
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
+        remove(tmp_file);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  rename(tmp_file, file_dest);
+  remove(tmp_file);
+
+ return 0;
+}
+int get_download_federated(char *path_xml, char *file_dest, char *hostname, char *datamart, int port)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024]={ '\0' };
+  char buffer1[10024]={ '\0' };
+  char url_action[10024]={ '\0' };
+  char tmp_file[1024]={ '\0' };
+  long int i;
+  long long int num_rec;
+  int right_url;
+
+  if(port!=0)
+     sprintf(buffer1, "http://%s:%d/esgf-stats-api/%s/xml", hostname, port, datamart);
+  else
+     sprintf(buffer1, "http://%s/esgf-stats-api/%s/xml", hostname, datamart);
+  //printf("url to be access %s\n", buffer1);
+  snprintf (url_action, sizeof (url_action),buffer1);
+  sprintf (tmp_file, "%s/%s", path_xml, "xml_tmp.xml");
+  remove(tmp_file);
+
+  tmp=fopen(tmp_file, "w");
+  if(tmp==NULL)
+        {
+         //printf("file null %s\n", tmp_file);
+         pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR opening file %s\n",tmp_file);
+         return -2;
+        }
+
+  curl = curl_easy_init();
+  curl_easy_setopt(curl, CURLOPT_URL, url_action);
+  //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA,  tmp);
+  curl_res = curl_easy_perform(curl);
+
+  if(curl_res)
+        {
+        pmesg(LOG_ERROR,__FILE__,__LINE__,"ERROR contatting the remote host or downloading stats\n");
+        remove(tmp_file);
+        fclose(tmp);
+        curl_easy_cleanup(curl);
+        return -1;
+        }
+  fclose(tmp);
+  curl_easy_cleanup(curl);
+
+  rename(tmp_file, file_dest);
+  remove(tmp_file);
+
+ return 0;
+ }
+int get_download_file_noparse(char *filename, char *url)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element = NULL;
+  CURL *curl;
+  CURLcode curl_res;
+  CURLINFO info;
+  long http_code;
+  double c_length;
+  FILE *tmp;
+  FILE *file;
+  char buffer[10024]={ '\0' };
+  char url_action[10024]={ '\0' };
+  char tmp_file[1024]={ '\0' };
+  char tmp_file2[1024]={ '\0' };
+  long int i;
+  long long int num_rec;
+  int right_url;
+
+  sprintf (url_action, "%s",url);
+  sprintf (tmp_file, ".work/%s_tmp", filename);
+  sprintf (tmp_file2, ".work/%s", filename);
   remove(tmp_file);
 
   tmp=fopen(tmp_file, "w");
@@ -1157,7 +1325,7 @@ int get_download_registration(char *path_xml, char *file_dest)
   fclose(tmp);
   curl_easy_cleanup(curl);
 
-  rename(tmp_file, file_dest);
+  rename(tmp_file, tmp_file2);
   remove(tmp_file);
 
  return 0;
