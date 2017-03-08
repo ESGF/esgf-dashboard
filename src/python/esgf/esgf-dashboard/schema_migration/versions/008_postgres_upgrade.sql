@@ -25,17 +25,17 @@ drop table if exists esgf_dashboard.dashboard_queue;
 --
 
 CREATE TABLE dashboard_queue (
-    id integer NOT NULL,                                                    
-    url_path character varying NOT NULL,            
-    remote_addr character varying NOT NULL,
-    user_id_hash character varying, 
-    user_idp character varying,     
-    service_type character varying,
-    success boolean,  
-    duration double precision, 
-    size bigint DEFAULT (-1),
-    "timestamp" double precision NOT NULL,  
-    processed smallint DEFAULT 0 NOT NULL 
+    id integer NOT NULL,                                -- unique id                              
+    url_path character varying NOT NULL,                -- path of the downloaded file
+    remote_addr character varying NOT NULL,             -- user ip address
+    user_id_hash character varying,                     -- hash code of the user id
+    user_idp character varying,                         -- user identity provider
+    service_type character varying,                     -- download service type
+    success boolean,                                    -- outcome of the download operation
+    duration double precision,                          -- duration of the download operation
+    size bigint DEFAULT (-1),                           -- file dimensions
+    "timestamp" double precision NOT NULL,              -- download time instant
+    processed smallint DEFAULT 0 NOT NULL               -- dashboard flag
 );
 
 --

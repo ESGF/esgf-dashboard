@@ -1269,9 +1269,24 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                     strcat(str_value, ",");
                                   }
                                }
-                               if(strcmp(tableName, "all_data_usage")==0)
+                               if((strcmp(tableName, "all_data_usage_continent")==0)||(strcmp(tableName, "cmip5_data_usage_continent")==0)||(strcmp(tableName, "obs4mips_data_usage_continent")==0)||(strcmp(tableName, "cordex_data_usage_continent")==0))
                                {
                                   if((k==6)||(k==7))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if((strcmp(tableName, "all_data_usage")==0)||(strcmp(tableName, "cmip5_data_usage")==0)||(strcmp(tableName, "obs4mips_data_usage")==0)||(strcmp(tableName, "cordex_data_usage")==0))
+                               {
+                                  if(k==6)
                                   {
                                     strcat(str_value, "'");
                                     strcat(str_value, content);
