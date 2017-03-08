@@ -83,7 +83,7 @@ drop LANGUAGE if exists plpgsql;
 --Copy the rows of the access_logging table into the dashboard_queue table
 --
 
-insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging;
+insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging where date_fetched>=1491004800;
 
 --
 -- Function to update the urls in the dashboard_queue table
