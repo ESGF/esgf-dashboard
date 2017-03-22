@@ -130,7 +130,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
   HASHTBL *hashtbl_obs_dim_processing_level;
   HASHTBL *hashtbl_obs_dim_source_id;
   HASHTBL *hashtbl_obs_dim_realm;
-  HASHTBL *hashtbl_obs_dim_index;
   HASHTBL *hashtbl_obs_bridge_institute;
   HASHTBL *hashtbl_obs_bridge_institute_tmp;
   HASHTBL *hashtbl_obs_bridge_variable;
@@ -942,22 +941,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  //continue;
 		}
 
-	      if (!(hashtbl_obs_dim_index = hashtbl_create (HAST_TABLE_OBS_DIM_INDEX, NULL)))
-		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
-		  hashtbl_destroy (hashtbl_cross_dim_date);
-		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
-		  hashtbl_destroy (hashtbl_cross_dim_project);
-                  hashtbl_destroy (hashtbl_cross_bridge_project);
-                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
-		  hashtbl_destroy (hashtbl_cross_fact_download);
-		  hashtbl_destroy (hashtbl_obs_dim_file);
-		  hashtbl_destroy (hashtbl_obs_dim_institute);
-		  hashtbl_destroy (hashtbl_obs_dim_variable);
-		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
-		  //continue;
-		}
 	      if (!(hashtbl_obs_dim_processing_level = hashtbl_create (HAST_TABLE_OBS_DIM_PROC_LEV, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
@@ -971,7 +954,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  //continue;
 		}
@@ -990,7 +972,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  //continue;
@@ -1010,7 +991,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1029,7 +1009,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1050,7 +1029,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1072,7 +1050,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1095,7 +1072,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1119,7 +1095,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1144,7 +1119,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1170,7 +1144,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1197,7 +1170,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1225,7 +1197,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1256,7 +1227,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1286,7 +1256,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1319,7 +1288,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1351,7 +1319,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1384,7 +1351,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1418,7 +1384,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1452,7 +1417,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1491,7 +1455,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1528,7 +1491,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1566,7 +1528,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1603,7 +1564,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1641,7 +1601,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1680,7 +1639,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1719,7 +1677,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_institute);
 		  hashtbl_destroy (hashtbl_obs_dim_variable);
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
-		  hashtbl_destroy (hashtbl_obs_dim_index);
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  hashtbl_destroy (hashtbl_obs_dim_source_id);
 		  hashtbl_destroy (hashtbl_obs_dim_realm);
@@ -1759,8 +1716,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 				   &hashtbl_obs_dim_variable);
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS_DIM_TIME_FREQUENCY,
 				   &hashtbl_obs_dim_time_frequency);
-	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS_DIM_INDEX,
-				   &hashtbl_obs_dim_index);
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS_DIM_PROCESSING_LEVEL,
 				   &hashtbl_obs_dim_processing_level);
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_OBS_DIM_SOURCE_ID,
@@ -3374,7 +3329,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_obs_dim_processing_level);
       hashtbl_destroy (hashtbl_obs_dim_source_id);
       hashtbl_destroy (hashtbl_obs_dim_realm);
-      hashtbl_destroy (hashtbl_obs_dim_index);
       hashtbl_destroy (hashtbl_obs_bridge_institute);
       hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
       hashtbl_destroy (hashtbl_obs_bridge_variable);
