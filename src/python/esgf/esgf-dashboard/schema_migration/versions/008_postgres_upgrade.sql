@@ -85,7 +85,7 @@ drop LANGUAGE if exists plpgsql;
 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging;
 
-update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1491004800;
+update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1488326400;
 
 --
 -- Function to update the urls in the dashboard_queue table
@@ -112,7 +112,7 @@ $store_new_entry$
 declare
 BEGIN
 -- Update dashboard_queue table
-if NEW.date_fetched>=1491004800 then 
+if NEW.date_fetched>=1488326400 then 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
 user_id_hash, user_idp, service_type, success, duration, size,
 timestamp)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,

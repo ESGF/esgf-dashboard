@@ -359,7 +359,7 @@ void * data_planA(void *arg)
 	       }
 	    }
             	
-	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	    sleep(300); // PRODUCTION_ once a day
             fprintf(stderr, "DONE PLANA");
 	}
 
