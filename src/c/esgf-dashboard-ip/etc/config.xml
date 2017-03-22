@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <configuration>
-	<node ipNodeAddress = "<rest apis fqdn>" port="<port>" datanode="<fqdn>">
+	<node ipNodeAddress = "<restapis fqdn>" port="<port>" datanode="<fqdn>">
 		<datamart name = "cross_dmart_project_host_time" path="cross-project/stats-by-time" timestamp = "0"/>
 		<datamart name = "cross_dmart_project_host_geolocation" path="cross-project/stats-by-space" timestamp = "0"/>
 		<datamart name = "obs4mips_dmart_variable_host_time" path="obs4mips/stats-by-variable" timestamp = "0"/>
