@@ -25,17 +25,17 @@ drop table if exists esgf_dashboard.dashboard_queue;
 --
 
 CREATE TABLE dashboard_queue (
-    id integer NOT NULL,                                                    -- id univoco della tupla
-    url_path character varying NOT NULL,                                      -- path del file scaricato
-    remote_addr character varying NOT NULL,                                   -- ip dell'utente
-    user_id_hash character varying,                                           -- hash dell'utente
-    user_idp character varying,                                               -- identity provider dell'utente
-    service_type character varying,                                           -- tipo di servizio da cui è effettuato il download (i.e. thredds)
-    success boolean,                                                          -- esito dell'operazione di download
-    duration double precision,                                                -- durata dell'operazione
-    size bigint DEFAULT (-1),                                                 -- dimensioni del file
-    "timestamp" double precision NOT NULL,                                    -- timestamp
-    processed smallint DEFAULT 0 NOT NULL                                     -- preso in carico dalla dashboard
+    id integer NOT NULL,                                -- unique id                              
+    url_path character varying NOT NULL,                -- path of the downloaded file
+    remote_addr character varying NOT NULL,             -- user ip address
+    user_id_hash character varying,                     -- hash code of the user id
+    user_idp character varying,                         -- user identity provider
+    service_type character varying,                     -- download service type
+    success boolean,                                    -- outcome of the download operation
+    duration double precision,                          -- duration of the download operation
+    size bigint DEFAULT (-1),                           -- file dimensions
+    "timestamp" double precision NOT NULL,              -- download time instant
+    processed smallint DEFAULT 0 NOT NULL               -- dashboard flag
 );
 
 --
@@ -85,6 +85,8 @@ drop LANGUAGE if exists plpgsql;
 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging;
 
+update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1491004800;
+
 --
 -- Function to update the urls in the dashboard_queue table
 --
@@ -110,11 +112,19 @@ $store_new_entry$
 declare
 BEGIN
 -- Update dashboard_queue table
+if NEW.date_fetched>=1491004800 then 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
 user_id_hash, user_idp, service_type, success, duration, size,
 timestamp)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,
 NEW.user_idp, NEW.service_type, NEW.success, NEW.duration,
 NEW.data_size, NEW.date_fetched);
+else
+insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
+user_id_hash, user_idp, service_type, success, duration, size,
+timestamp,processed)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,
+NEW.user_idp, NEW.service_type, NEW.success, NEW.duration,
+NEW.data_size, NEW.date_fetched,1);
+end if;
 RETURN NEW;
 END
 $store_new_entry$ LANGUAGE plpgsql;
