@@ -1092,7 +1092,64 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                          fields[0]=strdup(str_tmp);
                       }
 #endif
-                      sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
+                 char str_tmp[2048]={'\0'};
+                 if(strcmp(tableName, "all_data_usage")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year, host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "all_data_usage_continent")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year, continent, host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "obs4mips_data_usage")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "obs4mips_data_usage_continent")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,continent,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "cmip5_data_usage")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "cmip5_data_usage_continent")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,continent,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "cordex_data_usage")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 if(strcmp(tableName, "cordex_data_usage_continent")==0)
+                 {
+                   free(fields[0]);
+                   fields[0]=NULL;
+                   sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,continent,host");
+                   fields[0]=strdup(str_tmp);
+                 }
+                 sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
                       //printf("query vale %s\n", query);
                               res3 = PQexec(conn2, query);
                             if ((!res3) || (PQresultStatus (res3) != PGRES_COMMAND_OK))
