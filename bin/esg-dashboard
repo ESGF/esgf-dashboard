@@ -141,6 +141,9 @@ init() {
 
     write_as_property dashboard_service_app_home ${dashboard_app_home}
     write_as_property dashboard_ip_app_home ${esgf_dashboard_ip_install_dir}
+    mkdir -p /esg/config/dashboard
+    write_as_property registration_xml.download_url "http://${esgf_host}/esgf-nm/registration_xml"
+    write_as_property registration_xml.path /esg/config/dashboard
 
 }
 
@@ -608,8 +611,12 @@ setup_dashboard_database() {
     (( $? > 1 )) && return 0
 
     #install the egg....
+
+    source ${cdat_home}/bin/activate esgf-pub
     ((DEBUG)) && "$cdat_home/bin/easy_install ${esgf_dashboard_egg_file}"
     $cdat_home/bin/easy_install ${esgf_dashboard_egg_file}
+
+
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard python module" && checked_done 1
 
     #run the code to build the database and install sql migration...
@@ -617,6 +624,7 @@ setup_dashboard_database() {
     $cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard database tables in ${node_db_name}" && checked_done 1
     
+    source deactivate
     write_dashboard_db_install_log
     echo
     
