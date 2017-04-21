@@ -25,7 +25,8 @@ drop table if exists esgf_dashboard.dashboard_queue;
 --
 
 CREATE TABLE dashboard_queue (
-    id integer NOT NULL,                                -- unique id                              
+    id_dash bigserial PRIMARY KEY,                      -- unique id
+    id integer NOT NULL,                                -- access_logging table id                       
     url_path character varying NOT NULL,                -- path of the downloaded file
     remote_addr character varying NOT NULL,             -- user ip address
     user_id_hash character varying,                     -- hash code of the user id
@@ -37,36 +38,6 @@ CREATE TABLE dashboard_queue (
     "timestamp" double precision NOT NULL,              -- download time instant
     processed smallint DEFAULT 0 NOT NULL               -- dashboard flag
 );
-
---
--- Name: dashboard_queue_id_seq; Type: SEQUENCE; Schema: esgf_dashboard; Owner: dbsuper;
---
-
-CREATE SEQUENCE dashboard_queue_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
---
--- Name: dashboard_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: esgf_dashboard; Owner: dbsuper;
---
-
-ALTER SEQUENCE dashboard_queue_id_seq OWNED BY dashboard_queue.id;
-
---
--- Name: id; Type: DEFAULT; Schema: esgf_dashboard; Owner: dbsuper;
---
-
-ALTER TABLE dashboard_queue ALTER COLUMN id SET DEFAULT nextval('dashboard_queue_id_seq'::regclass);
-
---
--- Name: dashboard_queue_pkey; Type: CONSTRAINT; Schema: esgf_dashboard; Owner: dbsuper; Tablespace:
---
-
-ALTER TABLE ONLY dashboard_queue ADD CONSTRAINT dashboard_queue_pkey PRIMARY KEY (id);
-
 
 ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;
 --
@@ -85,7 +56,7 @@ drop LANGUAGE if exists plpgsql;
 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging;
 
-update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1488326400;
+update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1491004800;
 
 --
 -- Function to update the urls in the dashboard_queue table
@@ -98,7 +69,9 @@ i alias for $1;
 j integer:=28+i;
 begin
 UPDATE esgf_dashboard.dashboard_queue SET url_path = substr(url_path,
-j) where url_path like ''http%'';
+j) where url_path like ''http://%'';
+UPDATE esgf_dashboard.dashboard_queue SET url_path = substr(url_path,
+j+1) where url_path like ''https://%'';
 return 0;
 end;
 'language 'plpgsql';
@@ -112,7 +85,7 @@ $store_new_entry$
 declare
 BEGIN
 -- Update dashboard_queue table
-if NEW.date_fetched>=1488326400 then 
+if NEW.date_fetched>=1491004800 then 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
 user_id_hash, user_idp, service_type, success, duration, size,
 timestamp)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,
