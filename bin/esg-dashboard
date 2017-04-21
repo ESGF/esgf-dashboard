@@ -141,9 +141,65 @@ init() {
 
     write_as_property dashboard_service_app_home ${dashboard_app_home}
     write_as_property dashboard_ip_app_home ${esgf_dashboard_ip_install_dir}
+    mkdir -p /esg/config/dashboard
+    write_as_property registration_xml.download_url "http://${esgf_host}/esgf-nm/registration_xml"
+    write_as_property registration_xml.path /esg/config/dashboard
+
+    setup_esgf_stats_api
 
 }
 
+setup_esgf_stats_api(){
+    ############################
+    #Download the esgf-stats-api.war file home site (or use value of esgf_stats_api_dist_file if already set)
+    ############################
+
+    esgf_stats_api_dist_file=${esgf_stats_api_file:-${esgf_stats_api_dist_url##*/}}
+
+    #There is this pesky case of having a zero sized dist file...
+    if [ -e ${esgf_stats_api_dist_file} ]; then
+        ls -l ${esgf_stats_api_dist_file}
+        local size=$(stat -c%s ${esgf_stats_api_dist_file} >& /dev/null)
+        (( size == 0 )) && rm -v ${esgf_stats_api_dist_file}
+    fi
+
+    checked_get ${esgf_stats_api_dist_file} ${esgf_stats_api_dist_url} $((force_install))
+    (( $? > 1 )) && echo " ERROR: Could not download ${esgf_stats_api_dist_url} either" && popd && checked_done 1
+
+    stop_tomcat
+
+    #-------------------------------------------
+    #installing the esgf-stats-api web app ("manually") //zoiks
+    echo "Installing esgf-stats-api app..."
+    mkdir -p ${tomcat_install_dir}/webapps
+    pwd
+    cp -v $(readlink -f ${esgf_stats_api_dist_file}) ${tomcat_install_dir}/webapps/
+    pushd ${tomcat_install_dir}/webapps
+    [ $? != 0 ] && echo " Error: could not go to ${tomcat_install_dir}/webapps directory be sure tomcat is installed!" && checked_done 1
+
+    mkdir -p esgf-stats-api
+    cd esgf-stats-api
+
+    #move the current web.xml file out of the way
+    local webapp_config_file=${tomcat_install_dir}/webapps/esgf-stats-api/WEB-INF/web.xml
+    if ((upgrade)) && [ -e ${webapp_config_file} ]; then
+        cp -v ${webapp_config_file} ${webapp_config_file}.saved
+    fi
+
+    jar xf ../${esgf_stats_api_dist_file}
+    cd ..
+    chown -R ${tomcat_user}  esgf_stats_api*
+    chgrp -R ${tomcat_group} esgf_stats_api*
+    rm ${esgf_stats_api_dist_file}
+
+    if ((upgrade)) ; then
+        local version_property="Implementation-Version"
+        local current_version=$(sed -n '/^'${version_property}':[ ]*\(.*\)/p' ${tomcat_install_dir}/webapps/esgf_stats_api/META-INF/MANIFEST.MF | awk '{print $2}' | xargs 2> /dev/null)
+        cp -v ${webapp_config_file}.saved ${webapp_config_file} && echo "esgf_stats_api upgraded to ${current_version} $([OK])" && popd >& /dev/null && return 0
+    fi
+    popd >& /dev/null
+    #-------------------------------------------
+}
 
 #####
 # Install The ESGF Dashboard Services
@@ -608,8 +664,12 @@ setup_dashboard_database() {
     (( $? > 1 )) && return 0
 
     #install the egg....
+
+    source ${cdat_home}/bin/activate esgf-pub
     ((DEBUG)) && "$cdat_home/bin/easy_install ${esgf_dashboard_egg_file}"
     $cdat_home/bin/easy_install ${esgf_dashboard_egg_file}
+
+
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard python module" && checked_done 1
 
     #run the code to build the database and install sql migration...
@@ -617,6 +677,7 @@ setup_dashboard_database() {
     $cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard database tables in ${node_db_name}" && checked_done 1
     
+    source deactivate
     write_dashboard_db_install_log
     echo
     
