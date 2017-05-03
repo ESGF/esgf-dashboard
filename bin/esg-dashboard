@@ -83,7 +83,7 @@ force_install=${force_install:-0}
 tomcat_user=${tomcat_user:-tomcat}
 tomcat_group=${tomcat_group:-$tomcat_user}
 tomcat_install_dir=${CATALINA_HOME:-${install_prefix}/tomcat}
-python_version=${python_version:-"2.6"}
+python_version=${python_version:-"2.7}
 config_file=${esg_root_dir}/config/esgf.properties
 
 esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
@@ -107,8 +107,8 @@ init() {
     dashboard_app_context_root=esgf-dashboard
     dashboard_app_home=${tomcat_install_dir}/webapps/${dashboard_app_context_root}
 
-    esgf_dashboard_version=${esgf_dashboard_version:-"0.0.9"}
-    esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.0.1"}
+    esgf_dashboard_version=${esgf_dashboard_version:-"1.5"}
+    esgf_dashboard_db_version=${esgf_dashboard_db_version:-"0.0.2"}
     esgf_dashboard_egg_file=esgf_dashboard-${esgf_dashboard_db_version}-py${python_version}.egg
     
     #Database information....
@@ -123,7 +123,7 @@ init() {
     postgress_install_dir=${PGHOME:-${install_prefix}/pgsql}
 
     #Dashboard Information Provider...
-    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"0.0.9"}}
+    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"1.5}}
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
 
