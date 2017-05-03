@@ -270,8 +270,8 @@ void * data_federA(void *arg)
          }
          closedir(dir);
          res=compute_federation();
-	 //sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
-	 sleep(1800); // PRODUCTION_ once a day
+	 sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+	 //sleep(1800); // PRODUCTION_ once a day
 	 //sleep(120);
      }
      return NULL;
@@ -358,7 +358,6 @@ void * data_planA(void *arg)
                  break;
 	       }
 	    }
-            	
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
             fprintf(stderr, "DONE PLANA");
 	}
