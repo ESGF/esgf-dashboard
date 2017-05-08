@@ -83,7 +83,7 @@ force_install=${force_install:-0}
 tomcat_user=${tomcat_user:-tomcat}
 tomcat_group=${tomcat_group:-$tomcat_user}
 tomcat_install_dir=${CATALINA_HOME:-${install_prefix}/tomcat}
-python_version=${python_version:-"2.7}
+python_version=${python_version:-"2.7"}
 config_file=${esg_root_dir}/config/esgf.properties
 
 esgf_dashboard_ip_install_dir=${install_prefix}/esgf-dashboard-ip
