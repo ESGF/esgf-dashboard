@@ -123,7 +123,7 @@ init() {
     postgress_install_dir=${PGHOME:-${install_prefix}/pgsql}
 
     #Dashboard Information Provider...
-    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"1.5}}
+    esgf_dashboard_ip_version=${esgf_dashboard_ip_version:-${esgf_dashboard_version:-"1.5"}}
     esgf_dashboard_ip_dist_url=${esg_dist_url}/esgf-dashboard/esgf-dashboard-ip-${esgf_dashboard_ip_version}.tar.gz
     esgf_dashboard_ip_workdir=${esgf_dashboard_ip_workdir:-${workdir}/esgf-dashboard-ip}
 
