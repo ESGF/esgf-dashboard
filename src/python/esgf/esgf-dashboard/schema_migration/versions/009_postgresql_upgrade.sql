@@ -1,13 +1,22 @@
-DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_fact_download CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dim_date CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dim_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_bridge_project CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dim_project CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host_geolocation CASCADE;
- 
- 
+DROP TABLE IF EXISTS esgf_dashboard.aggregation_process CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.aggregation_process_planb CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cpu_metrics CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.federationdw CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.federationdw_planb CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.hasfeed CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.host CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.join1 CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.memory_metrics CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.news CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.project_dash CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.reconciliation_process CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.rssfeed CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.service_instance CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.service_status CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.user1 CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.uses CASCADE;
+
+
 CREATE TABLE esgf_dashboard.cross_dim_date (
     date_key serial PRIMARY KEY,
     download_date date,
@@ -93,29 +102,6 @@ ALTER TABLE esgf_dashboard.cross_dmart_project_host_geolocation OWNER TO dbsuper
 ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude);
 
 /* DIMENSION TABLES */
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_date CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_dataset CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_file CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_institute CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_institute CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_variable CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_variable CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_time_frequency CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_time_frequency CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_processing_level CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_processing_level CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_source_id CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_source_id CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_realm CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_realm CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_fact_download CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_time_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_variable_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_source_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_realm_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_dataset_host_time CASCADE;
- 
  
 CREATE TABLE esgf_dashboard.obs4mips_dim_geolocation (
     geolocation_key bigserial PRIMARY KEY,
@@ -331,28 +317,6 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time (
 ALTER TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time OWNER TO dbsuper;
 ALTER table esgf_dashboard.obs4mips_dmart_dataset_host_time add constraint obs4mips_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop); 
 /* DIMENSION TABLES */
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_date CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_dataset CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_time_frequency CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_time_frequency CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_variable CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_variable CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_experiment CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_experiment CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_model CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_model CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_realm CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_realm CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_institute CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_institute CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_fact_download CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_time_geolocation CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_model_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_experiment_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_variable_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_dataset_host_time CASCADE;
- 
  
 CREATE TABLE esgf_dashboard.cmip5_dim_geolocation (
     geolocation_key bigserial PRIMARY KEY,
@@ -567,7 +531,6 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_dataset_host_time (
 ALTER TABLE esgf_dashboard.cmip5_dmart_dataset_host_time OWNER TO dbsuper;
 ALTER table esgf_dashboard.cmip5_dmart_dataset_host_time add constraint cmip5_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop);
 
-DROP TABLE IF EXISTS esgf_dashboard.registry;
 CREATE TABLE esgf_dashboard.registry (
   datmart character varying(128) PRIMARY KEY,
   dmart_key integer default 0,
