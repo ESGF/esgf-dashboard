@@ -16,11 +16,6 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Drop the dashboard_queue table
---
-
-drop table if exists esgf_dashboard.dashboard_queue;
---
 -- Name: dashboard_queue; Type: TABLE; Schema: esgf_dashboard; Owner: dbsuper; Tablespace:
 --
 
@@ -41,41 +36,9 @@ CREATE TABLE dashboard_queue (
 
 ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;
 --
--- Drop the functions used for updating the dashboard_queue;
---
-drop function if exists store_dashboard_queue() CASCADE;
-drop function if exists update_dashboard_queue() CASCADE;
-drop function if exists delete_dashboard_queue() CASCADE;
-drop function if exists update_url();
-drop function if exists update_url(integer);
-drop LANGUAGE if exists plpgsql;
-
---
---Copy the rows of the access_logging table into the dashboard_queue table
---
-
-insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,user_id_hash, user_idp, service_type, success, duration, size, timestamp) select id, url, remote_addr, user_id_hash, user_idp, service_type, success, duration, data_size, date_fetched from esgf_node_manager.access_logging;
-
-update esgf_dashboard.dashboard_queue set processed=1 where timestamp<1491004800;
-
---
 -- Function to update the urls in the dashboard_queue table
 --
 CREATE LANGUAGE plpgsql;
-create function update_url(integer)
-returns integer as'
-declare
-i alias for $1;
-j integer:=28+i;
-begin
-UPDATE esgf_dashboard.dashboard_queue SET url_path = substr(url_path,
-j) where url_path like ''http://%'';
-UPDATE esgf_dashboard.dashboard_queue SET url_path = substr(url_path,
-j+1) where url_path like ''https://%'';
-return 0;
-end;
-'language 'plpgsql';
-
 --
 -- Insert into the dashboard_queue_table a new row stored in the access_logging table
 --
@@ -85,19 +48,11 @@ $store_new_entry$
 declare
 BEGIN
 -- Update dashboard_queue table
-if NEW.date_fetched>=1491004800 then 
 insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
 user_id_hash, user_idp, service_type, success, duration, size,
 timestamp)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,
 NEW.user_idp, NEW.service_type, NEW.success, NEW.duration,
 NEW.data_size, NEW.date_fetched);
-else
-insert into esgf_dashboard.dashboard_queue(id, url_path, remote_addr,
-user_id_hash, user_idp, service_type, success, duration, size,
-timestamp,processed)values(NEW.id, NEW.url, NEW.remote_addr, NEW.user_id_hash,
-NEW.user_idp, NEW.service_type, NEW.success, NEW.duration,
-NEW.data_size, NEW.date_fetched,1);
-end if;
 RETURN NEW;
 END
 $store_new_entry$ LANGUAGE plpgsql;

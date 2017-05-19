@@ -10,12 +10,13 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-DROP TABLE IF EXISTS esgf_dashboard.country CASCADE; 
-DROP TABLE IF EXISTS esgf_dashboard.countries CASCADE; 
+DROP TABLE IF EXISTS esgf_dashboard.country CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.countries CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.continent CASCADE;
+
 -- ----------------------------
 -- Table structure for `continent`
 -- ----------------------------
-DROP TABLE IF EXISTS esgf_dashboard.continent;
 CREATE TABLE esgf_dashboard.continent (
   continent_code character(2) PRIMARY KEY,
   continent_name character varying(255) DEFAULT NULL
@@ -35,7 +36,6 @@ INSERT INTO esgf_dashboard.continent VALUES ('SA', 'South America');
 -- ----------------------------
 -- Table structure for `country`
 -- ----------------------------
-DROP TABLE IF EXISTS esgf_dashboard.country;
 CREATE TABLE esgf_dashboard.country (
   country_id serial PRIMARY KEY,
   country_code character(2) NOT NULL,
