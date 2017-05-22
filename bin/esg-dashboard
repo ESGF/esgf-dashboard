@@ -666,15 +666,14 @@ setup_dashboard_database() {
     #install the egg....
 
     source ${cdat_home}/bin/activate esgf-pub
-    ((DEBUG)) && "$cdat_home/bin/easy_install ${esgf_dashboard_egg_file}"
-    $cdat_home/bin/easy_install ${esgf_dashboard_egg_file}
+    easy_install ${esgf_dashboard_egg_file}
 
 
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard python module" && checked_done 1
 
     #run the code to build the database and install sql migration...
-    ((DEBUG)) && echo "$cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c"
-    $cdat_home/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c
+    ((DEBUG)) && echo "esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c"
+    esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@${postgress_host}:${postgress_port}/${node_db_name} -c
     [ $? != 0 ] && echo "ERROR: Could not create esgf dashboard database tables in ${node_db_name}" && checked_done 1
     
     source deactivate
