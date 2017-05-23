@@ -249,7 +249,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation (
   longitude numeric(14,11),
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.obs4mips_dmart_clients_time_geolocation OWNER TO dbsuper;
+
 ALTER table esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation add constraint obs4mips_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
@@ -458,7 +458,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
   longitude numeric(14,11),
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.cmip5_dmart_clients_time_geolocation OWNER TO dbsuper;
+
 ALTER table esgf_dashboard.cmip5_dmart_clients_host_time_geolocation add constraint cmip5_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude,host_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (

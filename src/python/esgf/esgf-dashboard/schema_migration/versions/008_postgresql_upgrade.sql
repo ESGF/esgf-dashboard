@@ -35,10 +35,12 @@ CREATE TABLE dashboard_queue (
 );
 
 ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;
+
 --
 -- Function to update the urls in the dashboard_queue table
 --
 CREATE LANGUAGE plpgsql;
+
 --
 -- Insert into the dashboard_queue_table a new row stored in the access_logging table
 --
@@ -69,7 +71,7 @@ url_http:=url_path from esgf_dashboard.dashboard_queue WHERE id = OLD.id;
 if strpos(url_http,'http')<>0 then
 update esgf_dashboard.dashboard_queue set url_path=subquery.url_res
 FROM (select file.url as url_res from public.file_version as file,
-esgf_dashboard.dashboard_queue as log where log.url_path like '%'||file.url
+esgf_dashboard.dashboard_queue as log where log.url_path like '%%'||file.url
 and log.url_path=url_http) as subquery where url_path=url_http and id=OLD.id;
 end if;
 RETURN NEW;
@@ -98,3 +100,5 @@ CREATE TRIGGER store_delete_entry
 AFTER DELETE ON
 esgf_node_manager.access_logging
 FOR EACH ROW EXECUTE PROCEDURE delete_dashboard_queue();
+
+SET search_path = public, pg_catalog;

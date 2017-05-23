@@ -71,7 +71,7 @@ url_http:=url_path from esgf_dashboard.dashboard_queue WHERE id = OLD.id;
 if strpos(url_http,'http')<>0 then
 update esgf_dashboard.dashboard_queue set url_path=subquery.url_res
 FROM (select file.url as url_res from public.file_version as file,
-esgf_dashboard.dashboard_queue as log where log.url_path like '%'||file.url
+esgf_dashboard.dashboard_queue as log where log.url_path like '%%'||file.url
 and log.url_path=url_http) as subquery where url_path=url_http and id=OLD.id;
 end if;
 RETURN NEW;
@@ -100,3 +100,5 @@ CREATE TRIGGER store_delete_entry
 AFTER DELETE ON
 esgf_node_manager.access_logging
 FOR EACH ROW EXECUTE PROCEDURE delete_dashboard_queue();
+
+SET search_path = public, pg_catalog;
