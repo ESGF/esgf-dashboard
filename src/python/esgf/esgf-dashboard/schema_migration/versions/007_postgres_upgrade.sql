@@ -11,7 +11,6 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 DROP TABLE IF EXISTS esgf_dashboard.country CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.countries CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.continent CASCADE;
 
 -- ----------------------------
