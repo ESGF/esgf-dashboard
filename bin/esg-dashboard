@@ -142,8 +142,8 @@ init() {
     write_as_property dashboard_service_app_home ${dashboard_app_home}
     write_as_property dashboard_ip_app_home ${esgf_dashboard_ip_install_dir}
     mkdir -p /esg/config/dashboard
-    write_as_property registration_xml.download_url "http://${esgf_host}/esgf-nm/registration_xml"
-    write_as_property registration_xml.path /esg/config/dashboard
+    write_as_property 'esgf.registration_xml.download_url' "http://${esgf_host}/esgf-nm/registration_xml"
+    write_as_property 'esgf.registration_xml.path' /esg/config/dashboard
 
     setup_esgf_stats_api
 
