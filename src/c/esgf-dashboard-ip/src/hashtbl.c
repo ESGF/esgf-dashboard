@@ -95,7 +95,7 @@ int hashtbl_insert(HASHTBL *hashtbl, const char *key, void *data)
 	hash_size hash=hashtbl->hashfunc(key)%hashtbl->size;
 
 
-/*	fprintf(stderr, "hashtbl_insert() key=%s, hash=%d, data=%s\n", key, hash, (char*)data);*/
+       /*fprintf(stderr, "hashtbl_insert() key=%s, hash=%d, data=%s\n", key, hash, (char*)data);*/
 
 	node=hashtbl->nodes[hash];
 	while(node) {
@@ -160,7 +160,7 @@ void *hashtbl_get(HASHTBL *hashtbl, const char *key)
 	struct hashnode_s *node;
 	hash_size hash=hashtbl->hashfunc(key)%hashtbl->size;
 
-/*	fprintf(stderr, "hashtbl_get() key=%s, hash=%d\n", key, hash);*/
+	/*fprintf(stderr, "hashtbl_get() key=%s, hash=%d\n", key, hash);*/
 
 	node=hashtbl->nodes[hash];
 	while(node) {

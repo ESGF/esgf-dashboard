@@ -543,8 +543,8 @@ main (int argc, char **argv)
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[db.host], [db.database], [db.port], [db.user]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.host]\n");
 	  //pmesg(LOG_ERROR,__FILE__,__LINE__,"[node.manager.service.app.home]\n");
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.path]\n");
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.download_url]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration.xml.path]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration.xml.download.url]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[dashboard.ip.app.home]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please check!!!\n");
 	  myfree (esgf_properties);
@@ -972,7 +972,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "esgf.registration_xml.path")))
+	  if (!(strcmp (buffer, "esgf.registration.xml.path")))
 	    {
 	      strcpy (REGISTRATION_XML_PATH =
 		      (char *) malloc (strlen (value_buffer) + 1),
@@ -980,7 +980,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "esgf.registration_xml.download_url")))
+	  if (!(strcmp (buffer, "esgf.registration.xml.download.url")))
 	    {
 	      strcpy (REGISTRATION_XML_URL =
 		      (char *) malloc (strlen (value_buffer) + 1),

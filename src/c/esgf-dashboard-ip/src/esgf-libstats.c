@@ -1184,6 +1184,7 @@ int get_download_shards(char *path_xml, char *file_dest)
   int right_url;
 
   sprintf(buffer1, "http://%s/esg-search/search/?type=File&latest=true&distrib=true&format=application%ssolr%sxml", ESGF_NODE_SOLR,"%%2F","%2B");
+  printf("url shards ******************%s\n", buffer1);
   snprintf (url_action, sizeof (url_action),buffer1);
   //printf("url action vale %s\n", url_action);
   sprintf (tmp_file, "%s/%s", path_xml, "shards_tmp.xml");

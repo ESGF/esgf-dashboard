@@ -87,10 +87,11 @@ CREATE TABLE esgf_dashboard.cross_dmart_project_host_geolocation (
    host_name character varying(64),
    project_name character varying(64),
    latitude numeric(14,11),
-   longitude numeric(14,11)
+   longitude numeric(14,11),
+   country_id integer
 );
 ALTER TABLE esgf_dashboard.cross_dmart_project_host_geolocation OWNER TO dbsuper;
-ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude);
+ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude, country_id);
 
 /* DIMENSION TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_geolocation CASCADE;
@@ -110,7 +111,7 @@ DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_source_id CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dim_realm CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_bridge_realm CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_fact_download CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_time_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_host_geolocation CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_variable_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_source_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_realm_host_time CASCADE;
@@ -135,7 +136,7 @@ ALTER TABLE esgf_dashboard.obs4mips_dim_date OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.obs4mips_dim_dataset (
     dataset_key bigserial PRIMARY KEY,
-    dataset_name character varying(64),
+    dataset_name character varying(128),
     dataset_version smallint,
     datetime_start character varying(64),
     datetime_stop character varying(64)
@@ -144,7 +145,7 @@ ALTER TABLE esgf_dashboard.obs4mips_dim_dataset OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.obs4mips_dim_file (
     file_key bigserial PRIMARY KEY,
-    file_name character varying(64),
+    file_name character varying(128),
     file_size bigint
 );
 ALTER TABLE esgf_dashboard.obs4mips_dim_file OWNER TO dbsuper;
@@ -164,7 +165,7 @@ ALTER TABLE esgf_dashboard.obs4mips_bridge_institute OWNER TO dbsuper;
 CREATE TABLE esgf_dashboard.obs4mips_dim_variable (
     variable_key serial PRIMARY KEY,
     variable_code character varying(64),
-    variable_long_name character varying(64),
+    variable_long_name character varying(128),
     cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dim_variable OWNER TO dbsuper;
@@ -250,21 +251,20 @@ CREATE TABLE esgf_dashboard.obs4mips_fact_download (
 ALTER TABLE esgf_dashboard.obs4mips_fact_download OWNER TO dbsuper;
  
 /* DATA MARTS */
-CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation (
+CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_geolocation (
   dmart_key bigserial PRIMARY KEY,
   total_size bigint,
   number_of_downloads bigint,
   number_of_successful_downloads bigint,
   average_duration integer,
   number_of_users integer,
-  month smallint,
-  year smallint,
   latitude numeric(14,11),
   longitude numeric(14,11),
+  country_id integer,
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.obs4mips_dmart_clients_time_geolocation OWNER TO dbsuper;
-ALTER table esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation add constraint obs4mips_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name);
+ALTER TABLE esgf_dashboard.obs4mips_dmart_clients_host_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.obs4mips_dmart_clients_host_geolocation add constraint obs4mips_dmart_clients_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, latitude, longitude, country_id, host_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -277,7 +277,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   year smallint,
   host_name character varying(64),
   variable_code character varying(64),
-  variable_long_name character varying(64),
+  variable_long_name character varying(128),
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_variable_host_time OWNER TO dbsuper;
@@ -323,7 +323,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time (
   month smallint,
   year smallint,
   host_name character varying(64),
-  dataset_name character varying(64),
+  dataset_name character varying(128),
   dataset_version smallint,
   datetime_start character varying(64),
   datetime_stop character varying(64)
@@ -347,7 +347,7 @@ DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_realm CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_institute CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_bridge_institute CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_fact_download CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_time_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_host_geolocation CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_model_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_experiment_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_variable_host_time CASCADE;
@@ -372,7 +372,7 @@ ALTER TABLE esgf_dashboard.cmip5_dim_date OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.cmip5_dim_dataset (
     dataset_key bigserial PRIMARY KEY,
-    dataset_name character varying(64),
+    dataset_name character varying(128),
     dataset_version smallint,
     datetime_start character varying(64),
     datetime_stop character varying(64)
@@ -394,7 +394,7 @@ ALTER TABLE esgf_dashboard.cmip5_bridge_time_frequency OWNER TO dbsuper;
 CREATE TABLE esgf_dashboard.cmip5_dim_variable (
     variable_key serial PRIMARY KEY,
     variable_code character varying(64),
-    variable_long_name character varying(64),
+    variable_long_name character varying(128),
     cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dim_variable OWNER TO dbsuper;
@@ -480,7 +480,7 @@ CREATE TABLE esgf_dashboard.cmip5_fact_download (
 ALTER TABLE esgf_dashboard.cmip5_fact_download OWNER TO dbsuper;
  
 /* DATA MARTS */
-CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
+CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_geolocation (
   dmart_key bigserial PRIMARY KEY,
   total_size bigint,
   number_of_downloads bigint,
@@ -488,14 +488,13 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
   average_duration integer,
   number_of_users integer,
   number_of_replica_downloads bigint,
-  month smallint,
-  year smallint,
   latitude numeric(14,11),
   longitude numeric(14,11),
+  country_id integer,
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.cmip5_dmart_clients_time_geolocation OWNER TO dbsuper;
-ALTER table esgf_dashboard.cmip5_dmart_clients_host_time_geolocation add constraint cmip5_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude,host_name);
+ALTER TABLE esgf_dashboard.cmip5_dmart_clients_host_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.cmip5_dmart_clients_host_geolocation add constraint cmip5_dmart_clients_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, latitude, longitude, country_id, host_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -542,7 +541,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_variable_host_time (
   year smallint,
   host_name character varying(64),
   variable_code character varying(64),
-  variable_long_name character varying(64),
+  variable_long_name character varying(128),
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_variable_host_time OWNER TO dbsuper;
@@ -559,13 +558,233 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_dataset_host_time (
   month smallint,
   year smallint,
   host_name character varying(64),
-  dataset_name character varying(64),
+  dataset_name character varying(128),
   dataset_version smallint,
   datetime_start character varying(64),
   datetime_stop character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_dataset_host_time OWNER TO dbsuper;
 ALTER table esgf_dashboard.cmip5_dmart_dataset_host_time add constraint cmip5_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop);
+
+/* CORDEX DROP INSTRUCTIONS */
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_date CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_dataset CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_time_frequency CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_bridge_time_frequency CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_variable CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_bridge_variable CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_experiment CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_bridge_experiment CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_model CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_bridge_model CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dim_institute CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_bridge_institute CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_fact_download CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dmart_clients_host_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dmart_model_host_time CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dmart_experiment_host_time CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dmart_variable_host_time CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cordex_dmart_dataset_host_time CASCADE;
+ 
+/* CORDEX DIMENSION TABLES */
+CREATE TABLE esgf_dashboard.cordex_dim_geolocation (
+   geolocation_key bigserial PRIMARY KEY,
+   latitude numeric(14,11),
+   longitude numeric(14,11),
+   country_id integer NOT NULL REFERENCES esgf_dashboard.country
+);
+ALTER TABLE esgf_dashboard.cordex_dim_geolocation OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_date (
+   date_key serial PRIMARY KEY,
+   download_date date,
+   month smallint,
+   year smallint
+);
+ALTER TABLE esgf_dashboard.cordex_dim_date OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_dataset (
+   dataset_key bigserial PRIMARY KEY,
+   dataset_name character varying(128),
+   dataset_version smallint,
+   datetime_start character varying(64),
+   datetime_stop character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_dataset OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_time_frequency (
+   time_frequency_key serial PRIMARY KEY,
+   time_frequency_value character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_time_frequency OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_bridge_time_frequency (
+   time_frequency_key integer NOT NULL REFERENCES esgf_dashboard.cordex_dim_time_frequency,
+   time_frequency_group_key integer NOT NULL
+);
+ALTER TABLE esgf_dashboard.cordex_bridge_time_frequency OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_variable (
+   variable_key serial PRIMARY KEY,
+   variable_code character varying(64),
+   variable_long_name character varying(128),
+   cf_standard_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_variable OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_bridge_variable (
+   variable_key integer NOT NULL REFERENCES esgf_dashboard.cordex_dim_variable,
+   variable_group_key integer NOT NULL
+);
+ALTER TABLE esgf_dashboard.cordex_bridge_variable OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_experiment (
+   experiment_key serial PRIMARY KEY,
+   experiment_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_experiment OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_bridge_experiment (
+   experiment_key integer NOT NULL REFERENCES esgf_dashboard.cordex_dim_experiment,
+   experiment_group_key smallint NOT NULL
+);
+ALTER TABLE esgf_dashboard.cordex_bridge_experiment OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_dim_model (
+   model_key serial PRIMARY KEY,
+   model_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_model OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_bridge_model (
+   model_key integer NOT NULL REFERENCES esgf_dashboard.cordex_dim_model,
+   model_group_key smallint NOT NULL
+);
+ALTER TABLE esgf_dashboard.cordex_bridge_model OWNER TO dbsuper;
+
+CREATE TABLE esgf_dashboard.cordex_dim_institute (
+   institute_key serial PRIMARY KEY,
+   institute_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dim_institute OWNER TO dbsuper;
+ 
+CREATE TABLE esgf_dashboard.cordex_bridge_institute (
+   institute_key integer NOT NULL REFERENCES esgf_dashboard.cordex_dim_institute,
+   institute_group_key smallint NOT NULL
+);
+ALTER TABLE esgf_dashboard.cordex_bridge_institute OWNER TO dbsuper;
+ 
+/* CORDEX FACT TABLE */
+CREATE TABLE esgf_dashboard.cordex_fact_download (
+   download_key bigserial PRIMARY KEY,
+   size bigint,
+   success boolean,
+   duration integer,
+   replica boolean,
+   host_name character varying,
+   hour smallint,
+   minute smallint,
+   user_id_hash character varying,
+   user_idp character varying,
+   date_key integer REFERENCES esgf_dashboard.cordex_dim_date,
+   geolocation_key bigint REFERENCES esgf_dashboard.cordex_dim_geolocation,
+   dataset_key bigint REFERENCES esgf_dashboard.cordex_dim_dataset,
+   time_frequency_group_key integer,
+   variable_group_key integer,
+   experiment_group_key integer,
+   model_group_key integer,
+   institute_group_key integer,
+   id_query integer
+);
+ALTER TABLE esgf_dashboard.cordex_fact_download OWNER TO dbsuper;
+ 
+/* CORDEX DATA MARTS */
+CREATE TABLE esgf_dashboard.cordex_dmart_clients_host_geolocation (
+   dmart_key bigserial PRIMARY KEY,
+   total_size bigint,
+   number_of_downloads bigint,
+   number_of_successful_downloads bigint,
+   average_duration integer,
+   number_of_users integer,
+   number_of_replica_downloads bigint,
+   latitude numeric(14,11),
+   longitude numeric(14,11),
+   country_id integer,
+   host_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dmart_clients_host_geolocation OWNER TO dbsuper;
+ALTER table esgf_dashboard.cordex_dmart_clients_host_geolocation add constraint cordex_dmart_clients_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, latitude, longitude, country_id, host_name);
+ 
+CREATE TABLE esgf_dashboard.cordex_dmart_model_host_time (
+   dmart_key bigserial PRIMARY KEY,
+   total_size bigint,
+   number_of_downloads bigint,
+   number_of_successful_downloads bigint,
+   average_duration integer,
+   number_of_users integer,
+   number_of_replica_downloads bigint,
+   month smallint,
+   year smallint,
+   host_name character varying(64),
+   model_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dmart_model_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cordex_dmart_model_host_time add constraint cordex_dmart_model_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, model_name);
+
+ 
+CREATE TABLE esgf_dashboard.cordex_dmart_experiment_host_time (
+   dmart_key bigserial PRIMARY KEY,
+   total_size bigint,
+   number_of_downloads bigint,
+   number_of_successful_downloads bigint,
+   average_duration integer,
+   number_of_users integer,
+   number_of_replica_downloads bigint,
+   month smallint,
+   year smallint,
+   host_name character varying(64),
+   experiment_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dmart_experiment_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cordex_dmart_experiment_host_time add constraint cordex_dmart_experiment_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, experiment_name);
+ 
+CREATE TABLE esgf_dashboard.cordex_dmart_variable_host_time (
+   dmart_key bigserial PRIMARY KEY,
+   total_size bigint,
+   number_of_downloads bigint,
+   number_of_successful_downloads bigint,
+   average_duration integer,
+   number_of_users integer,
+   number_of_replica_downloads bigint,
+   month smallint,
+   year smallint,
+   host_name character varying(64),
+   variable_code character varying(64),
+   variable_long_name character varying(128),
+   cf_standard_name character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dmart_variable_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cordex_dmart_variable_host_time add constraint cordex_dmart_variable_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, variable_code, variable_long_name, cf_standard_name);
+ 
+CREATE TABLE esgf_dashboard.cordex_dmart_dataset_host_time (
+   dmart_key bigserial PRIMARY KEY,
+   total_size bigint,
+   number_of_downloads bigint,
+   number_of_successful_downloads bigint,
+   average_duration integer,
+   number_of_users integer,
+   number_of_replica_downloads bigint,
+   month smallint,
+   year smallint,
+   host_name character varying(64),
+   dataset_name character varying(128),
+   dataset_version smallint,
+   datetime_start character varying(64),
+   datetime_stop character varying(64)
+);
+ALTER TABLE esgf_dashboard.cordex_dmart_dataset_host_time OWNER TO dbsuper;
+ALTER table esgf_dashboard.cordex_dmart_dataset_host_time add constraint cordex_dmart_dataset_host_time_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, host_name, dataset_name, dataset_version, datetime_start, datetime_stop);
 
 DROP TABLE IF EXISTS esgf_dashboard.registry;
 CREATE TABLE esgf_dashboard.registry (
@@ -575,13 +794,18 @@ CREATE TABLE esgf_dashboard.registry (
 );
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_geolocation',0,0);
-insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_geolocation',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_variable_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_source_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_realm_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_dataset_host_time',0,0);
-insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_clients_host_geolocation',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_experiment_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_model_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_variable_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_dataset_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cordex_dmart_clients_host_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cordex_dmart_experiment_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cordex_dmart_model_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cordex_dmart_variable_host_time',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cordex_dmart_dataset_host_time',0,0); 

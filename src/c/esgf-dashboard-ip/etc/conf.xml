@@ -20,7 +20,20 @@
   <metadata occ="str">cf_standard_name</metadata>
   <metadata occ="str">variable</metadata>
   <metadata occ="str">variable_long_name</metadata>
+  <metadata occ="str">time_frequency</metadata>
+  <metadata occ="str">institute</metadata>
+  <metadata occ="bool">replica</metadata>
   <metadata occ="str">realm</metadata>
+  <metadata occ="date">datetime_start</metadata>
+  <metadata occ="date">datetime_stop</metadata>
+  <metadata occ="long">size</metadata>
+ </project>
+ <project name="CORDEX">
+  <metadata occ="str">driving_model</metadata>
+  <metadata occ="str">experiment</metadata>
+  <metadata occ="str">cf_standard_name</metadata>
+  <metadata occ="str">variable</metadata>
+  <metadata occ="str">variable_long_name</metadata>
   <metadata occ="str">time_frequency</metadata>
   <metadata occ="str">institute</metadata>
   <metadata occ="bool">replica</metadata>
