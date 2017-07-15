@@ -241,6 +241,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 int size_source=0;
                 int size_model=0;
                 int size_exp=0;
+                create_populate_done=0;
     
         // SELECT START
                   //printf("ID vale %d and flag vale %d\n", (*datasetproj)[cnt]->id_query, (*datasetproj)[cnt]->flag);
@@ -878,15 +879,14 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
            proj_name=strdup((*datasetproj)[cnt]->first[size2]->project);
            uppercase(proj_name);
       
-           if (create_populate_done==1)
+           if (create_populate_done!=0)
 	   {
             if(strcmp(proj_name, "OBS4MIPS")==0)
             {
               create_populate_done=2;       
-	      //pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
 	      if (!(hashtbl_obs_dim_file = hashtbl_create (HAST_TABLE_OBS_DIM_FILE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_FILE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -900,7 +900,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             
 	      if (!(hashtbl_obs_dim_institute = hashtbl_create (HAST_TABLE_OBS_DIM_INSTITUTE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_INSTITUTE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -913,7 +913,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		}
 	      if (!(hashtbl_obs_dim_variable = hashtbl_create (HAST_TABLE_OBS_DIM_VARIABLE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_VARIABLE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -927,7 +927,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		}
 	      if (!(hashtbl_obs_dim_time_frequency = hashtbl_create (HAST_TABLE_OBS_DIM_TIME_FREQ, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_TIME_FREQ [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -943,7 +943,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
 	      if (!(hashtbl_obs_dim_processing_level = hashtbl_create (HAST_TABLE_OBS_DIM_PROC_LEV, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_PROC_LEV [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -961,7 +961,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              {
             	if (!(hashtbl_obs_dim_source_id = hashtbl_create (HAST_TABLE_OBS_DIM_SOURCE_ID, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_SOURCE_ID [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -980,7 +980,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
               
 	      if (!(hashtbl_obs_dim_realm = hashtbl_create (HAST_TABLE_OBS_DIM_REALM, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_REALM [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -998,7 +998,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		}
 	      if (!(hashtbl_obs_dim_dataset = hashtbl_create (HAST_TABLE_OBS_DIM_DATASET, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_DATASET [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1018,7 +1018,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS4MIPS BRIDGE INSTITUTE\n");
 	      if (!(hashtbl_obs_bridge_institute = hashtbl_create (HAST_TABLE_OBS_BRIDGE_INSTITUTE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_INSTITUTE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1039,7 +1039,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable TMP for OBS BRIDGE INSTITUTE\n");
 	      if (!(hashtbl_obs_bridge_institute_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_INSTITUTE_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_INSTITUTE_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1061,7 +1061,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE VARIABLE\n");
 	      if (!(hashtbl_obs_bridge_variable = hashtbl_create (HAST_TABLE_OBS_BRIDGE_VARIABLE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_VARIABLE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1084,7 +1084,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable TMP for OBS BRIDGE VARIABLE\n");
 	      if (!(hashtbl_obs_bridge_variable_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_VARIABLE_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_VARIABLE_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1108,7 +1108,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE TIME FREQUENCY\n");
 	      if (!(hashtbl_obs_bridge_time_frequency = hashtbl_create (HAST_TABLE_OBS_BRIDGE_TIME_FREQUENCY, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_TIME_FREQUENCY [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1133,7 +1133,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable TMP for OBS BRIDGE TIME FREQUENCY\n");
 	      if (!(hashtbl_obs_bridge_time_frequency_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_TIME_FREQUENCY_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_TIME_FREQUENCY_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1159,7 +1159,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE PROCESSING LEVEL\n");
 	      if (!(hashtbl_obs_bridge_processing_level = hashtbl_create (HAST_TABLE_OBS_BRIDGE_PROCESSING_LEVEL, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_PROCESSING_LEVEL [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1186,7 +1186,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable TMP for OBS BRIDGE PROCESSING LEVEL\n");
 	      if (!(hashtbl_obs_bridge_processing_level_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_PROCESSING_LEVEL_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_PROCESSING_LEVEL_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1216,7 +1216,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE SOURCE ID\n");
 	      if (!(hashtbl_obs_bridge_source_id = hashtbl_create (HAST_TABLE_OBS_BRIDGE_SOURCE_ID, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_SOURCE_ID [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1245,7 +1245,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for OBS BRIDGE SOURCE ID\n");
 	      if (!(hashtbl_obs_bridge_source_id_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_SOURCE_ID_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_SOURCE_ID_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1277,7 +1277,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE REALM\n");
 	      if (!(hashtbl_obs_bridge_realm = hashtbl_create (HAST_TABLE_OBS_BRIDGE_REALM, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_REALM [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1308,7 +1308,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for OBS BRIDGE REALM\n");
 	      if (!(hashtbl_obs_bridge_realm_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_REALM_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_BRIDGE_REALM_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1340,7 +1340,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS DIM DATE\n");
 	      if (!(hashtbl_obs_dim_date = hashtbl_create (HAST_TABLE_OBS_DIM_DATE, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_DATE [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1373,7 +1373,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS DIM GEOLOCATION\n");
 	      if (!(hashtbl_obs_dim_geolocation = hashtbl_create (HAST_TABLE_OBS_DIM_GEOLOCATION, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_GEOLOCATION [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1406,7 +1406,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		}
 	      if (!(hashtbl_obs4mips_fact_download = hashtbl_create (HAST_TABLE_OBS4MIPS_DOWNLOAD, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS4MIPS_DOWNLOAD [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1444,7 +1444,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP5 DIM MODEL\n");
 	      if (!(hashtbl_cmip5_dim_model = hashtbl_create (HAST_TABLE_CMIP5_DIM_MODEL, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_DIM_MODEL [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1480,7 +1480,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP5 DIM EXPERIMENT\n");
 	      if (!(hashtbl_cmip5_dim_experiment = hashtbl_create (HAST_TABLE_CMIP5_DIM_EXPERIMENT, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_DIM_EXPERIMENT [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1517,7 +1517,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP5 BRIDGE MODEL\n");
 	      if (!(hashtbl_cmip5_bridge_model = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_MODEL, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_BRIDGE_MODEL [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1553,7 +1553,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for CMIP5 BRIDGE MODEL\n");
 	      if (!(hashtbl_cmip5_bridge_model_tmp = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_MODEL_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_BRIDGE_MODEL_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1590,7 +1590,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP5 BRIDGE EXPERIMENT\n");
 	      if (!(hashtbl_cmip5_bridge_experiment = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1628,7 +1628,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for CMIP5 BRIDGE EXPERIMENT\n");
 	      if (!(hashtbl_cmip5_bridge_experiment_tmp = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT_TMP, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT_TMP [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1666,7 +1666,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		}
 	      if (!(hashtbl_cmip5_fact_download = hashtbl_create (HAST_TABLE_CMIP5_DOWNLOAD, NULL)))
 		{
-		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for USES [skip parsing]\n");
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_DOWNLOAD [skip parsing]\n");
 		  hashtbl_destroy (hashtbl_cross_dim_date);
 		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
 		  hashtbl_destroy (hashtbl_cross_dim_project);
@@ -1871,20 +1871,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                      
                  lat=atof(str1_geo);
                  lon=atof(str_geo);
-                 //sprintf(key_geo, "%14.11f:%14.11f", geo_output.latitude,geo_output.longitude);
                  sprintf(key_geo, "%s:%s", str1_geo,str_geo);
-                 
-                 //int i, j=0;
-                 //while(str_geo[key_geo[i]!=' ' ? j++ : j] = str_geo[i++]);
-                 //char *str2; 
-                 //str2=key_geo;  
-                 //while (*str2==' ') str2++;  
-                 //if (str2!=key_geo) memmove(key_geo,str2,strlen(str2)+1); 
-
-                 //printf("str_geo vale %s\n",key_geo);
-                 //sprintf(key_geo,"%s", str_geo);
-                 //lat=geo_output.latitude;
-                 //lon=geo_output.longitude;
               }
               else
                  sprintf(key_geo, "%14.11f:%14.11f",lat,lon);
@@ -1914,7 +1901,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                      country_id=PQgetvalue(res_geo, 0, 0);
                      if(resp_res!=-1)
                        PQclear (res_geo);
-                     //printf("country_id %ls\n", country_id);
                      if((country_id) && (strcmp(proj_name, "OBS4MIPS")==0))
 		       snprintf (insert_geo_query, sizeof (insert_geo_query),QUERY_INSERT_OBS_DIM_GEOLOCATION, lat, lon, atoi(country_id));
                      else
@@ -1932,9 +1918,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                      hashtbl_insert (hashtbl_obs_dim_geolocation, key_geo, geo_id_str);
 	             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_geo, geo_id_str);
                   }
-	      //}
-	      //else
-		//pmesg(LOG_ERROR,__FILE__,__LINE__,"Esgf-lookup error\n");
 
               free(remote_addr);
               remote_addr=NULL;
@@ -2023,7 +2006,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_institute;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_OBS_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
                 else
@@ -2045,7 +2027,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",inst_key, hashtbl_result);
                institute_group_key = atol(hashtbl_result);
-               //printf("institute_group_key %d\n", institute_group_key);
                success_lookup[0]++;
             }
             else
@@ -2072,7 +2053,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_institute;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                       snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_OBS_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
                   else
@@ -2139,19 +2119,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = var_key;
          for(i=0; i<size_variable;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_variable-1)
                    ap += sprintf(ap, "%d", array_id_var[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_id_var[i]);
              
          }
-         //printf("var_key %s\n", var_key);
          if(miss_var==1)
          {
             PGresult   *res2;
@@ -2174,7 +2147,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_variable;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_OBS_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
                 else
@@ -2196,7 +2168,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",var_key, hashtbl_result);
                var_group_key = atol(hashtbl_result);
-               //printf("variable_group_key %d\n", var_group_key);
                success_lookup[0]++;
             }
             else
@@ -2223,7 +2194,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_variable;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                       snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_OBS_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
                   else
@@ -2237,7 +2207,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_obs_bridge_variable_tmp,max_group_id_str,var_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,var_key);
             }
-             //devo controllare se esiste già il gruppo
          }
          free(array_id_var);
 
@@ -2287,19 +2256,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = time_freq_key;
          for(i=0; i<size_time;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_time-1)
                    ap += sprintf(ap, "%d", array_id_time_freq[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_id_time_freq[i]);
              
          }
-         //printf("var_key %s\n", time_freq_key);
          if(miss_time_freq==1)
          {
             PGresult   *res2;
@@ -2322,7 +2284,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_time;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_OBS_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
                 else
@@ -2344,7 +2305,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",time_freq_key, hashtbl_result);
                time_freq_group_key = atol(hashtbl_result);
-               //printf("variable_group_key %d\n", time_freq_group_key);
                success_lookup[0]++;
             }
             else
@@ -2371,7 +2331,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_time;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                      snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_OBS_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
                   else
@@ -2385,7 +2344,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_obs_bridge_time_frequency_tmp,max_group_id_str,time_freq_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,time_freq_key);
             }
-             //devo controllare se esiste già il gruppo
          }
         free(array_id_time_freq);
         if(strcmp(proj_name, "OBS4MIPS")==0)
@@ -2433,19 +2391,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = proc_lev_key;
          for(i=0; i<size_processing;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_processing-1)
                    ap += sprintf(ap, "%d", array_id_proc_lev[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_id_proc_lev[i]);
              
          }
-         //printf("proc_lev_key %s\n", proc_lev_key);
          if(miss_proc_lev==1)
          {
             PGresult   *res2;
@@ -2468,7 +2419,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_processing;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 snprintf (insert_group_proc_lev_query, sizeof (insert_group_proc_lev_query),QUERY_INSERT_OBS_BRIDGE_PROCESSING_LEVEL,array_id_proc_lev[i],max_group_id+1);
                 submit_query (conn, insert_group_proc_lev_query);
 
@@ -2487,7 +2437,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",proc_lev_key, hashtbl_result);
                proc_lev_group_key = atol(hashtbl_result);
-               //printf("proc level_group_key %d\n", proc_lev_group_key);
                success_lookup[0]++;
             }
             else
@@ -2524,7 +2473,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_obs_bridge_processing_level_tmp,max_group_id_str,proc_lev_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,proc_lev_key);
             }
-             //devo controllare se esiste già il gruppo
          }
         free(array_id_proc_lev);
       }
@@ -2571,19 +2519,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = source_id_key;
          for(i=0; i<size_source;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_source-1)
                    ap += sprintf(ap, "%d", array_id_source_id[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_id_source_id[i]);
              
          }
-         //printf("source_id_key %s\n", source_id_key);
          if(miss_source_id==1)
          {
             PGresult   *res2;
@@ -2603,7 +2544,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_source;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
                 submit_query (conn, insert_group_source_id_query);
 
@@ -2622,7 +2562,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",source_id_key, hashtbl_result);
                source_id_group_key = atol(hashtbl_result);
-               //printf("source id_group_key %d\n", source_id_group_key);
                success_lookup[0]++;
             }
             else
@@ -2646,7 +2585,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_source;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
                   submit_query (conn, insert_group_source_id_query);
                   sprintf(array_id_source_id_str, "%d", array_id_source_id[i]);
@@ -2657,7 +2595,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_obs_bridge_source_id_tmp,max_group_id_str,source_id_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,source_id_key);
             }
-             //devo controllare se esiste già il gruppo
          }
         free(array_id_source_id);
        }
@@ -2708,19 +2645,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = realm_key;
          for(i=0; i<size_realm;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_realm-1)
                    ap += sprintf(ap, "%d", array_id_realm[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_id_realm[i]);
              
          }
-         //printf("realm_key %s\n", realm_key);
          if(miss_realm==1)
          {
             PGresult   *res2;
@@ -2743,7 +2673,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_realm;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_OBS_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
                 else
@@ -2765,7 +2694,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",realm_key, hashtbl_result);
                realm_group_key = atol(hashtbl_result);
-               //printf("realm_group_key %d\n", realm_group_key);
                success_lookup[0]++;
             }
             else
@@ -2792,7 +2720,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_realm;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                      snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_OBS_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
                   else
@@ -2807,7 +2734,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_obs_bridge_realm_tmp,max_group_id_str,realm_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,realm_key);
             }
-             //devo controllare se esiste già il gruppo
          }
         free(array_id_realm);
          /* cmip5_dim_model and bridge */
@@ -2852,19 +2778,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = model_key;
          for(i=0; i<size_model;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_model-1)
                    ap += sprintf(ap, "%d", array_model_id[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_model_id[i]);
              
          }
-         //printf("model_key %s\n", model_key);
          if(miss_model==1)
          {
             PGresult   *res2;
@@ -2884,7 +2803,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_model;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 snprintf (insert_group_model_query, sizeof (insert_group_model_query),QUERY_INSERT_CMIP5_BRIDGE_MODEL,array_model_id[i],max_group_id+1);
                 submit_query (conn, insert_group_model_query);
 
@@ -2903,7 +2821,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",model_key, hashtbl_result);
                model_group_key = atol(hashtbl_result);
-               //printf("source id_group_key %d\n", model_group_key);
                success_lookup[0]++;
             }
             else
@@ -2927,7 +2844,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_model;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   snprintf (insert_group_model_query, sizeof (insert_group_model_query),QUERY_INSERT_CMIP5_BRIDGE_MODEL,array_model_id[i],max_group_id+1);
                   submit_query (conn, insert_group_model_query);
                   sprintf(array_model_id_str, "%d", array_model_id[i]);
@@ -2938,7 +2854,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_cmip5_bridge_model_tmp,max_group_id_str,model_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,model_key);
             }
-             //devo controllare se esiste già il gruppo
          }
         free(array_model_id);
       }
@@ -2984,19 +2899,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          ap = exp_key;
          for(i=0; i<size_exp;i++)
          {
-                //if(i==0) 
-                //   sprintf(proj_key, "%d", array_idproj[i]);
-                //else
-                //{
-                //  sprintf(proj_key, ",%s%d", proj_key, array_idproj[i]);
-                //}
                 if(i==0 || i==size_exp-1)
                    ap += sprintf(ap, "%d", array_exp_id[i]);
                 else
                    ap += sprintf(ap, ",%d,", array_exp_id[i]);
              
          }
-         //printf("exp_key %s\n", exp_key);
          if(miss_exp==1)
          {
             PGresult   *res2;
@@ -3016,7 +2924,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_exp;i++)
             {
-                //sicuramente devo aggiungere un nuovo gruppo
                 snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
                 submit_query (conn, insert_group_exp_query);
 
@@ -3035,7 +2942,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%d] [%s]\n",exp_key, hashtbl_result);
                exp_group_key = atol(hashtbl_result);
-               //printf("experiment_group_key %d\n", exp_group_key);
                success_lookup[0]++;
             }
             else
@@ -3059,7 +2965,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_exp;i++)
                 {
-                  //sicuramente devo aggiungere un nuovo gruppo
                   snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
                   submit_query (conn, insert_group_exp_query);
                   sprintf(array_id_exp_str, "%d", array_exp_id[i]);
@@ -3070,7 +2975,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 hashtbl_insert (hashtbl_cmip5_bridge_experiment_tmp,max_group_id_str,exp_key);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",max_group_id_str,exp_key);
             }
-             //devo controllare se esiste già il gruppo
          }
          free(array_exp_id);
        }
@@ -3186,7 +3090,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              long int fact_obs_id=0;
              sprintf(fact_obs_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
              free(str_succ);
-             //printf("*************fact_obs_row*****%s\n", fact_obs_row); 
              if (hashtbl_result = hashtbl_get (hashtbl_obs4mips_fact_download, fact_obs_row))
              {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
@@ -3204,11 +3107,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 
-                //printf("select_id_fact_query vale %s\n", select_id_fact_query);
                 fact_obs_id=get_foreign_key_value(conn, select_id_fact_query);
                 sprintf (fact_obs_id_str, "%ld", fact_obs_id);
                 hashtbl_insert (hashtbl_obs4mips_fact_download,fact_obs_row,fact_obs_id_str);
-                //printf("hashtable [%s]*****[%s]\n",fact_obs_row,fact_obs_id_str);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_obs_row,fact_obs_id_str);
              }
           }
@@ -3236,17 +3137,13 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  char fact_cmip_id_str[256] = { '\0' };
                  char fact1_row[2048] = { '\0' };
                  sprintf(fact1_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
-                  //printf("fact1_row %s\n", fact1_row);
                   snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP5_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
-                 //printf("insert_cmip5_fact_download vale %s\n", insert_cmip5_fact_download);
 	         submit_query (conn, insert_cmip5_fact_download);
                  snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_CMIP5_ROW, size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
 
-                //printf("select_id_fact_query vale %s\n", select_id_fact_query);
                 fact_cmip_id=get_foreign_key_value(conn, select_id_fact_query);
                 sprintf (fact_cmip_id_str, "%ld", fact_cmip_id);
                 hashtbl_insert (hashtbl_cmip5_fact_download,fact_cmip_row,fact_cmip_id_str);
-                //printf("hashtable [%s]*****[%s]\n",fact_cmip_row,fact_cmip_id_str);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_cmip_row,fact_cmip_id_str);
               }
 
@@ -3278,10 +3175,66 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
      free(proj_name);
      free(replica);
      free(index_node);
-     free(dataset_id);
-     free(size_file);
-     free(datetime_start);
-     free(datetime_stop);
+    if(create_populate_done==2)
+    {
+      hashtbl_destroy (hashtbl_obs_dim_file);
+      hashtbl_destroy (hashtbl_obs_dim_dataset);
+      hashtbl_destroy (hashtbl_obs_dim_institute);
+      hashtbl_destroy (hashtbl_obs_dim_variable);
+      hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+      hashtbl_destroy (hashtbl_obs_dim_processing_level);
+      hashtbl_destroy (hashtbl_obs_dim_source_id);
+      hashtbl_destroy (hashtbl_obs_dim_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_institute);
+      hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_variable);
+      hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_processing_level);
+      hashtbl_destroy (hashtbl_obs_bridge_processing_level_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_source_id);
+      hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+      hashtbl_destroy (hashtbl_obs_dim_date);
+      hashtbl_destroy (hashtbl_obs_dim_geolocation);
+      hashtbl_destroy (hashtbl_obs4mips_fact_download);
+      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Releasing memory for hashtables [%d] \n",create_populate_done);
+    }
+    if(create_populate_done==3)
+    {
+      hashtbl_destroy (hashtbl_obs_dim_institute);
+      hashtbl_destroy (hashtbl_obs_dim_variable);
+      hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+      hashtbl_destroy (hashtbl_obs_dim_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_institute);
+      hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_variable);
+      hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+      hashtbl_destroy (hashtbl_obs_dim_date);
+      hashtbl_destroy (hashtbl_obs_dim_geolocation);
+      hashtbl_destroy (hashtbl_cmip5_fact_download);
+      hashtbl_destroy (hashtbl_cmip5_dim_model);
+      hashtbl_destroy (hashtbl_cmip5_bridge_model);
+      hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
+      hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+      hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+      hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+    }
+
+     if(dataset_id)
+       free(dataset_id);
+     if(size_file)
+       free(size_file);
+     if(datetime_start)
+       free(datetime_start);
+     if(datetime_stop)
+        free(datetime_stop);
      proj_name=NULL;
      replica=NULL;
      index_node=NULL;
@@ -3319,6 +3272,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_cross_bridge_project);
       hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
       hashtbl_destroy (hashtbl_cross_fact_download);
+#if 0
      if(create_populate_done==2)
      {
       hashtbl_destroy (hashtbl_obs_dim_file);
@@ -3359,6 +3313,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
            hashtbl_destroy (hashtbl_cmip5_fact_download);
         }
       }
+#endif
     }
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Closing transaction and releasing the database tables lock...\n");

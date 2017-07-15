@@ -1506,13 +1506,16 @@ int compute_solr_process_planA(int shards)
                   char *str=NULL;
                   str=strdup(buffer);
                   fprintf (pFile, "%s\n", str);
-                  if(queryid[cnt])
-                    flagid[cnt_qid]=strdup(queryid[cnt]);
+                  //if(queryid[cnt])
+                    //flagid[cnt_qid]=strdup(queryid[cnt]);
                   free(str);
                   str=NULL;
                   fclose (pFile);
-                  cnt_qid++;
+                  //cnt_qid++;
                }
+                  if(queryid[cnt])
+                    flagid[cnt_qid]=strdup(queryid[cnt]);
+                  cnt_qid++;
                int res1=0;
 
                datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));

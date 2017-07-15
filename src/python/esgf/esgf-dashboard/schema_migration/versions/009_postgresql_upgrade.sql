@@ -121,7 +121,7 @@ ALTER TABLE esgf_dashboard.obs4mips_dim_date OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.obs4mips_dim_dataset (
     dataset_key bigserial PRIMARY KEY,
-    dataset_name character varying(64),
+    dataset_name character varying(128),
     dataset_version smallint,
     datetime_start character varying(64),
     datetime_stop character varying(64)
@@ -130,7 +130,7 @@ ALTER TABLE esgf_dashboard.obs4mips_dim_dataset OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.obs4mips_dim_file (
     file_key bigserial PRIMARY KEY,
-    file_name character varying(64),
+    file_name character varying(128),
     file_size bigint
 );
 ALTER TABLE esgf_dashboard.obs4mips_dim_file OWNER TO dbsuper;
@@ -150,7 +150,7 @@ ALTER TABLE esgf_dashboard.obs4mips_bridge_institute OWNER TO dbsuper;
 CREATE TABLE esgf_dashboard.obs4mips_dim_variable (
     variable_key serial PRIMARY KEY,
     variable_code character varying(64),
-    variable_long_name character varying(64),
+    variable_long_name character varying(128),
     cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dim_variable OWNER TO dbsuper;
@@ -249,7 +249,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation (
   longitude numeric(14,11),
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation OWNER TO dbsuper;
+
 ALTER table esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation add constraint obs4mips_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
@@ -263,7 +263,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   year smallint,
   host_name character varying(64),
   variable_code character varying(64),
-  variable_long_name character varying(64),
+  variable_long_name character varying(128),
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.obs4mips_dmart_variable_host_time OWNER TO dbsuper;
@@ -309,7 +309,7 @@ CREATE TABLE esgf_dashboard.obs4mips_dmart_dataset_host_time (
   month smallint,
   year smallint,
   host_name character varying(64),
-  dataset_name character varying(64),
+  dataset_name character varying(128),
   dataset_version smallint,
   datetime_start character varying(64),
   datetime_stop character varying(64)
@@ -336,7 +336,7 @@ ALTER TABLE esgf_dashboard.cmip5_dim_date OWNER TO dbsuper;
  
 CREATE TABLE esgf_dashboard.cmip5_dim_dataset (
     dataset_key bigserial PRIMARY KEY,
-    dataset_name character varying(64),
+    dataset_name character varying(128),
     dataset_version smallint,
     datetime_start character varying(64),
     datetime_stop character varying(64)
@@ -358,7 +358,7 @@ ALTER TABLE esgf_dashboard.cmip5_bridge_time_frequency OWNER TO dbsuper;
 CREATE TABLE esgf_dashboard.cmip5_dim_variable (
     variable_key serial PRIMARY KEY,
     variable_code character varying(64),
-    variable_long_name character varying(64),
+    variable_long_name character varying(128),
     cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dim_variable OWNER TO dbsuper;
@@ -458,7 +458,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
   longitude numeric(14,11),
   host_name character varying(64)
 );
-ALTER TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation OWNER TO dbsuper;
+
 ALTER table esgf_dashboard.cmip5_dmart_clients_host_time_geolocation add constraint cmip5_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude,host_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (
@@ -506,7 +506,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_variable_host_time (
   year smallint,
   host_name character varying(64),
   variable_code character varying(64),
-  variable_long_name character varying(64),
+  variable_long_name character varying(128),
   cf_standard_name character varying(64)
 );
 ALTER TABLE esgf_dashboard.cmip5_dmart_variable_host_time OWNER TO dbsuper;
@@ -523,7 +523,7 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_dataset_host_time (
   month smallint,
   year smallint,
   host_name character varying(64),
-  dataset_name character varying(64),
+  dataset_name character varying(128),
   dataset_version smallint,
   datetime_start character varying(64),
   datetime_stop character varying(64)
