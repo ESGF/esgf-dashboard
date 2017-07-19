@@ -58,7 +58,8 @@
 #define REG_ELEMENT_REGISTEREDUSERS_ATTR_COUNT		"count"
 
 // Start transaction and lock tables 
-#define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.project_dash ; lock esgf_dashboard.host ; lock esgf_dashboard.uses ; lock esgf_dashboard.join1 ; lock esgf_dashboard.service_instance ;"
+//#define QUERY_OPEN_TRANSACTION  "start transaction; lock esgf_dashboard.project_dash ; lock esgf_dashboard.host ; lock esgf_dashboard.uses ; lock esgf_dashboard.join1 ; lock esgf_dashboard.service_instance ;"
+#define QUERY_OPEN_TRANSACTION  "start transaction;"
 
 // End transaction and release locks 
 #define QUERY_CLOSE_TRANSACTION  "end transaction;" 

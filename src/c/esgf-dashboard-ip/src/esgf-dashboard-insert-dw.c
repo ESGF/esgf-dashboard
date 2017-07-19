@@ -1838,7 +1838,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              hashtbl_insert (hashtbl_obs_dim_date, buf, date_obs_id_str);
 	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable query=%s [%d] [%s]\n",select_id_date_query, date_obs_id, date_obs_id_str);
           }
-          if(remote_addr)
+          if((remote_addr) && ((strcmp(proj_name, "OBS4MIPS")==0)||(strcmp(proj_name, "CMIP5")==0)))
           {
              int code=0;
              struct geo_output_struct geo_output;
@@ -3691,7 +3691,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
 
 
 
-     if(strcmp(datamart, "esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation")==0)
+     if(strcmp(datamart, "esgf_dashboard.obs4mips_dmart_clients_host_geolocation")==0)
      {  
         if(dmart_key==0)
         {  
@@ -3720,23 +3720,20 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            int resp_res=submit_query_res (conn, select_query,&res1);
            float lat=0.0;
            float lon=0.0;
-           if(PQntuples(res1)!=0)
+           /*if(PQntuples(res1)!=0)
            {
              month=atoi(PQgetvalue(res1, 0, 0));
              year=atoi(PQgetvalue(res1, 0, 1));
            }
            if(resp_res!=-1)
-              PQclear (res1);
-           snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_POS_DATE, month, year);
+              PQclear (res1);*/
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_POS_DATE);
            int res_query=submit_query_res (conn, select_query,&res1);
 
            for (i = 0; i < PQntuples(res1); i++)
            {
-             month=atoi(PQgetvalue(res1, i, 0));
-             year=atoi(PQgetvalue(res1, i, 1));
-
-             lat=atof(PQgetvalue(res1, i, 2));
-	     lon=atof(PQgetvalue(res1, i, 3));
+             lat=atof(PQgetvalue(res1, i, 0));
+	     lon=atof(PQgetvalue(res1, i, 1));
 
              sprintf(str1_geo, "%14.11f",lat);
              sprintf(str_geo, "%14.11f",lon);
@@ -3745,13 +3742,13 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              if (*str_geo==' ')
                      sprintf(str_geo, "%s",str_geo+1);
            
-             snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_EXIST_POS_DATE, month, year, str1_geo, str_geo);
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_EXIST_POS_DATE, str1_geo, str_geo);
              res_query=submit_query_res (conn, select_query,&res2);
 
              if(PQntuples(res2)!=0)    
-                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month, year, str1_geo, str_geo, month, year, str1_geo, str_geo);
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo, str1_geo, str_geo);
              else
-                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month, year, str1_geo, str_geo);
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo);
              
              submit_query(conn,insert_dmart_project_host);
              if(res_query!=-1)
@@ -3767,8 +3764,8 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
               PQclear (res1);
 
              
-             snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
-             submit_query (conn,update_dmart_project_host);
+             //snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_OBS4MIPS_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
+             //submit_query (conn,update_dmart_project_host);
 
 
 	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
@@ -4090,7 +4087,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              submit_query (conn, update_registry);
         }
       }
-     if(strcmp(datamart, "esgf_dashboard.cmip5_dmart_clients_host_time_geolocation")==0)
+     if(strcmp(datamart, "esgf_dashboard.cmip5_dmart_clients_host_geolocation")==0)
      {  
         if(dmart_key==0)
         {  
@@ -4119,23 +4116,23 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            int res_query=submit_query_res (conn, select_query,&res1);
            float lat=0.0;
            float lon=0.0;
-           if(PQntuples(res1)!=0)
+           /*if(PQntuples(res1)!=0)
            {
              month=atoi(PQgetvalue(res1, 0, 0));
              year=atoi(PQgetvalue(res1, 0, 1));
            }
            if(res_query!=-1)
-               PQclear (res1);
-           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_POS_DATE, month, year);
+               PQclear (res1);*/
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_POS_DATE);
            int resp_res=submit_query_res (conn, select_query,&res1);
 
            for (i = 0; i < PQntuples(res1); i++)
            {
-             month=atoi(PQgetvalue(res1, i, 0));
-             year=atoi(PQgetvalue(res1, i, 1));
+             //month=atoi(PQgetvalue(res1, i, 0));
+             //year=atoi(PQgetvalue(res1, i, 1));
 
-             lat=atof(PQgetvalue(res1, i, 2));
-	     lon=atof(PQgetvalue(res1, i, 3));
+             lat=atof(PQgetvalue(res1, i, 0));
+	     lon=atof(PQgetvalue(res1, i, 1));
 
              sprintf(str1_geo, "%14.11f",lat);
              sprintf(str_geo, "%14.11f",lon);
@@ -4144,20 +4141,20 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              if (*str_geo==' ')
                      sprintf(str_geo, "%s",str_geo+1);
            
-             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXIST_POS_DATE, month, year, str1_geo, str_geo);
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXIST_POS_DATE, str1_geo, str_geo);
              res_query=submit_query_res (conn, select_query,&res2);
 
              if(PQntuples(res2)!=0)    
-                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month, year, str1_geo, str_geo, month, year, str1_geo, str_geo);
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo, str1_geo, str_geo);
              else
-                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month, year, str1_geo, str_geo);
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo);
              
              submit_query(conn,insert_dmart_project_host);
              if(res_query!=-1)
                PQclear (res2);
              
-             snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
-             submit_query (conn,update_dmart_project_host);
+             //snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
+             //submit_query (conn,update_dmart_project_host);
 
 	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
              dmart_id=get_foreign_key_value(conn, select_id_dmart_query);

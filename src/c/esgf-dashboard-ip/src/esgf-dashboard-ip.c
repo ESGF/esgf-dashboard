@@ -342,7 +342,7 @@ void * data_planA(void *arg)
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with unsuccess\n");
             
             res1=read_shards("./.work/shards.xml");
-            fprintf(stderr, "START PLANA");
+            fprintf(stderr, "%s\n", "START PLANA");
 
 	    // skip the first time, because the process is called once before this loop	
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
@@ -354,12 +354,12 @@ void * data_planA(void *arg)
                res=compute_solr_process_planA(res1);
                if(res==-25)
 	       {
-                 fprintf(stderr, "There is no entries to be processed");
+                 fprintf(stderr, "%s\n", "There is no entries to be processed");
                  break;
 	       }
 	    }
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
-            fprintf(stderr, "DONE PLANA");
+            fprintf(stderr, "%s\n", "DONE PLANA");
 	}
 
 	return NULL;
@@ -689,32 +689,30 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   pthread_create (&pth_planA, NULL, &data_planA,NULL);
   pthread_mutex_unlock(&plana_mutex);
 
-  compute_remote_clients_data_mart();
-
-  compute_remote_clients_data_mart();
+  //compute_remote_clients_data_mart();
 
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
-  compute_aggregate_data_user_metrics();
+  //compute_aggregate_data_user_metrics();
 
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();
 
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
   // start thread 
-  pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
+  //pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
 
-  if (ENABLE_REALTIME)
-  	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  //if (ENABLE_REALTIME)
+  //	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
   
 
   // enabling threads pool for sensors
   //if (num_sensors!=-1)
   	//thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
-
+#if 0
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
@@ -776,6 +774,7 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   	else
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
+#endif
   if (pthread_join (pth_planA, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else

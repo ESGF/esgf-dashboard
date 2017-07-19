@@ -236,21 +236,20 @@ CREATE TABLE esgf_dashboard.obs4mips_fact_download (
 ALTER TABLE esgf_dashboard.obs4mips_fact_download OWNER TO dbsuper;
  
 /* DATA MARTS */
-CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation (
+CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_geolocation (
   dmart_key bigserial PRIMARY KEY,
   total_size bigint,
   number_of_downloads bigint,
   number_of_successful_downloads bigint,
   average_duration integer,
   number_of_users integer,
-  month smallint,
-  year smallint,
   latitude numeric(14,11),
   longitude numeric(14,11),
+  country_id integer,
   host_name character varying(64)
 );
 
-ALTER table esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation add constraint obs4mips_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, month, year, latitude, longitude, host_name);
+ALTER table esgf_dashboard.obs4mips_dmart_clients_host_geolocation add constraint obs4mips_dmart_clients_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, latitude, longitude, country_id, host_name);
  
 CREATE TABLE esgf_dashboard.obs4mips_dmart_variable_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -444,7 +443,7 @@ CREATE TABLE esgf_dashboard.cmip5_fact_download (
 ALTER TABLE esgf_dashboard.cmip5_fact_download OWNER TO dbsuper;
  
 /* DATA MARTS */
-CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
+CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_geolocation (
   dmart_key bigserial PRIMARY KEY,
   total_size bigint,
   number_of_downloads bigint,
@@ -452,14 +451,13 @@ CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_time_geolocation (
   average_duration integer,
   number_of_users integer,
   number_of_replica_downloads bigint,
-  month smallint,
-  year smallint,
   latitude numeric(14,11),
   longitude numeric(14,11),
+  country_id integer,
   host_name character varying(64)
 );
 
-ALTER table esgf_dashboard.cmip5_dmart_clients_host_time_geolocation add constraint cmip5_dmart_clients_host_time_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, month, year, latitude, longitude,host_name);
+ALTER table esgf_dashboard.cmip5_dmart_clients_host_geolocation add constraint cmip5_dmart_clients_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, average_duration, number_of_users, number_of_replica_downloads, latitude, longitude, country_id,host_name);
  
 CREATE TABLE esgf_dashboard.cmip5_dmart_model_host_time (
   dmart_key bigserial PRIMARY KEY,
@@ -538,12 +536,12 @@ CREATE TABLE esgf_dashboard.registry (
 );
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cross_dmart_project_host_geolocation',0,0);
-insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_clients_host_geolocation',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_variable_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_source_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_realm_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.obs4mips_dmart_dataset_host_time',0,0);
-insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_clients_host_time_geolocation',0,0);
+insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_clients_host_geolocation',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_experiment_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_model_host_time',0,0);
 insert into esgf_dashboard.registry values('esgf_dashboard.cmip5_dmart_variable_host_time',0,0);

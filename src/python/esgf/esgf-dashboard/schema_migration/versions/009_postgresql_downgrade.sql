@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_variable_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_source_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_realm_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_dataset_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_host_geolocation CASCADE;
 
 /* CMIP5 DROP TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dim_geolocation CASCADE;
@@ -55,7 +55,7 @@ DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_model_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_experiment_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_variable_host_time CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_dataset_host_time CASCADE;
-DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_host_time_geolocation CASCADE;
+DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_host_geolocation CASCADE;
 
 /* REGISTRY DROP TABLE */
 DROP TABLE IF EXISTS esgf_dashboard.registry CASCADE;
