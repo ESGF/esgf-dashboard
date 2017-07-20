@@ -1267,6 +1267,7 @@ int compute_solr_process_planA(int shards)
           PQclear(res1);
           pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
           insert_dmart_cross_project(conn);
+          PQfinish(conn);
           return -25;
     	}
           
