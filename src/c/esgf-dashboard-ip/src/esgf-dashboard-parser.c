@@ -207,6 +207,7 @@ get_foreign_key_value (PGconn * conn, char *query)
   res = PQexec (conn, query);
   if ((!res) || (PQresultStatus (res) != PGRES_TUPLES_OK))
     {
+      fprintf (stderr, "Query: %s\n", query);
       pmesg(LOG_ERROR,__FILE__,__LINE__,"SELECT command did not return tuples properly\n");
       PQclear (res);
       return -1;

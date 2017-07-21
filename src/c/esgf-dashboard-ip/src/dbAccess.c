@@ -1464,33 +1464,37 @@ int compute_solr_process_planA(int shards)
                {
                  fprintf(stderr, "\n[%s:%d] Error: could not parse %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
                  flag=1;
-                 char buffer[2056]={'\0'};
-                 pFile = fopen ("myfile.csv", "a+");
-                 sprintf(buffer, "%s;%s;noparse",queryid[cnt],ftpfile[cnt]->URL);
-                 char *str=NULL;
-                 str=strdup(buffer);
-                 fprintf (pFile, "%s\n", str);
-                 free(str);
-                 str=NULL;
-                 fclose (pFile);
-                   
+                 if(SOLR_LOG==1)  
+                 {
+                   char buffer[2056]={'\0'};
+                   pFile = fopen ("myfile.csv", "a+");
+                   sprintf(buffer, "%s;%s;noparse",queryid[cnt],ftpfile[cnt]->URL);
+                   char *str=NULL;
+                   str=strdup(buffer);
+                   fprintf (pFile, "%s\n", str);
+                   free(str);
+                   str=NULL;
+                   fclose (pFile);
+                 }
                }
             }
             else
             {
                  fprintf(stderr, "\n[%s:%d] Error: could not download %s *** %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename,ftpfile[cnt]->URL);
                  flag=1;
-                 char buffer[2056]={'\0'};
-                 pFile = fopen ("myfile.csv", "a+");
-                 sprintf(buffer, "%s;%s;nodownload",queryid[cnt],ftpfile[cnt]->URL);
-                 char *str=NULL;
-                 str=strdup(buffer);
-                 fprintf (pFile, "%s\n", str);
-                 free(str);
-                 str=NULL;
-                 fclose (pFile);
-               
-            }
+                 if(SOLR_LOG==1)  
+                 {
+                   char buffer[2056]={'\0'};
+                   pFile = fopen ("myfile.csv", "a+");
+                   sprintf(buffer, "%s;%s;nodownload",queryid[cnt],ftpfile[cnt]->URL);
+                   char *str=NULL;
+                   str=strdup(buffer);
+                   fprintf (pFile, "%s\n", str);
+                   free(str);
+                   str=NULL;
+                   fclose (pFile);
+                 }
+              }
           }
           if(flag==0)
           {
