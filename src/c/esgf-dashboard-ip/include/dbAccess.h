@@ -255,7 +255,7 @@
 //Select the obs4mips row starting from obs4mips row 
 #define QUERY_GET_OBS_ROW "SELECT download_key from esgf_dashboard.obs4mips_fact_download where size=%ld and success='%s' and duration=%d and user_id_hash='%s' and host_name='%s' and user_idp='%s' and hour='%s' and minute='%s' and index_node_name='%s' and dataset_key=%d and file_key=%d and geolocation_key=%d and date_key=%d and institute_group_key=%d and variable_group_key=%d and time_frequency_group_key=%d and processing_level_group_key=%d and source_id_group_key=%d and realm_group_key=%d and id_query=%d;"
 //Select the cmip5 row starting from cmip5 row 
-#define QUERY_GET_CMIP5_ROW "SELECT download_key from esgf_dashboard.obs4mips_cmip5_download where size=%ld and success='%s' and duration=%d and replica='%s' and host_name='%s' and hour='%s' and minute='%s' and use_id_hash='%s' and user_idp='%s' and date_key=%d and geolocation_key=%d and dataset_key=%d and time_frequency_group_key=%d and variable_group_key=%d and experiment_group_key=%d and model_group_key=%d and realm_group_key=%d and institute_group_key=%d and id_query=%d;"
+#define QUERY_GET_CMIP5_ROW "SELECT download_key from esgf_dashboard.cmip5_fact_download where size=%ld and success='%s' and duration=%d and replica='%s' and host_name='%s' and hour='%s' and minute='%s' and user_id_hash='%s' and user_idp='%s' and date_key=%d and geolocation_key=%d and dataset_key=%d and time_frequency_group_key=%d and variable_group_key=%d and experiment_group_key=%d and model_group_key=%d and realm_group_key=%d and institute_group_key=%d and id_query=%d;"
 
 //Select the max group id from cross_bridge_project 
 #define QUERY_GET_MAX_GROUP_ID "SELECT MAX(project_group_key) AS max_bridge_proj from esgf_dashboard.cross_bridge_project;"

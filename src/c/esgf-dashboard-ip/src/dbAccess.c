@@ -1422,17 +1422,19 @@ int compute_solr_process_planA(int shards)
           sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
           struct stat st = {0};
           if (stat(tmp_file, &st) == -1) {
-            size_eff++;
+            queryid[size_eff]=strdup(id_query[cnt]);
           }
           else
           {
             doc = xmlReadFile(tmp_file, NULL, 0);
-            if (doc != NULL)
-            {
-               //fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
-               queryid[i]=strdup(id_query[cnt]);
-               i++;
-            }
+            //if (doc != NULL)
+            //{
+            //   fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, tmp_file);
+               //queryid[i]=strdup(id_query[cnt]);
+               //i++;
+            //}
+            queryid[i]=strdup(id_query[cnt]);
+            i++;
             xmlFreeDoc(doc);
             xmlCleanupCharEncodingHandlers();
             xmlCleanupParser();
@@ -1570,12 +1572,19 @@ int compute_solr_process_planA(int shards)
            }
           }
            char update_dashboard_queue[2048] = { '\0' };
-           if(queryid[cnt]!=NULL)
+           if(queryid[cnt])
            {
-            
-              snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,atoi(queryid[cnt]));
-              if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
-                return -1;
+              int a = 0;
+
+
+              a=atoi(queryid[cnt]);
+              if(a>0) 
+              {
+                snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,a);
+                
+                if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
+                  return 0;
+              }
            }
       }
       flag=0;
@@ -1604,7 +1613,7 @@ int compute_solr_process_planA(int shards)
 
     if(res!=SUCCESS)
     {
-      pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
+      pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files\n");
     } 
     free_datasetid(datasetid);
     free_datasetid(queryid);
