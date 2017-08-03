@@ -287,7 +287,7 @@ int transaction_based_query(char *submitted_query, char* open_transaction, char*
 
   if ((!res) || (PQresultStatus (res) != PGRES_COMMAND_OK))
     	{
-	        pmesg(LOG_WARNING,__FILE__,__LINE__,"Query submission failed [%s]\n", submitted_query);
+	        //pmesg(LOG_WARNING,__FILE__,__LINE__,"Query submission failed [%s]\n", submitted_query);
 	        PQclear(res);
 		PQfinish(conn);
 		return -4;
