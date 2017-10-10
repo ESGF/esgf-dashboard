@@ -742,8 +742,8 @@ clean_dashboard_database_subsystem_installation() {
             echo "removing esgf_dashboard.* schema and tables and DATA"
             ${cdat_home}/bin/esgf_dashboard_initialize --dburl ${postgress_user}:${pg_sys_acct_passwd}@localhost:${postgress_port}/esgcet -d 0
             [ $? != 0 ] && echo "ERROR: Unable to remove ${tomcat_install_dir}/webapps/${dashboard_app_context_root}" && return 1
-            rm -rvf ${cdat_home}/bin/esgf_dashboard_initialize && \
-                rm -rf ${cdat_home}/lib/python${python_version}/${esgf_dashboard_egg_file} && \
+            rm -rvf ${cdat_home}/envs/esgf-pub/bin/esgf_dashboard_initialize && \
+                rm -rf ${cdat_home}/envs/esgf-pub/lib/python${python_version}/${esgf_dashboard_egg_file} && \
                 perl -n -i -e'print unless m!python:esgf_dashboard!' ${install_logfile} && echo "[REMOVED]"
         fi
     fi 
