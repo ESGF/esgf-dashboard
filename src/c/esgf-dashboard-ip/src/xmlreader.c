@@ -370,7 +370,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
-       ftpfile[cnt]->flag = strdup(flagid[cnt]);
+       ftpfile[cnt]->flag = atoi(flagid[cnt]);
        //printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
@@ -532,7 +532,11 @@ void free_struct_datasetproj(struct dataset_project **datasetproj)
 int cnt;
     for(cnt=0; datasetproj[cnt]!=NULL; cnt++)
     {
-        int size, size2, size3, size4;
+        int size=0;
+        int size2=0; 
+        int size3=0;
+        int size4=0;
+
         for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
         {
           //printf("project**** vale %s\n", datasetproj[cnt]->first[size2]->project);
@@ -542,18 +546,19 @@ int cnt;
               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
               {
                 //printf("size 3 vale %d\n", size3);
-                if(datasetproj[cnt]->first[size2]->first[size3]->occ)
+                //if(datasetproj[cnt]->first[size2]->first[size3]->occ)
                   //printf("1 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->occ);
-                if(datasetproj[cnt]->first[size2]->first[size3]->name)
+                //if(datasetproj[cnt]->first[size2]->first[size3]->name)
                   //printf("2 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->name);
-                for(size4=0; datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                int len = sizeof(datasetproj[cnt]->first[size2]->first[size3]->value) / sizeof(datasetproj[cnt]->first[size2]->first[size3]->value[0]);
+                for(size4=0; size4<len && datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                 {
                    //printf("3 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    free(datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    datasetproj[cnt]->first[size2]->first[size3]->value[size4]=NULL;
                 }
-                free(datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
-                datasetproj[cnt]->first[size2]->first[size3]->value[size4]=NULL;
+                //free(datasetproj[cnt]->first[size2]->first[size3]->value[len]);
+                //datasetproj[cnt]->first[size2]->first[size3]->value[len]=NULL;
                 free(datasetproj[cnt]->first[size2]->first[size3]->name);
                 datasetproj[cnt]->first[size2]->first[size3]->name=NULL;
                 free(datasetproj[cnt]->first[size2]->first[size3]->occ);
@@ -816,6 +821,7 @@ void print_element(xmlNode * a_node, int *res)
                         //printf("content %s\n", content);
                         *res=1;
                      }
+                     xmlFree(content);
                      //else
                         //printf("content %s\n", "no found");
                 }

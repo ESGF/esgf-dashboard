@@ -1191,6 +1191,7 @@ int compute_solr_process_planA(int shards)
         char **datasetid=NULL;
         char **queryid=NULL;
         char **flagid=NULL;
+        char **flag_id=NULL;
         int cnt_qid=0;
 
         int i=0;
@@ -1254,6 +1255,7 @@ int compute_solr_process_planA(int shards)
     	{
           //there are not entries in the dashboard_queue with processed=0
           // stop transaction
+          PQclear(res1);
           res1 = PQexec(conn, QUERY4);
           pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
           pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
@@ -1274,7 +1276,7 @@ int compute_solr_process_planA(int shards)
 
         URL=(char**) calloc (size+1, sizeof(char *));
         id_query=(char**) calloc (size+1, sizeof(char *));
-        flagid=(char**) calloc (size+1, sizeof(char *));
+        flag_id=(char**) calloc (size+1, sizeof(char *));
 
         char url_comp1[2056]={'\0'};
         char url_comp[2056]={'\0'};
@@ -1314,15 +1316,16 @@ int compute_solr_process_planA(int shards)
           free(str_url1);
           URL[i]=strdup(url_comp);
           id_query[i]=strdup(PQgetvalue(res1, i, 1));
-          flagid[i]=strdup("0");
+          flag_id[i]=strdup("0");
         }
         size=PQntuples(res1);
         URL[i]=NULL;
         id_query[i]=NULL;
-        flagid[i]=NULL;
+        flag_id[i]=NULL;
 
 
         // stop transaction
+        PQclear(res1);
         res1 = PQexec(conn, QUERY4);
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
@@ -1344,17 +1347,17 @@ int compute_solr_process_planA(int shards)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
-          myfree_array(flagid,size+1);
+          myfree_array(flag_id,size+1);
           pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in calloc");
           return ERROR_CALLOC;
         }
 
-        res=alloca_struct_FtpFile(ftpfile, URL, id_query, flagid, size);
+        res=alloca_struct_FtpFile(ftpfile, URL, id_query, flag_id, size);
         if(res!=SUCCESS)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
-          myfree_array(flagid,size+1);
+          myfree_array(flag_id,size+1);
           free_struct_FtpFile(ftpfile);
           return res;
         }
@@ -1406,7 +1409,7 @@ int compute_solr_process_planA(int shards)
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
-          myfree_array(flagid,size+1);
+          myfree_array(flag_id,size+1);
           free_struct_FtpFile(ftpfile);
           return -25; //sleep mode
         }
@@ -1423,6 +1426,7 @@ int compute_solr_process_planA(int shards)
           struct stat st = {0};
           if (stat(tmp_file, &st) == -1) {
             queryid[size_eff]=strdup(id_query[cnt]);
+            flagid[size_eff]=strdup(flag_id[cnt]);
           }
           else
           {
@@ -1434,6 +1438,7 @@ int compute_solr_process_planA(int shards)
                //i++;
             //}
             queryid[i]=strdup(id_query[cnt]);
+            flagid[i]=atoi(flag_id[cnt]);
             i++;
             xmlFreeDoc(doc);
             xmlCleanupCharEncodingHandlers();
@@ -1608,6 +1613,7 @@ int compute_solr_process_planA(int shards)
       return res;
     }
     myfree_array(id_query,size+1);
+    myfree_array(flag_id,size+1);
 
     res=ftp_download_file(ftpfile,cnt2);
 

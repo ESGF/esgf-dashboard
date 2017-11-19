@@ -286,7 +286,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                    user_idp_row=strdup(PQgetvalue(res1, i, 6));
                 }
 
-                //PQclear (res1);
+                PQclear (res1);
 
         int size2, size3, size4=0;
         for(size2=0; (*datasetproj)[cnt]->first[size2]!=NULL; size2++)
@@ -506,6 +506,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_cross_fact_download);
 		  //continue;
 		}
+#if 0
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS4MIPS DOWNLOAD\n");
 	      if (!(hashtbl_obs4mips_fact_download = hashtbl_create (HAST_TABLE_OBS4MIPS_DOWNLOAD, NULL)))
 		{
@@ -533,6 +534,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_cmip5_fact_download);
 		  //continue;
 		}
+#endif
 
             }
 
@@ -873,7 +875,13 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_row,fact_id_str);
           }
 
-
+         hashtbl_destroy (hashtbl_cross_dim_date); 
+         hashtbl_destroy (hashtbl_cross_dim_geolocation);
+         hashtbl_destroy (hashtbl_cross_dim_project);
+         hashtbl_destroy (hashtbl_cross_bridge_project);
+         hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+         hashtbl_destroy (hashtbl_cross_fact_download);
+ 
          for(size2=0; (*datasetproj)[cnt]->first[size2]!=NULL; size2++)
          {
            proj_name=strdup((*datasetproj)[cnt]->first[size2]->project);
@@ -940,7 +948,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
 		  //continue;
 		}
-
+             if(strcmp(proj_name, "OBS4MIPS")==0)
+             {
 	      if (!(hashtbl_obs_dim_processing_level = hashtbl_create (HAST_TABLE_OBS_DIM_PROC_LEV, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_PROC_LEV [skip parsing]\n");
@@ -957,8 +966,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_processing_level);
 		  //continue;
 		}
-             if(strcmp(proj_name, "OBS4MIPS")==0)
-             {
             	if (!(hashtbl_obs_dim_source_id = hashtbl_create (HAST_TABLE_OBS_DIM_SOURCE_ID, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_SOURCE_ID [skip parsing]\n");
@@ -1156,6 +1163,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
 		  //continue;
 		}
+             if(strcmp(proj_name, "OBS4MIPS")==0)
+             {
 	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE PROCESSING LEVEL\n");
 	      if (!(hashtbl_obs_bridge_processing_level = hashtbl_create (HAST_TABLE_OBS_BRIDGE_PROCESSING_LEVEL, NULL)))
 		{
@@ -1211,8 +1220,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_bridge_processing_level_tmp);
 		  //continue;
 		}
-             if(strcmp(proj_name, "OBS4MIPS")==0)
-             {
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for OBS BRIDGE SOURCE ID\n");
 	      if (!(hashtbl_obs_bridge_source_id = hashtbl_create (HAST_TABLE_OBS_BRIDGE_SOURCE_ID, NULL)))
 		{
@@ -1404,6 +1411,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
 		  //continue;
 		}
+
+            if(strcmp(proj_name, "OBS4MIPS")==0)
+            {
 	      if (!(hashtbl_obs4mips_fact_download = hashtbl_create (HAST_TABLE_OBS4MIPS_DOWNLOAD, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS4MIPS_DOWNLOAD [skip parsing]\n");
@@ -1437,6 +1447,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_obs_dim_geolocation);
 		  hashtbl_destroy (hashtbl_obs4mips_fact_download);
              }
+          }
 
             if(strcmp(proj_name, "CMIP5")==0)
             {
@@ -3204,6 +3215,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
     }
     if(create_populate_done==3)
     {
+      hashtbl_destroy (hashtbl_obs_dim_dataset);
       hashtbl_destroy (hashtbl_obs_dim_institute);
       hashtbl_destroy (hashtbl_obs_dim_variable);
       hashtbl_destroy (hashtbl_obs_dim_time_frequency);
@@ -3218,13 +3230,13 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
       hashtbl_destroy (hashtbl_obs_dim_date);
       hashtbl_destroy (hashtbl_obs_dim_geolocation);
-      hashtbl_destroy (hashtbl_cmip5_fact_download);
       hashtbl_destroy (hashtbl_cmip5_dim_model);
       hashtbl_destroy (hashtbl_cmip5_bridge_model);
       hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
       hashtbl_destroy (hashtbl_cmip5_dim_experiment);
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+      hashtbl_destroy (hashtbl_cmip5_fact_download);
     }
 
      if(dataset_id)
@@ -3264,6 +3276,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");                
   //PQfinish (conn);
   // releasing memory for hashtables
+#if 0
   if (create_populate_done)
     {
       hashtbl_destroy (hashtbl_cross_dim_date);
@@ -3272,7 +3285,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_cross_bridge_project);
       hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
       hashtbl_destroy (hashtbl_cross_fact_download);
-#if 0
      if(create_populate_done==2)
      {
       hashtbl_destroy (hashtbl_obs_dim_file);
@@ -3313,8 +3325,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
            hashtbl_destroy (hashtbl_cmip5_fact_download);
         }
       }
-#endif
     }
+#endif
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"Closing transaction and releasing the database tables lock...\n");
   /*if (manage_database_open_close_transaction(conn,QUERY_CLOSE_TRANSACTION)) {
@@ -4440,7 +4452,8 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              PQclear (res1);
            snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXP_DATE, month, year);
            res_query=submit_query_res (conn, select_query,&res1);
-
+         if(PQntuples(res_query)!=0)
+         {
            for (i = 0; i < PQntuples(res1); i++)
            {
              month=atoi(PQgetvalue(res1, i, 0));
@@ -4468,6 +4481,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
              //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
            }
+         }
            if(res_query!=-1)
              PQclear (res1);
            snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_EXPERIMENT_HOST_TIME, month,year);

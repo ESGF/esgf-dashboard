@@ -359,6 +359,7 @@ void * data_planA(void *arg)
 	       }
 	    }
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
+            //sleep(60);
             fprintf(stderr, "%s\n", "DONE PLANA");
 	}
 
@@ -771,7 +772,7 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
 	{
   	if (pthread_join (pth_realtime, NULL))
   		pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
-  	else
+  	elsepth_planA,
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
 #endif
@@ -780,6 +781,7 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
 
+  pthread_detach(pth_planA);
   pthread_mutex_destroy(&plana_mutex);
  
 if(strcmp(ALLOW_FEDERATION, "yes")==0)
@@ -814,6 +816,8 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   myfree (ESGF_HOSTNAME);
   myfree (ESGF_NODE_SOLR);
   myfree (DASHBOARD_SERVICE_PATH);
+
+  pthread_exit(NULL);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
 

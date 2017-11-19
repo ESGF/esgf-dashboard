@@ -1122,7 +1122,6 @@ int get_download_registration(char *path_xml, char *file_dest)
   double c_length;
   FILE *tmp;
   FILE *file;
-  char buffer[10024]={ '\0' };
   char url_action[10024]={ '\0' };
   char tmp_file[1024]={ '\0' };
   long int i;
