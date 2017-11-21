@@ -3115,6 +3115,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char fact_obs_id_str[256] = { '\0' };
                 snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 	        submit_query (conn, insert_obs4mips_fact_download);
+                //printf("query vale %s\n", insert_obs4mips_fact_download);
 
                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 
@@ -3728,8 +3729,8 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
         }
         else
         {
-           snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_PROJECT_HOST_POS, dmart_key);
-           int resp_res=submit_query_res (conn, select_query,&res1);
+           //snprintf (select_query, sizeof (select_query), QUERY_SELECT_OBS4MIPS_DMART_PROJECT_HOST_POS, dmart_key);
+           //int resp_res=submit_query_res (conn, select_query,&res1);
            float lat=0.0;
            float lon=0.0;
            /*if(PQntuples(res1)!=0)
@@ -4124,8 +4125,9 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
         }
         else
         {
-           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_PROJECT_HOST_POS, dmart_key);
-           int res_query=submit_query_res (conn, select_query,&res1);
+           //snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_PROJECT_HOST_POS, dmart_key);
+           //int res_query=submit_query_res (conn, select_query,&res1);
+           int res_query=0;
            float lat=0.0;
            float lon=0.0;
            /*if(PQntuples(res1)!=0)

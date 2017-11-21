@@ -986,6 +986,7 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
  	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
                         PQclear(res_cont);
     	}
+        PQclear(res);
         // stop transaction
         res = PQexec(conn, QUERY4);
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
@@ -1049,6 +1050,8 @@ int reconciliation_process_planB(char* proj, char* tabl, int i)
  	                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Step 1 [OK] update downloads %s\n", update_query_hostname);
                         PQclear(res_cont);
     	}
+        PQclear(res);
+        pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction opened\n");
         // stop transaction
         res = PQexec(conn, QUERY4);
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
