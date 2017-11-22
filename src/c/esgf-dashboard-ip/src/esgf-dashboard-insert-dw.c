@@ -4423,6 +4423,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
         {  
            snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP5_DMART_EXPERIMENT_HOST_TIME,ESGF_HOSTNAME);
            submit_query (conn,insert_dmart_project_host);
+           printf("insert_dmart_project_host %s\n", insert_dmart_project_host);
 
            /* update registry */
 	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
@@ -4444,6 +4445,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
         {
            snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXPERIMENT_HOST_TIME, dmart_key);
            int res_query=submit_query_res (conn, select_query,&res1);
+
            char *experiment_name=NULL;
            if(PQntuples(res1)!=0)
            {
@@ -4454,36 +4456,37 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
              PQclear (res1);
            snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXP_DATE, month, year);
            res_query=submit_query_res (conn, select_query,&res1);
-         if(PQntuples(res_query)!=0)
-         {
-           for (i = 0; i < PQntuples(res1); i++)
+           if(PQntuples(res1)!=0)
            {
-             month=atoi(PQgetvalue(res1, i, 0));
-             year=atoi(PQgetvalue(res1, i, 1));
+             for (i = 0; i < PQntuples(res1); i++)
+             {
+               month=atoi(PQgetvalue(res1, i, 0));
+               year=atoi(PQgetvalue(res1, i, 1));
 
-             experiment_name=PQgetvalue(res1, i, 2);
+               experiment_name=PQgetvalue(res1, i, 2);
 
-             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXIST_EXP_DATE, month, year, experiment_name);
-             int res_resp=submit_query_res (conn, select_query,&res2);
+               snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP5_DMART_EXIST_EXP_DATE, month, year, experiment_name);
+               int res_resp=submit_query_res (conn, select_query,&res2);
 
-             if(PQntuples(res2)!=0)    
+               if(PQntuples(res2)!=0)    
                  snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP5_DMART_EXPERIMENT_HOST_TIME, month, year, experiment_name, month, year, experiment_name);
-             else
+               else
                  snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP5_DMART_EXPERIMENT_HOST_TIME, month, year, experiment_name);
              
-             submit_query(conn,insert_dmart_project_host);
-             if(res_resp!=-1)
-               PQclear (res2);
+               submit_query(conn,insert_dmart_project_host);
+               if(res_resp!=-1)
+                 PQclear (res2);
 
-	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
-             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
-             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
-             submit_query (conn, update_registry);
-             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
-             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
-             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+	       snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+               dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+               snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+               submit_query (conn, update_registry);
+               //if(res_resp!=-1)
+               //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+               //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+               //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+             }
            }
-         }
            if(res_query!=-1)
              PQclear (res1);
            snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_EXPERIMENT_HOST_TIME, month,year);
