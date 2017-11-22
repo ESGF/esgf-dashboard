@@ -13,7 +13,7 @@
 // --------------------------------------------------------
 
 // Enable log file with SOLR urls.
-#define SOLR_LOG	1   //0 not enable to save the results in the myfile.csv, 1 otherwise
+#define SOLR_LOG	0   //0 not enable to save the results in the myfile.csv, 1 otherwise
 
 // --------------- Query ----------------------------------
 #define QUERY1 	"SELECT s.id, h.ip, s.port FROM esgf_dashboard.service_instance s INNER JOIN esgf_dashboard.host h ON h.id=s.idHost ORDER BY h.ip, s.port;" 
@@ -208,7 +208,7 @@
 //
 // PLAN A
 // SELECT URL FROM DASHBOARD_QUEUE
-#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 order by timestamp ASC limit 1000;"
+#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and url_path like '%%esg_dataroot%%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and id=415547;"
 #define QUERY_UPDATE_DASHBOARD_QUEUE "update esgf_dashboard.dashboard_queue set processed=1 where id=%d;"

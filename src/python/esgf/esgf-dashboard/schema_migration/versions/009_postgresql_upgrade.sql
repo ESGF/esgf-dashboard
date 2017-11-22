@@ -546,7 +546,7 @@ DECLARE
 tab1 alias for $1;
 tab2 alias for $2;
 BEGIN
-  DROP TABLE esgf_dashboard.registry;
+  DROP TABLE if EXISTS esgf_dashboard.registry;
   EXECUTE tab2;
 insert into esgf_dashboard.registry values(''esgf_dashboard.cross_dmart_project_host_time'',0,0);
 insert into esgf_dashboard.registry values(''esgf_dashboard.cross_dmart_project_host_geolocation'',0,0);
