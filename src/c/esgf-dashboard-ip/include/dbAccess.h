@@ -208,7 +208,8 @@
 //
 // PLAN A
 // SELECT URL FROM DASHBOARD_QUEUE
-#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%' order by timestamp ASC limit 1000;"
+#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 1000;"
+//#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and url_path like '%%esg_dataroot%%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and id=415547;"
 #define QUERY_UPDATE_DASHBOARD_QUEUE "update esgf_dashboard.dashboard_queue set processed=1 where id=%d;"
