@@ -109,10 +109,11 @@ select table_exists('cross_dmart_project_host_geolocation', 'CREATE TABLE esgf_d
    host_name character varying(64),
    project_name character varying(64),
    latitude numeric(14,11),
-   longitude numeric(14,11)
+   longitude numeric(14,11),
+   country_id integer 
 );
 ALTER TABLE esgf_dashboard.cross_dmart_project_host_geolocation OWNER TO dbsuper;
-ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude);');
+ALTER table esgf_dashboard.cross_dmart_project_host_geolocation add constraint cross_dmart_project_host_geolocation_1 unique (total_size, number_of_downloads, number_of_successful_downloads, number_of_replica_downloads, average_duration, number_of_users, host_name, project_name, longitude, latitude, country_id);');
 
 /* DIMENSION TABLES */
  
@@ -570,4 +571,4 @@ select table_registry('registry', 'CREATE TABLE esgf_dashboard.registry (
   timestamp integer
 );');
 
-
+SET search_path = public, pg_catalog;

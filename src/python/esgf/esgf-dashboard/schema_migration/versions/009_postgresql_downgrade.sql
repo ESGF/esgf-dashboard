@@ -1,3 +1,5 @@
+SET search_path = esgf_dashboard, pg_catalog;
+
 /* CROSS DW DROP TABLES */
 DROP TABLE IF EXISTS esgf_dashboard.cross_dmart_project_host CASCADE;
 DROP TABLE IF EXISTS esgf_dashboard.cross_fact_download CASCADE;
@@ -59,5 +61,5 @@ DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_host_geolocation CASCADE
 
 /* REGISTRY DROP TABLE */
 DROP TABLE IF EXISTS esgf_dashboard.registry CASCADE;
-
+SET search_path = public, pg_catalog;
 
