@@ -248,6 +248,8 @@ select table_exists('obs4mips_fact_download', 'CREATE TABLE esgf_dashboard.obs4m
   id_query integer
 );
 ALTER TABLE esgf_dashboard.obs4mips_fact_download OWNER TO dbsuper;');
+
+DROP TABLE IF EXISTS esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation CASCADE;
  
 /* DATA MARTS */
 select table_exists('obs4mips_dmart_clients_host_geolocation', 'CREATE TABLE esgf_dashboard.obs4mips_dmart_clients_host_geolocation (
@@ -454,6 +456,8 @@ select table_exists('cmip5_fact_download', 'CREATE TABLE esgf_dashboard.cmip5_fa
   id_query integer
 );
 ALTER TABLE esgf_dashboard.cmip5_fact_download OWNER TO dbsuper;');
+
+DROP TABLE IF EXISTS esgf_dashboard.cmip5_dmart_clients_host_time_geolocation CASCADE;
  
 /* DATA MARTS */
 select table_exists('cmip5_dmart_clients_host_geolocation', 'CREATE TABLE esgf_dashboard.cmip5_dmart_clients_host_geolocation (
