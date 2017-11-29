@@ -127,7 +127,7 @@ int count_metadata(xmlDocPtr * doc, char *tag, char *projectName)
 }
 
 
-int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetproj, int cnt, int c, int j, int first_query, int num)
+int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetproj, int cnt, int c, int j, int first_query, int num, int child)
 {
   int num_children=0;
   xmlChar *prop = NULL;
@@ -137,21 +137,27 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
   char *str=NULL;
   int res_met=0;
   result = getnodeset(doc, BAD_CAST tag, NULL, NULL);
+  xmlChar *content=NULL;
+  
   if (result)
         {
+               if(child>1)
+                (*datasetproj)[cnt]->first[c]->first[j]->value=realloc ((*datasetproj)[cnt]->first[c]->first[j]->value, (child+1)*sizeof(char**));
                 for(i = 0; i < result->nodesetval->nodeNr; i++)
                 {
                         node = result->nodesetval->nodeTab[i];
                         node = node->children;
                         for (node1 = node; node1; node1 = node1->next)
                         {
-                             xmlChar *content=xmlNodeGetContent(node1);
-                             (*datasetproj)[cnt]->first[c]->first[j]->value[k]=xmlStrdup(content);
+                             content=xmlNodeGetContent(node1);
+                             (*datasetproj)[cnt]->first[c]->first[j]->value[k]=strdup(content);
                              xmlFree(content);
+                             content=NULL;
                              k++;
                         }
                 }
-                (*datasetproj)[cnt]->first[c]->first[j]->size=k;
+                (*datasetproj)[cnt]->first[c]->first[j]->size=child;
+                (*datasetproj)[cnt]->first[c]->first[j]->value[child]=NULL;
                 xmlXPathFreeObject(result);
         }
         else
@@ -333,7 +339,8 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
     if(query==1)
     {
        sprintf(str, "//%s[@name='%s']",  (*datasetproj)[cnt]->first[j]->first[num]->occ, (*datasetproj)[cnt]->first[j]->first[num]->name);
-       res=retrieve_tag(doc, str, datasetproj, cnt, j, num, query, num);
+       res=count_tag(doc,str);
+       res=retrieve_tag(doc, str, datasetproj, cnt, j, num, query, num, res);
     }
     else
     {
@@ -343,7 +350,8 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
             sprintf(str, "//arr[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->name);
           else
             sprintf(str, "//%s[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->occ,(*datasetproj)[cnt]->first[j]->first[k]->name);
-          res=retrieve_tag(doc, str, datasetproj, cnt, j, k, query, num);
+          res=count_tag(doc,str);
+          res=retrieve_tag(doc, str, datasetproj, cnt, j, k, query, num, res);
        }
     }
   return res;
