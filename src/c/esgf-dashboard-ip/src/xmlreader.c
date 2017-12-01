@@ -132,7 +132,10 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
   int num_children=0;
   xmlChar *prop = NULL;
   xmlXPathObjectPtr result;
-  int i,k=0;
+  int i,cnt_k=0;
+  int flg=0;
+  int k=0;
+  int u=0;
   xmlNodePtr node,node1;
   char *str=NULL;
   int res_met=0;
@@ -149,10 +152,25 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
                         node = node->children;
                         for (node1 = node; node1; node1 = node1->next)
                         {
-                             content=xmlNodeGetContent(node1);
-                             (*datasetproj)[cnt]->first[c]->first[j]->value[k]=strdup(content);
-                             xmlFree(content);
-                             content=NULL;
+                             cnt_k++;
+                        }
+                }
+                //printf("cnt_k vale %d\n", cnt_k);
+                flg=cnt_k-child;
+                for(i = 0; i < result->nodesetval->nodeNr; i++)
+                {
+                        node = result->nodesetval->nodeTab[i];
+                        node = node->children;
+                        for (node1 = node; node1; node1 = node1->next)
+                        {
+                             if(k>=flg)
+                             {
+                               content=xmlNodeGetContent(node1);
+                               (*datasetproj)[cnt]->first[c]->first[j]->value[u]=strdup(content);
+                               //printf("content %s\n", content);
+                               xmlFree(content);
+                               u++;
+                             }
                              k++;
                         }
                 }
