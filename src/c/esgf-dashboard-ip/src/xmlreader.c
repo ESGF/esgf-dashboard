@@ -242,7 +242,10 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
               if(xmlStrcasecmp(prop, (xmlChar *)"dataset_id")==0)
               {
                 prop1 = xmlNodeGetContent(cur_node);
-                (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
+                if(id_query[cnt])
+                   (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
+                else
+                   (*datasetproj)[cnt]->id_query=0;
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1);
                 //printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
 

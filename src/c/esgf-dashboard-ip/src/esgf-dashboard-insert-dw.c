@@ -703,7 +703,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          for(size2=0; (*datasetproj)[cnt]->first[size2]!=NULL; size2++)
          {  
             int proj_id=0;
-            if (hashtbl_result = hashtbl_get (hashtbl_cross_dim_project, (*datasetproj)[cnt]->first[size2]->project))
+            proj_name=strdup((*datasetproj)[cnt]->first[size2]->project);
+            uppercase(proj_name); 
+            if (hashtbl_result = hashtbl_get (hashtbl_cross_dim_project, proj_name))
             {
                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",(*datasetproj)[cnt]->first[size2]->project, hashtbl_result);
                proj_id = atoi (hashtbl_result);
@@ -718,18 +720,20 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                char insert_proj_query[2048] = { '\0' };
                char select_proj_query[2048] = { '\0' };
                success_lookup[1]++;
-	       snprintf (insert_proj_query, sizeof (insert_proj_query),QUERY_INSERT_CROSS_DIM_PROJECT,(*datasetproj)[cnt]->first[size2]->project);
+	       snprintf (insert_proj_query, sizeof (insert_proj_query),QUERY_INSERT_CROSS_DIM_PROJECT,proj_name);
                submit_query (conn, insert_proj_query);
-	       snprintf(select_id_proj_query, sizeof (select_id_proj_query), QUERY_GET_PROJ_ID,(*datasetproj)[cnt]->first[size2]->project);
+	       snprintf(select_id_proj_query, sizeof (select_id_proj_query), QUERY_GET_PROJ_ID,proj_name);
                proj_id=get_foreign_key_value(conn, select_id_proj_query);
 
   
                array_idproj[size2]=proj_id;
 	       // add entry to hash table
 	       sprintf (proj_id_str, "%ld", proj_id);
-               hashtbl_insert (hashtbl_cross_dim_project,(*datasetproj)[cnt]->first[size2]->project,proj_id_str);
-	       pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",(*datasetproj)[cnt]->first[size2]->project, proj_id_str);
+               hashtbl_insert (hashtbl_cross_dim_project,proj_name,proj_id_str);
+	       pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",proj_name, proj_id_str);
             }  
+            free(proj_name);
+            proj_name=NULL;
          }
 
 
