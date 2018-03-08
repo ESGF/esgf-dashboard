@@ -1,9 +1,9 @@
 #! /bin/sh
 
-# Copyright (c) 2011 
+# Copyright (c) 2018 
 # All rights reserved.
 #
-# Author: Sandro Fiore, 2011
+# Author: ASC Division, CMCC, 2018
 
 
 ### BEGIN INIT INFO
@@ -36,7 +36,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
     start)
         echo -n "Starting the ESGF Information Provider... "
         
-        ps ax | grep -v grep | pgrep $SERVICE
+        ps ax | grep -v grep | pgrep -f $SERVICE
         if [ $? == 0 ]; then
             echo "[ALREADY RUNNING] "
 	else
@@ -64,7 +64,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
         #-------
         #Otherwise do brute force
         #-------
-	if ps ax | grep -v grep | pgrep $SERVICE >& /dev/null
+	if ps ax | grep -v grep | pgrep -f $SERVICE >& /dev/null
 	then
             ## Stop the esgf information provider 
             killall esgf-dashboard-ip 
@@ -76,7 +76,7 @@ test -x $ESGF_DASHBOARD_IP_HOME/bin/esgf-dashboard-ip || { echo "$ESGF_DASHBOARD
     status)
         echo -n "Checking the ESGF Information Provider status..."
 
-	if ps ax | grep -v grep | pgrep $SERVICE > /dev/null
+	if ps ax | grep -v grep | pgrep -f $SERVICE > /dev/null
 	then
 	    echo "[RUNNING] "
 	else
