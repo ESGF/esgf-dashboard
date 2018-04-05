@@ -23,6 +23,7 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 #include "../include/ftpget.h"
+#include "../include/hashtbl.h"
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
@@ -46,6 +47,8 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stdout, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
+#define HAST_NO_AUTH            300
+
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
 //#define XMLPARSER_THREAD_FREQ 3 // test value
 
@@ -285,6 +288,10 @@ void * data_planA(void *arg)
         PGconn * conn;
         PGresult *res2;
         char conninfo[1024] = {'\0'};
+        char line [ 1024 ]={'\0'};
+        HASHTBL *hashtbl_no_auth;
+        int i=1;
+
 
         /* Connect to database */
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
@@ -342,7 +349,25 @@ void * data_planA(void *arg)
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with unsuccess\n");
             
             res1=read_shards("./.work/shards.xml");
-            fprintf(stderr, "START PLANA");
+            fprintf(stderr, "%s\n", "START PLANA");
+            
+            
+            if (!(hashtbl_no_auth = hashtbl_create (HAST_NO_AUTH, NULL)))
+            {
+                pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+            }
+
+            FILE *fp=fopen("../etc/notauthorized_openID", "r");
+            char str[12]={0};
+            while ( fgets ( line, sizeof line, fp ) != NULL )
+            {
+              line[strlen(line)-1]='\0';
+              sprintf(str, "%d", i);
+              //printf("line vale %s\n", line);
+              hashtbl_insert (hashtbl_no_auth, (char *) line, (char *) str);
+              i++;
+            }
+            fclose ( fp );
 
 	    // skip the first time, because the process is called once before this loop	
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
@@ -350,16 +375,17 @@ void * data_planA(void *arg)
                if(res1==-1)
                  res1=0;
 	         //break;
-                  
-               res=compute_solr_process_planA(res1);
+               res=compute_solr_process_planA(res1, &hashtbl_no_auth);
                if(res==-25)
 	       {
-                 fprintf(stderr, "There is no entries to be processed");
+                 fprintf(stderr, "%s\n", "There are no entries to be processed");
                  break;
 	       }
 	    }
+            hashtbl_destroy (hashtbl_no_auth);
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
-            fprintf(stderr, "DONE PLANA");
+            //sleep(60);
+            fprintf(stderr, "%s\n", "DONE PLANA");
 	}
 
 	return NULL;
@@ -543,8 +569,8 @@ main (int argc, char **argv)
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[db.host], [db.database], [db.port], [db.user]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.host]\n");
 	  //pmesg(LOG_ERROR,__FILE__,__LINE__,"[node.manager.service.app.home]\n");
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.path]\n");
-	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration_xml.download_url]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration.xml.path]\n");
+	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[esgf.registration.xml.download.url]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"[dashboard.ip.app.home]\n");
 	  pmesg(LOG_ERROR,__FILE__,__LINE__,"Please check!!!\n");
 	  myfree (esgf_properties);
@@ -689,30 +715,30 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   pthread_create (&pth_planA, NULL, &data_planA,NULL);
   pthread_mutex_unlock(&plana_mutex);
 
-  compute_remote_clients_data_mart();
+  //compute_remote_clients_data_mart();
 
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
-  compute_aggregate_data_user_metrics();
+  //compute_aggregate_data_user_metrics();
 
   //if (FEDERATED_STATS)
 	//federation_level_aggregation_metrics_planB();
 
-  pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
+  //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Starting the forever loop for the metrics collector\n");
 
   // start thread 
-  pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
+  //pthread_create (&pth, NULL, &data_download_metrics_dw_reconciliation,NULL);
 
-  if (ENABLE_REALTIME)
-  	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
+  //if (ENABLE_REALTIME)
+  //	pthread_create (&pth_realtime, NULL, &realtime_monitoring,NULL);
   
 
   // enabling threads pool for sensors
   //if (num_sensors!=-1)
   	//thread_manager_start (&threads[0],&sens_struct,num_sensors);
 
-
+#if 0
   counter = 0;
  // PRODUCTION_  while (iterator)
  // TEST_  while (iterator--)
@@ -771,14 +797,16 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
 	{
   	if (pthread_join (pth_realtime, NULL))
   		pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
-  	else
+  	elsepth_planA,
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
+#endif
   if (pthread_join (pth_planA, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else
   	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Pre-compute data download metrics thread joined the master for PLANA!\n");
 
+  pthread_detach(pth_planA);
   pthread_mutex_destroy(&plana_mutex);
  
 if(strcmp(ALLOW_FEDERATION, "yes")==0)
@@ -813,6 +841,8 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
   myfree (ESGF_HOSTNAME);
   myfree (ESGF_NODE_SOLR);
   myfree (DASHBOARD_SERVICE_PATH);
+
+  pthread_exit(NULL);
 
   fprintf(stderr,"[END] esgf-dashboard-ip end\n");
 
@@ -970,7 +1000,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "esgf.registration_xml.path")))
+	  if (!(strcmp (buffer, "esgf.registration.xml.path")))
 	    {
 	      strcpy (REGISTRATION_XML_PATH =
 		      (char *) malloc (strlen (value_buffer) + 1),
@@ -978,7 +1008,7 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 	      (*notfound)--;
 	      (*mandatory_properties)--;
 	    }
-	  if (!(strcmp (buffer, "esgf.registration_xml.download_url")))
+	  if (!(strcmp (buffer, "esgf.registration.xml.download.url")))
 	    {
 	      strcpy (REGISTRATION_XML_URL =
 		      (char *) malloc (strlen (value_buffer) + 1),

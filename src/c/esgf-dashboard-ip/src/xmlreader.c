@@ -127,32 +127,64 @@ int count_metadata(xmlDocPtr * doc, char *tag, char *projectName)
 }
 
 
-int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetproj, int cnt, int c, int j, int first_query, int num)
+int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetproj, int cnt, int c, int j, int first_query, int num, int child)
 {
   int num_children=0;
   xmlChar *prop = NULL;
   xmlXPathObjectPtr result;
-  int i,k=0;
-  xmlNodePtr node,node1;
+  int i,cnt_k=0;
+  int flg=0;
+  int k=0;
+  int u=0;
+  xmlNodePtr node=NULL;
+  xmlNodePtr node1=NULL;
+  xmlChar *content=NULL;
   char *str=NULL;
   int res_met=0;
   result = getnodeset(doc, BAD_CAST tag, NULL, NULL);
+  
   if (result)
         {
+               if(child>1)
+                (*datasetproj)[cnt]->first[c]->first[j]->value=realloc ((*datasetproj)[cnt]->first[c]->first[j]->value, (child+1)*sizeof(char**));
                 for(i = 0; i < result->nodesetval->nodeNr; i++)
                 {
                         node = result->nodesetval->nodeTab[i];
                         node = node->children;
                         for (node1 = node; node1; node1 = node1->next)
                         {
-                             xmlChar *content=xmlNodeGetContent(node1);
-                             (*datasetproj)[cnt]->first[c]->first[j]->value[k]=xmlStrdup(content);
-                             xmlFree(content);
+                             cnt_k++;
+                        }
+                }
+                //printf("cnt_k vale %d\n", cnt_k);
+                flg=cnt_k-child;
+                for(i = 0; i < result->nodesetval->nodeNr; i++)
+                {
+                        node = result->nodesetval->nodeTab[i];
+                        node = node->children;
+                        for (node1 = node; node1; node1 = node1->next)
+                        {
+                             if(k>=flg)
+                             {
+                               if (node1 != NULL)
+                               {
+                                  content=xmlNodeGetContent(node1);
+                                  if((*datasetproj)[cnt]->first[c]->first[j]->value[u])
+                                    free((*datasetproj)[cnt]->first[c]->first[j]->value[u]);
+                                  (*datasetproj)[cnt]->first[c]->first[j]->value[u]=strdup(content);
+                                  xmlFree(content);
+                                  content=NULL;
+                               }
+                               u++;
+                             }
                              k++;
                         }
                 }
-                (*datasetproj)[cnt]->first[c]->first[j]->size=k;
+                //printf("child vale %d\n", child);
+                (*datasetproj)[cnt]->first[c]->first[j]->size=child;
+                (*datasetproj)[cnt]->first[c]->first[j]->value[child]=NULL;
                 xmlXPathFreeObject(result);
+                xmlCleanupParser();
         }
         else
         {
@@ -218,7 +250,10 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
               if(xmlStrcasecmp(prop, (xmlChar *)"dataset_id")==0)
               {
                 prop1 = xmlNodeGetContent(cur_node);
-                (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
+                if(id_query[cnt])
+                   (*datasetproj)[cnt]->id_query=atoi(id_query[cnt]);
+                else
+                   (*datasetproj)[cnt]->id_query=0;
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1);
                 //printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
 
@@ -283,12 +318,13 @@ int read_conf_file(xmlNode * a_node, char *projectName, struct dataset_project *
                          prop1 = xmlGetProp(cur_node, (xmlChar *)"occ");
                          if(prop1)
                          {
+                            xmlChar* content=NULL;
                             (*datasetproj)[cnt]->first[i]->first[k]=(struct metadata_entry*)calloc (1, sizeof(struct metadata_entry));
                             (*datasetproj)[cnt]->first[i]->first[k]->occ=strdup((char *)(prop1));
-                            xmlChar* content=xmlNodeGetContent(cur_node);
+                            content=xmlNodeGetContent(cur_node);
                             (*datasetproj)[cnt]->first[i]->first[k]->name=strdup((char *) content);
                             (*datasetproj)[cnt]->first[i]->first[k]->value = (char**)calloc (1, sizeof(char *));
-                            (*datasetproj)[cnt]->first[i]->first[k]->value[0]=NULL;
+                            //(*datasetproj)[cnt]->first[i]->first[k]->value[0]=NULL;
                             xmlFree(content);
                             content=NULL;
                             k++;
@@ -333,7 +369,8 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
     if(query==1)
     {
        sprintf(str, "//%s[@name='%s']",  (*datasetproj)[cnt]->first[j]->first[num]->occ, (*datasetproj)[cnt]->first[j]->first[num]->name);
-       res=retrieve_tag(doc, str, datasetproj, cnt, j, num, query, num);
+       res=count_tag(doc,str);
+       res=retrieve_tag(doc, str, datasetproj, cnt, j, num, query, num, res);
     }
     else
     {
@@ -343,7 +380,8 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
             sprintf(str, "//arr[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->name);
           else
             sprintf(str, "//%s[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->occ,(*datasetproj)[cnt]->first[j]->first[k]->name);
-          res=retrieve_tag(doc, str, datasetproj, cnt, j, k, query, num);
+          res=count_tag(doc,str);
+          res=retrieve_tag(doc, str, datasetproj, cnt, j, k, query, num, res);
        }
     }
   return res;
@@ -370,7 +408,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        }
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
-       ftpfile[cnt]->flag = strdup(flagid[cnt]);
+       ftpfile[cnt]->flag = atoi(flagid[cnt]);
        //printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
@@ -532,7 +570,11 @@ void free_struct_datasetproj(struct dataset_project **datasetproj)
 int cnt;
     for(cnt=0; datasetproj[cnt]!=NULL; cnt++)
     {
-        int size, size2, size3, size4;
+        int size=0;
+        int size2=0; 
+        int size3=0;
+        int size4=0;
+
         for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
         {
           //printf("project**** vale %s\n", datasetproj[cnt]->first[size2]->project);
@@ -542,18 +584,19 @@ int cnt;
               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
               {
                 //printf("size 3 vale %d\n", size3);
-                if(datasetproj[cnt]->first[size2]->first[size3]->occ)
+                //if(datasetproj[cnt]->first[size2]->first[size3]->occ)
                   //printf("1 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->occ);
-                if(datasetproj[cnt]->first[size2]->first[size3]->name)
+                //if(datasetproj[cnt]->first[size2]->first[size3]->name)
                   //printf("2 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->name);
-                for(size4=0; datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                int len = sizeof(datasetproj[cnt]->first[size2]->first[size3]->value) / sizeof(datasetproj[cnt]->first[size2]->first[size3]->value[0]);
+                for(size4=0; size4<len && datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                 {
                    //printf("3 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    free(datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    datasetproj[cnt]->first[size2]->first[size3]->value[size4]=NULL;
                 }
-                free(datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
-                datasetproj[cnt]->first[size2]->first[size3]->value[size4]=NULL;
+                //free(datasetproj[cnt]->first[size2]->first[size3]->value[len]);
+                //datasetproj[cnt]->first[size2]->first[size3]->value[len]=NULL;
                 free(datasetproj[cnt]->first[size2]->first[size3]->name);
                 datasetproj[cnt]->first[size2]->first[size3]->name=NULL;
                 free(datasetproj[cnt]->first[size2]->first[size3]->occ);
@@ -767,8 +810,11 @@ int read_shards(char *shardsName)
 {
     int i=0;
     int *res=0;
-    xmlDocPtr doc;
+    xmlDocPtr doc=NULL;
     xmlNode *root_element = NULL;
+
+    LIBXML_TEST_VERSION
+    
     /*parse the file and get the DOM */
     int size=getFilesize(shardsName); 
     if(size==0)
@@ -787,13 +833,10 @@ int read_shards(char *shardsName)
     /*Get the root element node */
     root_element = xmlDocGetRootElement(doc);
 
-    xmlNode *cur_node = NULL;
-    xmlNode *a_node = NULL;
-    xmlChar *prop = NULL;
     print_element(root_element,&res);
     xmlFreeDoc(doc);
-    xmlCleanupParser();
-    xmlMemoryDump();
+    //xmlCleanupParser();
+    //xmlMemoryDump();
     return res;
 }
 void print_element(xmlNode * a_node, int *res)
@@ -816,6 +859,7 @@ void print_element(xmlNode * a_node, int *res)
                         //printf("content %s\n", content);
                         *res=1;
                      }
+                     xmlFree(content);
                      //else
                         //printf("content %s\n", "no found");
                 }
@@ -985,7 +1029,8 @@ int read_dmart_feder(char *dmartName)
         PQclear(res2);
         PQfinish(conn);
         return -2;
-      }
+     }
+     PQclear(res2);
 
 #if 0
       sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
@@ -1027,18 +1072,23 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
     int num_metadata=0;
     int cnt=0;
     int i=0;
+    int tab_n=0;
     int kind_dmart=0; 
+    char **host_n=NULL;
     char **fields=NULL;
     char **values=NULL;
     fields=(char **)calloc (2, sizeof(char*));
     values=(char **)calloc (2, sizeof(char*));
+    host_n=(char **)calloc (2, sizeof(char*));
     xmlChar *prop=NULL; 
     char query[2048]={'\0'};
 //0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time; 12 - cross_dmart_isenes_kpis;   
                             PGresult *res2;
                             PGresult *res3;
+                            int del_flag=0;
     
     for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        tab_n=0;
         if (cur_node->type == XML_ELEMENT_NODE) {
             if(xmlStrcasecmp(cur_node->name, (xmlChar *)"table")==0)
 	    {
@@ -1046,13 +1096,14 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                if(prop)
 	       {
                  tableName=strdup(prop);
+                 tab_n=1;
                }
                xmlFree(prop);
             }
             if(xmlStrcasecmp(cur_node->name, (xmlChar *)"row")==0)
             {
                     //printf("******* %s**********\n","row");
-                    read_elem_fed(cur_node->children, tableName, fields, values);
+                    read_elem_fed(cur_node->children, tableName, fields, values, host_n);
                     char *str_c=strrchr(fields[0],',');
                     if (str_c)
                       *str_c=0;
@@ -1074,11 +1125,10 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                               PQclear(res2);
                               free(fields[0]);
                               free(values[0]);
+                              free(host_n[0]);
                               fields[0]=NULL;
                               values[0]=NULL;
-                              free(fields); 
-                              free(values);
-                              return -2;
+                              host_n[0]=NULL;
                             }
                             PQclear(res2);
 
@@ -1149,7 +1199,15 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                    sprintf(str_tmp, "%s", "gb, downloads,files,users, month, year,continent,host");
                    fields[0]=strdup(str_tmp);
                  }
-                 sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
+                 if(del_flag==0)
+                 {
+                   sprintf(query, "DELETE FROM esgf_dashboard.%s where host_name='%s';INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, host_n[0], tableName, fields[0], values[0]);
+                   del_flag=1;
+                 }
+                 else
+                    sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
+
+           
                       //printf("query vale %s\n", query);
                               res3 = PQexec(conn2, query);
                             if ((!res3) || (PQresultStatus (res3) != PGRES_COMMAND_OK))
@@ -1159,13 +1217,13 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                               PQclear(res3);
                               free(fields[0]);
                               free(values[0]);
+                              free(host_n[0]);
                               fields[0]=NULL;
                               values[0]=NULL;
-                              free(fields); 
-                              free(values);
-                              return -2;
+                              host_n[0]=NULL;
                             }
-                            PQclear(res3);
+                            else
+                              PQclear(res3);
                             res2 = PQexec(conn2, QUERY4);
                             pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
                             pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
@@ -1176,20 +1234,19 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                               PQclear(res2);
                               free(fields[0]);
                               free(values[0]);
+                              free(host_n[0]);
                               fields[0]=NULL;
                               values[0]=NULL;
-                              free(fields); 
-                              free(values);
-                              return -2;
+                              host_n[0]=NULL;
                              }
                              PQclear(res2);
                     //}      
                     free(fields[0]);
                     free(values[0]);
+                    free(host_n[0]);
                     fields[0]=NULL;
                     values[0]=NULL;
-                    free(fields); 
-                    free(values);
+                    host_n[0]=NULL;
                         
             }      
 		  //if(xmlStrcasecmp(prop, (xmlChar *)"obs4mips_dmart_clients_host_time_geolocation")==0)
@@ -1205,7 +1262,15 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
             //}
         }
         print_element_dmart_feder_names(cur_node->children, tableName, conn2);
+        if(tab_n==1)
+        {
+          free(tableName);
+          tableName=NULL;
+        }
     }
+    free(fields);
+    free(values);
+    free(host_n);
 }
 
 #if 0
@@ -1257,7 +1322,7 @@ int getFilesize(const char* filename) {
     }
     return st.st_size;   
 }
-int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **values)
+int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **values, char **host_n)
 {
     xmlNode *cur_node = NULL;
     xmlChar *prop = NULL;
@@ -1267,8 +1332,10 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
     int k=0;
     char str_field[2056] = { '\0' };
     char str_value[2056] = { '\0' };
+    char str_host[2056] = { '\0' };
     strcpy(str_field, "");
     strcpy(str_value, "");
+    strcpy(str_host, "");
 
                         for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
                           if(xmlStrcasecmp(cur_node->name, (xmlChar *)"field")==0)
@@ -1277,6 +1344,12 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                             if(prop1)
                             {
                                xmlChar* content=xmlNodeGetContent(cur_node);
+                               if(strcmp(prop1, "project_name")==0)
+                                 uppercase(content);
+                               if(strcmp(prop1, "host_name")==0)
+                               {
+                                    strcat(str_host, content);
+                               }
                                //printf("name vale %s\n", prop1);
                                strcat(str_field, prop1);
                                strcat(str_field, ",");
@@ -1499,10 +1572,16 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                             xmlFree(prop1);
                          }
                       }
+                      //printf("str_field vale %s\n", str_field);
+                    
                       fields[0]=strdup(str_field);
                       fields[1]=NULL;
+                      //printf("str_value vale %s\n", str_value);
                       values[0]=strdup(str_value);
                       values[1]=NULL;
+                      //printf("str_host vale %s\n", str_host);
+                      host_n[0]=strdup(str_host);
+                      host_n[1]=NULL;
 
     return 0;
  //}
@@ -1592,6 +1671,7 @@ int delete_federated(char *hostname, char *datamart)
         PQfinish(conn);
         return -2;
      }
+     PQclear(res2);
      sprintf(query, "delete from esgf_dashboard.%s where host_name='%s';", datamart, hostname);
      
       //printf("query vale %s\n", query);

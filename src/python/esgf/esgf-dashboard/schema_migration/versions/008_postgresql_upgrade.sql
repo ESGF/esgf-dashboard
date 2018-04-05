@@ -15,10 +15,131 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
+drop trigger if exists store_new_entry on esgf_node_manager.access_logging;
+drop trigger if exists store_update_entry on esgf_node_manager.access_logging;
+drop trigger if exists store_delete_entry on esgf_node_manager.access_logging;
+
+drop function if exists delete_dashboard_queue();
+drop function if exists update_dashboard_queue();
+drop function if exists store_dashboard_queue();
+drop function if exists update_url(integer);
+
+--
+-- Fuction to verify if the language exists
+--
+CREATE OR REPLACE FUNCTION create_language_plpgsql()
+RETURNS BOOLEAN AS $$
+    CREATE LANGUAGE plpgsql;
+    SELECT TRUE;
+$$ LANGUAGE SQL;
+
+SELECT CASE WHEN NOT
+    (
+        SELECT  TRUE AS exists
+        FROM    pg_language
+        WHERE   lanname = 'plpgsql'
+        UNION
+        SELECT  FALSE AS exists
+        ORDER BY exists DESC
+        LIMIT 1
+    )
+THEN
+    create_language_plpgsql()
+ELSE
+    FALSE
+END AS plpgsql_created;
+
+DROP FUNCTION create_language_plpgsql();
+
+--
+-- Fuction to verify if a table exists
+--
+DROP FUNCTION if EXISTS table_exists(TEXT, TEXT) CASCADE;
+
+CREATE FUNCTION table_exists(tablename TEXT, tableschema TEXT) RETURNS integer AS'
+DECLARE
+tab1 alias for $1;
+tab2 alias for $2;
+BEGIN
+IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''esgf_dashboard'' AND table_name=tab1) THEN
+  if tab1=''dashboard_queue'' then
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''id_dash'') THEN
+       alter table esgf_dashboard.dashboard_queue add column id_dash bigserial PRIMARY KEY ;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''id'') THEN
+       alter table esgf_dashboard.dashboard_queue add column id integer NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''url_path'') THEN
+       alter table esgf_dashboard.dashboard_queue add column url_path character varying NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''remote_addr'') THEN
+       alter table esgf_dashboard.dashboard_queue add column remote_addr character varying NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''user_id_hash'') THEN
+       alter table esgf_dashboard.dashboard_queue add column user_id_hash character varying NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''user_idp'') THEN
+       alter table esgf_dashboard.dashboard_queue add column user_idp character varying NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''service_type'') THEN
+       alter table esgf_dashboard.dashboard_queue add column service_type character varying NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''success'') THEN
+       alter table esgf_dashboard.dashboard_queue add column success boolean;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''duration'') THEN
+       alter table esgf_dashboard.dashboard_queue add column duration double precision;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''size'') THEN
+       alter table esgf_dashboard.dashboard_queue add column size bigint DEFAULT(-1);
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''timestamp'') THEN
+       alter table esgf_dashboard.dashboard_queue add column timestamp double precision NOT NULL;
+    END IF;
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''processed'') THEN
+       alter table esgf_dashboard.dashboard_queue add column processed smallint DEFAULT 0 NOT NULL;
+    END IF;
+  end if;
+  if (tab1=''cross_dmart_project_host_time'' OR tab1=''cross_dmart_project_host_geolocation'' OR tab1=''obs4mips_dmart_clients_host_geolocation'' OR tab1=''obs4mips_dmart_variable_host_time'' OR tab1=''obs4mips_dmart_source_host_time'' OR tab1=''obs4mips_dmart_realm_host_time'' OR tab1=''cmip5_dmart_clients_host_geolocation'' OR tab1=''cmip5_dmart_model_host_time'' OR tab1=''cmip5_dmart_variable_host_time'' OR tab1=''cmip5_dmart_dataset_host_time'' OR tab1=''cmip5_dmart_clients_host_geolocation'' OR tab1=''cmip5_dmart_dataset_host_time'') then
+    EXECUTE ''DROP TABLE '' || tab1;
+    EXECUTE tab2;
+  end if;
+  return 0;
+ELSE
+  EXECUTE tab2;
+return 1;
+END IF;
+END;
+'LANGUAGE 'plpgsql';
+
 --
 -- Name: dashboard_queue; Type: TABLE; Schema: esgf_dashboard; Owner: dbsuper; Tablespace:
 --
-
+select table_exists('dashboard_queue','
 CREATE TABLE dashboard_queue (
     id_dash bigserial PRIMARY KEY,                      -- unique id
     id integer NOT NULL,                                -- access_logging table id                       
@@ -34,16 +155,12 @@ CREATE TABLE dashboard_queue (
     processed smallint DEFAULT 0 NOT NULL               -- dashboard flag
 );
 
-ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;
-
---
--- Function to update the urls in the dashboard_queue table
---
-CREATE LANGUAGE plpgsql;
+ALTER TABLE esgf_dashboard.dashboard_queue OWNER TO dbsuper;');
 
 --
 -- Insert into the dashboard_queue_table a new row stored in the access_logging table
 --
+DROP FUNCTION if EXISTS store_dashboard_queue() CASCADE;
 
 CREATE FUNCTION store_dashboard_queue() RETURNS trigger AS
 $store_new_entry$
@@ -59,6 +176,7 @@ RETURN NEW;
 END
 $store_new_entry$ LANGUAGE plpgsql;
 
+DROP FUNCTION if EXISTS update_dashboard_queue() CASCADE;
 
 CREATE FUNCTION update_dashboard_queue() RETURNS trigger AS
 $store_update_entry$
@@ -77,6 +195,8 @@ end if;
 RETURN NEW;
 END
 $store_update_entry$ LANGUAGE plpgsql;
+
+DROP FUNCTION if EXISTS delete_dashboard_queue() CASCADE;
 
 CREATE FUNCTION delete_dashboard_queue() RETURNS trigger AS
 $store_delete_entry$
@@ -100,4 +220,5 @@ CREATE TRIGGER store_delete_entry
 AFTER DELETE ON
 esgf_node_manager.access_logging
 FOR EACH ROW EXECUTE PROCEDURE delete_dashboard_queue();
+
 SET search_path = public, pg_catalog;
