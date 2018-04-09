@@ -363,7 +363,7 @@ void * data_planA(void *arg)
             {
               line[strlen(line)-1]='\0';
               sprintf(str, "%d", i);
-              //printf("line vale %s\n", line);
+              //printf("line is %s\n", line);
               hashtbl_insert (hashtbl_no_auth, (char *) line, (char *) str);
               i++;
             }

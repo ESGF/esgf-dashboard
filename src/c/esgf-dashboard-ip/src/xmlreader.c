@@ -108,7 +108,6 @@ int count_metadata(xmlDocPtr * doc, char *tag, char *projectName)
                 {
                    node = result->nodesetval->nodeTab[i];
                    prop = xmlGetProp(node, (xmlChar *)"name");
-                   //printf("prop vale %s\n", prop);
                    if(xmlStrcasecmp(prop, (xmlChar *)projectName)==0)
                    {
                        for (cur_node = node->children; cur_node; cur_node = cur_node->next) {
@@ -156,7 +155,6 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
                              cnt_k++;
                         }
                 }
-                //printf("cnt_k vale %d\n", cnt_k);
                 flg=cnt_k-child;
                 for(i = 0; i < result->nodesetval->nodeNr; i++)
                 {
@@ -180,7 +178,6 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
                              k++;
                         }
                 }
-                //printf("child vale %d\n", child);
                 (*datasetproj)[cnt]->first[c]->first[j]->size=child;
                 (*datasetproj)[cnt]->first[c]->first[j]->value[child]=NULL;
                 xmlXPathFreeObject(result);
@@ -255,28 +252,7 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
                 else
                    (*datasetproj)[cnt]->id_query=0;
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1);
-                printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
 
-#if 0
-                char *tmp_str=strstr(prop1, "|");
-                char *tmp_str1=strstr(prop1, "|");
-                if(tmp_str)
-                {
-                   *tmp_str = 0; 
-                   sprintf(str_dataset_id,"%s%s%s",prop1,"%7C",tmp_str1+1); 
-                   //printf("str_dataset_id vale %s\n", str_dataset_id);
-                }
-          
-                (*datasetproj)[cnt]->dataset_id=strdup(str_dataset_id); 
-                /*char *tmp_str=strstr(prop1, "|");
-                if(tmp_str)
-                {
-                   *tmp_str = 0; 
-                }
-                char *tmp_str1=strstr(prop1, ".v");
-                if(tmp_str1)
-                  (*datasetproj)[cnt]->version=strdup(tmp_str1+2);*/
-#endif
                 xmlFree(prop1);
               }
               if(xmlStrcasecmp(prop, (xmlChar *)"project")==0)
@@ -409,7 +385,6 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        ftpfile[cnt]->id_query=atoi(id_query[cnt]);
        ftpfile[cnt]->URL = strdup(URL[cnt]);
        ftpfile[cnt]->flag = atoi(flagid[cnt]);
-       //printf("URL vale %s\n", URL[cnt]);
        if(!ftpfile[cnt]->URL)
        {
          //pmesg(LOG_ERROR, __FILE__, __LINE__,"Not enough memory. Error in strdup");
@@ -424,9 +399,7 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        if(URL[cnt])
        {
          str_1=strdup(URL[cnt]);
-         //printf("str_1 vale %s\n", str_1);
          filename=strrchr(str_1, '/');
-         //printf("filename vale %s\n", filename+1);
          free(str_1);
          
        }
@@ -457,7 +430,6 @@ int alloca_struct_FtpFile(struct FtpFile **ftpfile, char** URL, char** id_query,
        //free(filename);
        filename=NULL;
        filename=strdup(str_2);
-       printf("filename**** vale %s\n", filename);
        ftpfile[cnt]->filename = strdup(filename);
        free(filename);
        filename=NULL;
@@ -577,21 +549,19 @@ int cnt;
 
         for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
         {
-          //printf("project**** vale %s\n", datasetproj[cnt]->first[size2]->project);
-          //printf("size 2 vale %d\n", size2);
           for(size3=0; datasetproj[cnt]->first[size2]->first[size3]!=NULL; size3++)
           {
               if(datasetproj[cnt]->first[size2]->first[size3]!=NULL)
               {
-                //printf("size 3 vale %d\n", size3);
+                //printf("size 3 is %d\n", size3);
                 //if(datasetproj[cnt]->first[size2]->first[size3]->occ)
-                  //printf("1 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->occ);
+                  //printf("1 is %s\n", datasetproj[cnt]->first[size2]->first[size3]->occ);
                 //if(datasetproj[cnt]->first[size2]->first[size3]->name)
-                  //printf("2 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->name);
+                  //printf("2 is %s\n", datasetproj[cnt]->first[size2]->first[size3]->name);
                 int len = sizeof(datasetproj[cnt]->first[size2]->first[size3]->value) / sizeof(datasetproj[cnt]->first[size2]->first[size3]->value[0]);
                 for(size4=0; size4<len && datasetproj[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                 {
-                   //printf("3 vale %s\n", datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
+                   //printf("3 is %s\n", datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    free(datasetproj[cnt]->first[size2]->first[size3]->value[size4]);
                    datasetproj[cnt]->first[size2]->first[size3]->value[size4]=NULL;
                 }
@@ -608,9 +578,7 @@ int cnt;
               datasetproj[cnt]->first[size2]->first[size3]->value=NULL;
               free(datasetproj[cnt]->first[size2]->first[size3]);
               datasetproj[cnt]->first[size2]->first[size3]=NULL;
-              //printf("SIZE 3 con incremento vale %d\n", size3);
          }
-         //printf("SIZE 3 vale %d\n", size3);
          free(datasetproj[cnt]->first[size2]->first[size3]);
          datasetproj[cnt]->first[size2]->first[size3]=NULL;
          free(datasetproj[cnt]->first[size2]->project);
@@ -741,7 +709,6 @@ int read_conf_project(char *filename_conf, struct dataset_project ***datasetproj
     }
 
     
-    //printf("num_metadata vale %d\n", num_metadata);
     
     /*Get the root element node */
     root_element = xmlDocGetRootElement(doc);
@@ -751,7 +718,6 @@ int read_conf_project(char *filename_conf, struct dataset_project ***datasetproj
     {
       //printf("leggo file di configurazione con progetto %s\n", (*datasetproj)[cnt]->first[i]->project);
       int num_metadata=count_metadata(doc,"/projects/project", (*datasetproj)[cnt]->first[i]->project);
-      //printf("num_metadata vale %d\n", num_metadata);
       (*datasetproj)[cnt]->first[i]->size=num_metadata;
       if(num_metadata>0)
       {
@@ -779,9 +745,9 @@ int read_conf_project(char *filename_conf, struct dataset_project ***datasetproj
         {
           if(datasetproj[size1]->first[size2]->occ)
           {
-            printf("size 2 vale %d\n", size2);
-            printf("1 vale %s\n", datasetproj[size1]->first[size2]->occ);
-            printf("2 vale %s\n", datasetproj[size1]->first[size2]->name);
+            printf("size 2 is %d\n", size2);
+            printf("1 is %s\n", datasetproj[size1]->first[size2]->occ);
+            printf("2 is %s\n", datasetproj[size1]->first[size2]->name);
           }
        }
      }
@@ -792,9 +758,9 @@ int read_conf_project(char *filename_conf, struct dataset_project ***datasetproj
     for(size1=0; metadata[size1]!=NULL; size1++)
     {
         
-        printf("1 vale %s\n", metadata[size1]->occ);
-        printf("2 vale %s\n", metadata[size1]->name);
-        printf("3 vale %s, size vale %d\n", metadata[size1]->value, size1);
+        printf("1 is %s\n", metadata[size1]->occ);
+        printf("2 is %s\n", metadata[size1]->name);
+        printf("3 is %s, size is %d\n", metadata[size1]->value, size1);
     }
 
     
@@ -1210,7 +1176,7 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
                     sprintf(query, "INSERT INTO esgf_dashboard.%s(%s)values(%s);", tableName, fields[0], values[0]);
 
            
-                      //printf("query vale %s\n", query);
+                      //printf("query is %s\n", query);
                               res3 = PQexec(conn2, query);
                             if ((!res3) || (PQresultStatus (res3) != PGRES_COMMAND_OK))
                             {
@@ -1352,10 +1318,10 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                {
                                     strcat(str_host, content);
                                }
-                               //printf("name vale %s\n", prop1);
+                               //printf("name is %s\n", prop1);
                                strcat(str_field, prop1);
                                strcat(str_field, ",");
-                               //printf("value vale %s\n", content);
+                               //printf("value is %s\n", content);
                                if(strcmp(tableName, "obs4mips_dmart_clients_host_time_geolocation")==0)
                                {
                                   if(k==5)
@@ -1574,14 +1540,14 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                             xmlFree(prop1);
                          }
                       }
-                      //printf("str_field vale %s\n", str_field);
+                      //printf("str_field is %s\n", str_field);
                     
                       fields[0]=strdup(str_field);
                       fields[1]=NULL;
-                      //printf("str_value vale %s\n", str_value);
+                      //printf("str_value is %s\n", str_value);
                       values[0]=strdup(str_value);
                       values[1]=NULL;
-                      //printf("str_host vale %s\n", str_host);
+                      //printf("str_host is %s\n", str_host);
                       host_n[0]=strdup(str_host);
                       host_n[1]=NULL;
 
@@ -1676,7 +1642,7 @@ int delete_federated(char *hostname, char *datamart)
      PQclear(res2);
      sprintf(query, "delete from esgf_dashboard.%s where host_name='%s';", datamart, hostname);
      
-      //printf("query vale %s\n", query);
+      //printf("query is %s\n", query);
       res2 = PQexec(conn, query);
       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
       {

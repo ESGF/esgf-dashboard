@@ -1205,7 +1205,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         xmlDoc *doc = NULL;
         xmlNode *root_element = NULL;
         char *filename_conf="../etc/conf.xml";
-        char str_url[256];
+        char str_url[2028];
         str_url[0]='\0';
         char *str_userid=NULL;
         char *hashtbl_result=NULL;
@@ -1338,7 +1338,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           }
           if(str_userid)
           {
-            //printf("str_userid3 vale %s\n", str_userid);
             free(str_userid);
             str_userid=NULL;
           }
@@ -1475,7 +1474,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           }
         }
         size_eff=size-size_eff;
-        //printf("size_eff vale %d\n", size_eff);
         if(size_eff==0)  //no downloads
         {
           myfree_array(URL,size+1);
@@ -1510,7 +1508,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                //queryid[i]=strdup(id_query[cnt]);
                //i++;
             //}
-            //printf("doc1 vale %s\n", tmp_file);
             queryid[i]=strdup(id_query[cnt]);
             flagid[i]=atoi(flag_id[cnt]);
             i++;
@@ -1615,7 +1612,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
                datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
                res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, flagid);
-               //printf("queryid[%d] vale %s\n", cnt, queryid[cnt]);
                datasetproj[cnt2]->first[res]=NULL;
                res1=read_conf_project(filename_conf,&datasetproj, cnt2);
               
@@ -1639,7 +1635,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                  datasetid[cnt2]=NULL;
                }
                datasetid[cnt2] = strdup(str_url);
-               //printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
                cnt2++;
           }
           else
@@ -1714,7 +1709,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
     for (cnt=0; ftpfile[cnt]->filename!=NULL; cnt++)
     {
       /*parse the file and get the DOM */
-      //printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
       char tmp_file[2048] = {'\0'};
       sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
       struct stat st = {0};
@@ -1745,7 +1739,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
       /*Get the root element node */
       root_element = xmlDocGetRootElement(doc);
       int size1,size2, size3,size4;
-      //printf("cnt vale %d e size2 vale %d\n", cnt, size2); 
       for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
       {
           int num_metadata=datasetproj[cnt]->first[size2]->size;

@@ -244,7 +244,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 create_populate_done=0;
     
         // SELECT START
-                  //printf("ID vale %d and flag vale %d\n", (*datasetproj)[cnt]->id_query, (*datasetproj)[cnt]->flag);
+                  //printf("ID is %d and flag is %d\n", (*datasetproj)[cnt]->id_query, (*datasetproj)[cnt]->flag);
 
                 //continue; 
                 snprintf (select_query, sizeof (select_query), QUERY_SELECT_DASHBOARD_QUEUE, (*datasetproj)[cnt]->id_query);
@@ -403,7 +403,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_model=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     model=(char **)calloc(size_model+1, sizeof(char*));
-                    //printf("size_model vale %d\n", size_model);                    
+                    //printf("size_model is %d\n", size_model);                    
                     //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                     for(size4=0; size4<size_model; size4++)
                     {                    
@@ -426,7 +426,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
                       version=(*datasetproj)[cnt]->first[size2]->first[size3]->value[size4];
-                      printf("version vale %s\n", version);
+                      printf("version is %s\n", version);
                   }*/
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "dataset_id")==0)
                   {
@@ -662,7 +662,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                  //while (*str2==' ') str2++;  
                  //if (str2!=key_geo) memmove(key_geo,str2,strlen(str2)+1); 
 
-                 //printf("str_geo vale %s\n",key_geo);
+                 //printf("str_geo is %s\n",key_geo);
                  //sprintf(key_geo,"%s", str_geo);
                  //lat=geo_output.latitude;
                  //lon=geo_output.longitude;
@@ -889,7 +889,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	     submit_query (conn, insert_cross_bridge_project);
 	     snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_FACT_ROW,  size_row, success_row, duration_row, replica, user_id_hash_row, esgf_node, user_idp_row, buf3,buf4, project_group_key, geo_id, date_id,(*datasetproj)[cnt]->id_query);
 
-             //printf("select_id_fact_query vale %s\n", select_id_fact_query);
+             //printf("select_id_fact_query is %s\n", select_id_fact_query);
              fact_id=get_foreign_key_value(conn, select_id_fact_query);
              sprintf (fact_id_str, "%ld", fact_id);
              //printf("FACT ID %ld", fact_id);
@@ -3140,7 +3140,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char fact_obs_id_str[256] = { '\0' };
                 snprintf (insert_obs4mips_fact_download, sizeof (insert_obs4mips_fact_download), QUERY_INSERT_OBS_FACT_DOWNLOAD,size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 	        submit_query (conn, insert_obs4mips_fact_download);
-                //printf("query vale %s\n", insert_obs4mips_fact_download);
+                //printf("query is %s\n", insert_obs4mips_fact_download);
 
                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_OBS_ROW, size_row, success_row, duration_row, user_id_hash_row, esgf_node, user_idp_row, buf3, buf4, index_node, dataset_id_key, file_id, geo_obs_id, date_obs_id, institute_group_key, var_group_key, time_freq_group_key, proc_lev_group_key, source_id_group_key, realm_group_key,(*datasetproj)[cnt]->id_query);
 
@@ -3279,8 +3279,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
       hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
       hashtbl_destroy (hashtbl_obs_dim_date);
+      hashtbl_destroy (hashtbl_obs_dim_geolocation);
+      hashtbl_destroy (hashtbl_obs_bridge_variable);
     }
-    printf("create_populate_done ******%d\n", create_populate_done);
      if(dataset_id)
        free(dataset_id);
      if(size_file)
