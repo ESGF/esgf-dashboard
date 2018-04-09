@@ -21,8 +21,25 @@ drop trigger if exists store_delete_entry on esgf_node_manager.access_logging;
 drop function if exists delete_dashboard_queue() CASCADE;
 drop function if exists update_dashboard_queue() CASCADE;
 drop function if exists store_dashboard_queue() CASCADE;
+drop function if exists table_exists_userid() CASCADE; 
 
-alter table esgf_dashboard.dashboard_queue add column user_id character varying NOT NULL DEFAULT '<no-user_id>';
+CREATE FUNCTION table_exists_userid() RETURNS integer AS'
+DECLARE
+BEGIN
+IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''esgf_dashboard'' AND table_name=''dashboard_queue'') THEN
+  if tab1=''dashboard_queue'' then
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''user_id'') THEN
+       alter table esgf_dashboard.dashboard_queue add column user_id character varying NOT NULL DEFAULT ''<no-user_id>'';
+    END IF;
+  end if;
+END IF;
+return 0;
+END;
+'LANGUAGE 'plpgsql';
+
+select table_exists_userid();
 
 --
 -- Insert into the dashboard_queue_table a new row stored in the access_logging table
@@ -43,7 +60,7 @@ declare
 url_http varchar;
 BEGIN
 -- Update dashboard_queue table
-update esgf_dashboard.dashboard_queue set success=NEW.success, size=NEW.data_size, duration=NEW.duration WHERE id = OLD.id;
+update esgf_dashboard.dashboard_queue set success=NEW.success, size=NEW.data_size, duration=NEW.duration, user_id=NEW.user_id WHERE id = OLD.id;
 url_http:=url_path from esgf_dashboard.dashboard_queue WHERE id = OLD.id;
 if strpos(url_http,'http')<>0 then
 update esgf_dashboard.dashboard_queue set url_path=subquery.url_res
