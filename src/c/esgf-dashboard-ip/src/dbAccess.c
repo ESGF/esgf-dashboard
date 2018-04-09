@@ -1314,6 +1314,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         i=0;
         /* next, print out the rows */
         //for (i = 0; i < PQntuples(res1); i++)
+        size=PQntuples(res1);
         while(i < PQntuples(res1))
         {
           str_userid=strdup(PQgetvalue(res1, i, 2));
@@ -1404,8 +1405,8 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           PQfinish(conn);
           return -2;
         }
-        PQclear(res1);
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
+        PQclear(res1);
 
 
         struct FtpFile **ftpfile=NULL;
@@ -1430,7 +1431,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         }
         //printf("%s\n", "entro in download");
         res=ftp_download_file(ftpfile,size);
-        printf("%s\n", "esco in download");
+        //printf("%s\n", "esco in download");
 
         if(res!=SUCCESS)
         {
@@ -1614,6 +1615,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                datasetproj[cnt2]=(struct dataset_project *) calloc(1, sizeof(struct dataset_project));
                datasetproj[cnt2]->first=(struct project **)calloc (res+1, sizeof(struct project *));
                res1 = get_datasetid_solr(root_element, &datasetproj, cnt2,res, flagid);
+               //printf("queryid[%d] vale %s\n", cnt, queryid[cnt]);
                datasetproj[cnt2]->first[res]=NULL;
                res1=read_conf_project(filename_conf,&datasetproj, cnt2);
               
@@ -1743,6 +1745,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
       /*Get the root element node */
       root_element = xmlDocGetRootElement(doc);
       int size1,size2, size3,size4;
+      //printf("cnt vale %d e size2 vale %d\n", cnt, size2); 
       for(size2=0; datasetproj[cnt]->first[size2]!=NULL; size2++)
       {
           int num_metadata=datasetproj[cnt]->first[size2]->size;

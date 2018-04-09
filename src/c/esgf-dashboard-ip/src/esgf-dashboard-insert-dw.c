@@ -1953,9 +1953,11 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_geo, geo_id_str);
                   }
 
-              free(remote_addr);
-              remote_addr=NULL;
+              //free(remote_addr);
+              //remote_addr=NULL;
           }
+          free(remote_addr);
+          remote_addr=NULL;
               
 
 
@@ -3262,7 +3264,23 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
       hashtbl_destroy (hashtbl_cmip5_fact_download);
     }
-
+    if(create_populate_done==1)
+    {
+      hashtbl_destroy (hashtbl_obs_dim_institute);
+      hashtbl_destroy (hashtbl_obs_dim_variable);
+      hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+      hashtbl_destroy (hashtbl_obs_dim_realm);
+      hashtbl_destroy (hashtbl_obs_dim_dataset);
+      hashtbl_destroy (hashtbl_obs_bridge_institute);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+      hashtbl_destroy (hashtbl_obs_bridge_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+      hashtbl_destroy (hashtbl_obs_dim_date);
+    }
+    printf("create_populate_done ******%d\n", create_populate_done);
      if(dataset_id)
        free(dataset_id);
      if(size_file)

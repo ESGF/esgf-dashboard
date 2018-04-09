@@ -255,7 +255,7 @@ get_datasetid_solr(xmlNode * a_node, struct dataset_project ***datasetproj,int c
                 else
                    (*datasetproj)[cnt]->id_query=0;
                 (*datasetproj)[cnt]->dataset_id=strdup(prop1);
-                //printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
+                printf("++++++query vale %d\n", (*datasetproj)[cnt]->id_query);
 
 #if 0
                 char *tmp_str=strstr(prop1, "|");
@@ -877,6 +877,7 @@ int get_replica(xmlDocPtr doc,xmlNode *root_element)
     xmlNode *cur_node = NULL;
     xmlNode *a_node = NULL;
     xmlChar *prop = NULL;
+
     print_element_replica(root_element,&res);
     return res;
 }
@@ -900,6 +901,7 @@ void print_element_replica(xmlNode * a_node, int *res)
                         //printf("content %s\n", content);
                         *res=1;
                      }
+                     xmlFree(content);
                      //else
                         //printf("content %s\n", "no found");
                 }
