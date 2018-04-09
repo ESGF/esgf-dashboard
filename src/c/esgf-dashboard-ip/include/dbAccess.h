@@ -208,11 +208,12 @@
 //
 // PLAN A
 // SELECT URL FROM DASHBOARD_QUEUE
-#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 1000;"
+#define QUERY_PLANA_SELECT_URL "select url_path,id,user_id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and url_path like '%%esg_dataroot%%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and id=415547;"
 #define QUERY_UPDATE_DASHBOARD_QUEUE "update esgf_dashboard.dashboard_queue set processed=1 where id=%d;"
+#define QUERY_UPDATE_DASHBOARD_QUEUE_NO_AUTH "update esgf_dashboard.dashboard_queue set processed=2 where id=%d;"
 #define QUERY_UPDATE_REGISTRY_INIT "update esgf_dashboard.registry set dmart_key=0,timestamp=0;"
 // QUERY_INSERT_CROSS_DIM_DATE adds a new date of the downloaded file in the database
 #define QUERY_INSERT_CROSS_DIM_DATE  "INSERT into esgf_dashboard.cross_dim_date(download_date,month,year) values('%s',%d,%d);"

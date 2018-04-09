@@ -22,6 +22,7 @@
 #include <libxml/xpath.h>
 #include <libxml/tree.h>
 #include <dirent.h>
+#include "../include/hashtbl.h"
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
@@ -1184,7 +1185,7 @@ int compute_federation()
 }
 
 //PLANA START
-int compute_solr_process_planA(int shards)
+int compute_solr_process_planA(int shards, HASHTBL ** pointer)
 {
   	char select_query_dashboard[2048] = { '\0' };
         int         nFields;
@@ -1204,11 +1205,13 @@ int compute_solr_process_planA(int shards)
         xmlDoc *doc = NULL;
         xmlNode *root_element = NULL;
         char *filename_conf="../etc/conf.xml";
-        char str_url[256];
+        char str_url[2028];
         str_url[0]='\0';
+        char *str_userid=NULL;
+        char *hashtbl_result=NULL;
 
-        LIBXML_TEST_VERSION
-        xmlInitParser();
+        //LIBXML_TEST_VERSION
+        //xmlInitParser();
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Process planA START\n");
 
@@ -1275,12 +1278,29 @@ int compute_solr_process_planA(int shards)
           PQfinish(conn);
           return -25;
     	}
+        
+       
+        int size_eff_b=0;
           
+        for (i = 0; i < PQntuples(res1); i++)
+        {
+          str_userid=strdup(PQgetvalue(res1, i, 2));
+          if (hashtbl_result = hashtbl_get (*pointer, str_userid))
+          {
+            size_eff_b++;
+          }
+          free(str_userid);
+          str_userid=NULL;
+        }
+        if(size_eff_b>0)
+          size=size_eff_b;
+                   
 
         URL=(char**) calloc (size+1, sizeof(char *));
         id_query=(char**) calloc (size+1, sizeof(char *));
         flag_id=(char**) calloc (size+1, sizeof(char *));
 
+         
         char url_comp1[2056]={'\0'};
         char url_comp[2056]={'\0'};
 
@@ -1290,9 +1310,38 @@ int compute_solr_process_planA(int shards)
         char *str_u2=NULL;
         char *str_replica=NULL;
         int ch=0;
+        int size_eff=0;
+        i=0;
         /* next, print out the rows */
-        for (i = 0; i < PQntuples(res1); i++)
+        //for (i = 0; i < PQntuples(res1); i++)
+        size=PQntuples(res1);
+        while(i < PQntuples(res1))
         {
+          str_userid=strdup(PQgetvalue(res1, i, 2));
+          if (hashtbl_result = hashtbl_get (*pointer, str_userid))
+          {
+               //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",str_userid, hashtbl_result);
+               size_eff++;
+               char update_dashboard_queue[2048] = { '\0' };
+               snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE_NO_AUTH,atoi(PQgetvalue(res1, i, 1)));
+
+               if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
+                  return 0;
+
+               if(str_userid)
+               {
+                 free(str_userid);
+                 str_userid=NULL;
+               }
+               i++;
+               continue;
+          }
+          if(str_userid)
+          {
+            free(str_userid);
+            str_userid=NULL;
+          }
+
           str_url1=strdup(PQgetvalue(res1, i, 0));
 
           str_u=strstr(str_url1, ".nc");
@@ -1317,14 +1366,30 @@ int compute_solr_process_planA(int shards)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files,localhost:8982/solr/files", url_comp1);
 
           free(str_url1);
-          URL[i]=strdup(url_comp);
-          id_query[i]=strdup(PQgetvalue(res1, i, 1));
-          flag_id[i]=strdup("0");
+          URL[ch]=strdup(url_comp);
+          id_query[ch]=strdup(PQgetvalue(res1, ch, 1));
+          flag_id[ch]=strdup("0");
+          i++;
+          ch++;
         }
-        size=PQntuples(res1);
-        URL[i]=NULL;
-        id_query[i]=NULL;
-        flag_id[i]=NULL;
+        if((size-size_eff)==0)
+        {
+          myfree_array(URL,size+1);
+          myfree_array(id_query,size+1);
+          myfree_array(flag_id,size+1);
+          PQclear(res1);
+          PQfinish(conn);
+          return 0; //sleep mode
+        }
+
+
+        if(size_eff==0)
+          size=PQntuples(res1);
+        else
+          size=size_eff;
+        URL[ch]=NULL;
+        id_query[ch]=NULL;
+        flag_id[ch]=NULL;
 
 
         // stop transaction
@@ -1339,10 +1404,9 @@ int compute_solr_process_planA(int shards)
           PQfinish(conn);
           return -2;
         }
-        PQclear(res1);
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
-        //myfree_array(URL,size+1);
-        //myfree_array(id_query,size+1);
+        PQclear(res1);
+
 
         struct FtpFile **ftpfile=NULL;
         ftpfile=calloc (size+2, sizeof(struct FtpFile *));
@@ -1367,7 +1431,6 @@ int compute_solr_process_planA(int shards)
         //printf("%s\n", "entro in download");
         res=ftp_download_file(ftpfile,size);
         //printf("%s\n", "esco in download");
-        int size_eff=0;
 
         if(res!=SUCCESS)
         {
@@ -1375,6 +1438,9 @@ int compute_solr_process_planA(int shards)
            size_eff++;
            pmesg(LOG_ERROR, __FILE__, __LINE__,"Error in download files");
         }
+        size_eff=0;
+
+
 
         for (cnt=0; cnt < size; cnt++)
         {
@@ -1400,20 +1466,21 @@ int compute_solr_process_planA(int shards)
                 size_eff++;
               }
               xmlFreeDoc(doc);
-              xmlCleanupCharEncodingHandlers();
-              xmlCleanupParser();
-              xmlMemoryDump();
+              //xmlCleanupCharEncodingHandlers();
+              //xmlCleanupParser();
+              //xmlMemoryDump();
+              doc=NULL;
             //}
           }
         }
         size_eff=size-size_eff;
-        //printf("size_eff vale %d\n", size_eff);
         if(size_eff==0)  //no downloads
         {
           myfree_array(URL,size+1);
           myfree_array(id_query,size+1);
           myfree_array(flag_id,size+1);
           free_struct_FtpFile(ftpfile);
+          PQfinish(conn);
           return -25; //sleep mode
         }
 
@@ -1433,7 +1500,8 @@ int compute_solr_process_planA(int shards)
           }
           else
           {
-            doc = xmlReadFile(tmp_file, NULL, 0);
+            xmlDocPtr doc1;
+            doc1 = xmlReadFile(tmp_file, NULL, 0);
             //if (doc != NULL)
             //{
             //   fprintf(stderr, "\n[%s:%d] Success: parse file %s\n", __FILE__, __LINE__, tmp_file);
@@ -1443,13 +1511,14 @@ int compute_solr_process_planA(int shards)
             queryid[i]=strdup(id_query[cnt]);
             flagid[i]=atoi(flag_id[cnt]);
             i++;
-            xmlFreeDoc(doc);
-            xmlCleanupCharEncodingHandlers();
-            xmlCleanupParser();
-            xmlMemoryDump();
+            xmlFreeDoc(doc1);
+            //xmlCleanupCharEncodingHandlers();
+            //xmlCleanupParser();
+            //xmlMemoryDump();
           }
         }
-        struct dataset_project **datasetproj;
+
+        struct dataset_project **datasetproj=NULL;
         datasetproj=calloc(size_eff+1, sizeof(struct dataset_project*));
 
         int query_kind=0;
@@ -1461,6 +1530,8 @@ int compute_solr_process_planA(int shards)
            /*parse the file and get the DOM */
           char tmp_file[2048] = {'\0'};
           sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
+
+          xmlDoc *doc = NULL; 
           doc = xmlReadFile(tmp_file, NULL, 0);
           if (doc == NULL)
           {
@@ -1469,7 +1540,8 @@ int compute_solr_process_planA(int shards)
             
             if(res==0) 
             {
-               doc = xmlReadFile(tmp_file, NULL, 0);
+               xmlDocPtr doc1;
+               doc1 = xmlReadFile(tmp_file, NULL, 0);
                if (doc == NULL)
                {
                  fprintf(stderr, "\n[%s:%d] Error: could not parse %s\n", __FILE__, __LINE__, ftpfile[cnt]->filename);
@@ -1487,6 +1559,7 @@ int compute_solr_process_planA(int shards)
                    fclose (pFile);
                  }
                }
+               xmlFreeDoc(doc1);
             }
             else
             {
@@ -1506,6 +1579,9 @@ int compute_solr_process_planA(int shards)
                  }
               }
           }
+
+
+
           if(flag==0)
           {
              /*Get the root element node */
@@ -1559,7 +1635,6 @@ int compute_solr_process_planA(int shards)
                  datasetid[cnt2]=NULL;
                }
                datasetid[cnt2] = strdup(str_url);
-               //printf("datasetid[%d] vale %s\n", cnt2, datasetid[cnt2]);
                cnt2++;
           }
           else
@@ -1597,15 +1672,16 @@ int compute_solr_process_planA(int shards)
       }
       flag=0;
       xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();
+      //xmlCleanupCharEncodingHandlers();
+      //xmlCleanupParser();
+      //xmlMemoryDump();
       res=remove(tmp_file);
     }
     datasetid[cnt2]=NULL;
-    datasetproj[cnt2]=NULL;
+    //datasetproj[cnt2]=NULL;
     myfree_array(URL,size+1);
     free_struct_FtpFile(ftpfile);
+
 
     ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
 
@@ -1633,7 +1709,6 @@ int compute_solr_process_planA(int shards)
     for (cnt=0; ftpfile[cnt]->filename!=NULL; cnt++)
     {
       /*parse the file and get the DOM */
-      //printf("FILENAME vale %s\n", ftpfile[cnt]->filename);
       char tmp_file[2048] = {'\0'};
       sprintf (tmp_file, ".work/%s", ftpfile[cnt]->filename);
       struct stat st = {0};
@@ -1651,10 +1726,12 @@ int compute_solr_process_planA(int shards)
           res=get_download_file_noparse(ftpfile[cnt]->filename,ftpfile[cnt]->URL);
           if(res==0)
           {
+            xmlFreeDoc(doc);
             doc = xmlReadFile(tmp_file, NULL, 0);
             if (doc == NULL)
             {
               continue;
+              xmlFreeDoc(doc);
             }
           }
         }
@@ -1684,9 +1761,9 @@ int compute_solr_process_planA(int shards)
 
       res=remove(tmp_file);
       xmlFreeDoc(doc);
-      xmlCleanupCharEncodingHandlers();
-      xmlCleanupParser();
-      xmlMemoryDump();
+      //xmlCleanupCharEncodingHandlers();
+      //xmlCleanupParser();
+      //xmlMemoryDump();
     }
     check_cross_project(conn, &datasetproj,ESGF_HOSTNAME, res_rep);
     insert_dmart_cross_project(conn);

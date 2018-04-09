@@ -964,7 +964,7 @@ thread_manager (struct sensor_struct *sens_struct, const unsigned num_sensors)
         {
           void *ptr = NULL;
           res = pthread_join (threads[c], &ptr);
-	  fprintf(stdout,"After joining the thread - res vale [%d] \n",res);
+	  fprintf(stdout,"After joining the thread - res is [%d] \n",res);
         }
     }
 
@@ -989,7 +989,7 @@ thread_manager_start (pthread_t *threads, struct sensor_struct *sens_struct, con
         {
           void *ptr = NULL;
           res = pthread_join (threads[c], &ptr);
-	  fprintf(stdout,"After joining the thread - res vale [%d] \n",res);
+	  fprintf(stdout,"After joining the thread - res is [%d] \n",res);
         }*/
 
 //  free (threads);
@@ -1006,7 +1006,7 @@ thread_manager_stop (pthread_t *threads, struct sensor_struct *sens_struct, cons
         {
           void *ptr = NULL;
           res = pthread_join (threads[c], &ptr);
-	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"After joining the thread - res vale [%d] \n",res);
+	  pmesg(LOG_DEBUG,__FILE__,__LINE__,"After joining the thread - res is [%d] \n",res);
         }
 //  free (threads);
   return 0;
@@ -1184,7 +1184,7 @@ int get_download_shards(char *path_xml, char *file_dest)
 
   sprintf(buffer1, "http://%s/esg-search/search/?type=File&latest=true&distrib=true&format=application%ssolr%sxml", ESGF_NODE_SOLR,"%%2F","%2B");
   snprintf (url_action, sizeof (url_action),buffer1);
-  //printf("url action vale %s\n", url_action);
+  //printf("url action is %s\n", url_action);
   sprintf (tmp_file, "%s/%s", path_xml, "shards_tmp.xml");
   remove(tmp_file);
 
@@ -1238,9 +1238,9 @@ int get_download_federated(char *path_xml, char *file_dest, char *hostname, char
   int right_url;
 
   if(port!=0)
-     sprintf(buffer1, "http://%s:%d/esgf-stats-api/%s/xml", hostname, port, datamart);
+     sprintf(buffer1, "https://%s:%d/esgf-stats-api/%s/xml", hostname, port, datamart);
   else
-     sprintf(buffer1, "http://%s/esgf-stats-api/%s/xml", hostname, datamart);
+     sprintf(buffer1, "https://%s/esgf-stats-api/%s/xml", hostname, datamart);
   //printf("url to be access %s\n", buffer1);
   snprintf (url_action, sizeof (url_action),buffer1);
   sprintf (tmp_file, "%s/%s", path_xml, "xml_tmp.xml");
