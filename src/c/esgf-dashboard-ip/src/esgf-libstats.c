@@ -1238,9 +1238,9 @@ int get_download_federated(char *path_xml, char *file_dest, char *hostname, char
   int right_url;
 
   if(port!=0)
-     sprintf(buffer1, "http://%s:%d/esgf-stats-api/%s/xml", hostname, port, datamart);
+     sprintf(buffer1, "https://%s:%d/esgf-stats-api/%s/xml", hostname, port, datamart);
   else
-     sprintf(buffer1, "http://%s/esgf-stats-api/%s/xml", hostname, datamart);
+     sprintf(buffer1, "https://%s/esgf-stats-api/%s/xml", hostname, datamart);
   //printf("url to be access %s\n", buffer1);
   snprintf (url_action, sizeof (url_action),buffer1);
   sprintf (tmp_file, "%s/%s", path_xml, "xml_tmp.xml");

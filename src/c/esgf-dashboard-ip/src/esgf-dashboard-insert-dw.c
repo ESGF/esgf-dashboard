@@ -299,7 +299,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 {
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "replica")==0)
                   {
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    int size_replica=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_replica; size4++)
                     {
                       replica=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -308,7 +310,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_institute=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     institute=(char **)calloc(size_institute+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_institute; size4++)
                     {                    
                       institute[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -318,7 +321,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_cf=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     cf_standard_name=(char **)calloc(size_cf+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_cf; size4++)
                     {                    
                       cf_standard_name[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -328,7 +332,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_variable=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     variable=(char **)calloc(size_variable+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_variable; size4++)
                     {                    
                       variable[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -338,7 +343,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_variable_long=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     variable_long_name=(char **)calloc(size_variable_long+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_variable_long; size4++)
                     {                    
                       variable_long_name[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -348,7 +354,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_time=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     time_frequency=(char **)calloc(size_time+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_time; size4++)
                     {                    
                       time_frequency[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -363,7 +370,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_processing=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     processing_level=(char **)calloc(size_processing+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_processing; size4++)
                     {                    
                       processing_level[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -373,7 +381,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_source=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     source_id=(char **)calloc(size_source+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_source; size4++)
                     {                    
                       source_id[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -383,7 +392,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_realm=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     realm=(char **)calloc(size_realm+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_realm; size4++)
                     {                    
                       realm[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -392,8 +402,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "model")==0)
                   {
                     size_model=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
-                    model=(char **)calloc(size_model+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    model=(char **)calloc(size_model+1, sizeof(char*));
+                    //printf("size_model vale %d\n", size_model);                    
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_model; size4++)
                     {                    
                       model[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -403,7 +415,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   {
                     size_exp=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     experiment=(char **)calloc(size_exp+1, sizeof(char*));                    
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_exp; size4++)
                     {                    
                       experiment[size4]=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
@@ -422,7 +435,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   }
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "size")==0)
                   {
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    int size_file_num=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_file_num; size4++)
                     {
                       size_file=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                       size_row=atol(size_file);
@@ -432,12 +447,16 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   }
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "datetime_start")==0)
                   {
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    int size_date_start=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_date_start; size4++)
                       datetime_start=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                   }
                   if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "datetime_stop")==0)
                   {
-                    for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    int size_date_stop=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
+                    //for(size4=0; (*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]!=NULL; size4++)
+                    for(size4=0; size4<size_date_stop; size4++)
                       datetime_stop=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                   }
                 }
@@ -1934,9 +1953,11 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	             pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_geo, geo_id_str);
                   }
 
-              free(remote_addr);
-              remote_addr=NULL;
+              //free(remote_addr);
+              //remote_addr=NULL;
           }
+          free(remote_addr);
+          remote_addr=NULL;
               
 
 
@@ -3243,7 +3264,23 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
       hashtbl_destroy (hashtbl_cmip5_fact_download);
     }
-
+    if(create_populate_done==1)
+    {
+      hashtbl_destroy (hashtbl_obs_dim_institute);
+      hashtbl_destroy (hashtbl_obs_dim_variable);
+      hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+      hashtbl_destroy (hashtbl_obs_dim_realm);
+      hashtbl_destroy (hashtbl_obs_dim_dataset);
+      hashtbl_destroy (hashtbl_obs_bridge_institute);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+      hashtbl_destroy (hashtbl_obs_bridge_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+      hashtbl_destroy (hashtbl_obs_dim_date);
+    }
+    //printf("create_populate_done ******%d\n", create_populate_done);
      if(dataset_id)
        free(dataset_id);
      if(size_file)

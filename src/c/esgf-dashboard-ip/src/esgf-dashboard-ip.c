@@ -23,6 +23,7 @@
 #include "../include/config.h"
 #include "../include/debug.h"
 #include "../include/ftpget.h"
+#include "../include/hashtbl.h"
 
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
@@ -46,6 +47,8 @@ static char *USAGE =
 
 #define PRINT_USAGE fprintf(stdout, USAGE, argv[0],argv[0], argv[0])
 #define VERSION "@version_num@"
+#define HAST_NO_AUTH            300
+
 //#define XMLPARSER_THREAD_FREQ 60  // release value 
 //#define XMLPARSER_THREAD_FREQ 3 // test value
 
@@ -285,6 +288,10 @@ void * data_planA(void *arg)
         PGconn * conn;
         PGresult *res2;
         char conninfo[1024] = {'\0'};
+        char line [ 1024 ]={'\0'};
+        HASHTBL *hashtbl_no_auth;
+        int i=1;
+
 
         /* Connect to database */
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
@@ -343,6 +350,24 @@ void * data_planA(void *arg)
             
             res1=read_shards("./.work/shards.xml");
             fprintf(stderr, "%s\n", "START PLANA");
+            
+            
+            if (!(hashtbl_no_auth = hashtbl_create (HAST_NO_AUTH, NULL)))
+            {
+                pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for RSSFEED [skip parsing]\n");
+            }
+
+            FILE *fp=fopen("../etc/notauthorized_openID", "r");
+            char str[12]={0};
+            while ( fgets ( line, sizeof line, fp ) != NULL )
+            {
+              line[strlen(line)-1]='\0';
+              sprintf(str, "%d", i);
+              //printf("line vale %s\n", line);
+              hashtbl_insert (hashtbl_no_auth, (char *) line, (char *) str);
+              i++;
+            }
+            fclose ( fp );
 
 	    // skip the first time, because the process is called once before this loop	
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
@@ -350,14 +375,14 @@ void * data_planA(void *arg)
                if(res1==-1)
                  res1=0;
 	         //break;
-                  
-               res=compute_solr_process_planA(res1);
+               res=compute_solr_process_planA(res1, &hashtbl_no_auth);
                if(res==-25)
 	       {
-                 fprintf(stderr, "%s\n", "There is no entries to be processed");
+                 fprintf(stderr, "%s\n", "There are no entries to be processed");
                  break;
 	       }
 	    }
+            hashtbl_destroy (hashtbl_no_auth);
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
             //sleep(60);
             fprintf(stderr, "%s\n", "DONE PLANA");
