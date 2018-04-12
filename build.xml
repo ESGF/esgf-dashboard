@@ -118,7 +118,7 @@ Builds the project via ant (obviously).
   <filter token="branch"  value="${branch}"/>
   <property name="commit" value="ffffff"/>
   <filter token="commit"  value="${commit}"/>
-  <property name="db_version_num" value="0.0.0"/>
+  <property name="db_version_num" value="0.0.2"/>
   <filter token="db_version_num"  value="${db_version_num}"/>
   <property name="python_version" value="0.0"/>
   <filter token="python_version_num"  value="${python_version}"/>
