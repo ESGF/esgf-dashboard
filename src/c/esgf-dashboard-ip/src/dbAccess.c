@@ -1281,6 +1281,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         
        
         int size_eff_b=0;
+        size=PQntuples(res1);
           
         for (i = 0; i < PQntuples(res1); i++)
         {
@@ -1293,7 +1294,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           str_userid=NULL;
         }
         if(size_eff_b>0)
-          size=size_eff_b;
+          size=size-size_eff_b;
                    
 
         URL=(char**) calloc (size+1, sizeof(char *));
@@ -1314,7 +1315,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         i=0;
         /* next, print out the rows */
         //for (i = 0; i < PQntuples(res1); i++)
-        size=PQntuples(res1);
         while(i < PQntuples(res1))
         {
           str_userid=strdup(PQgetvalue(res1, i, 2));
@@ -1366,8 +1366,9 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files,localhost:8982/solr/files", url_comp1);
 
           free(str_url1);
+          str_url1=NULL;
           URL[ch]=strdup(url_comp);
-          id_query[ch]=strdup(PQgetvalue(res1, ch, 1));
+          id_query[ch]=strdup(PQgetvalue(res1, i, 1));
           flag_id[ch]=strdup("0");
           i++;
           ch++;
@@ -1386,7 +1387,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         if(size_eff==0)
           size=PQntuples(res1);
         else
-          size=size_eff;
+          size=PQntuples(res1)-size_eff;
         URL[ch]=NULL;
         id_query[ch]=NULL;
         flag_id[ch]=NULL;

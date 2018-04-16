@@ -62,7 +62,6 @@
 #define HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT_TMP	        64	
 
 
-
 #if 0
 #define POSTGRES_HOST "localhost"
 #define POSTGRES_PORT_NUMBER 5432
