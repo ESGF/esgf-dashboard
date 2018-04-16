@@ -1295,8 +1295,6 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         }
         if(size_eff_b>0)
           size=size-size_eff_b;
-                   
-
         URL=(char**) calloc (size+1, sizeof(char *));
         id_query=(char**) calloc (size+1, sizeof(char *));
         flag_id=(char**) calloc (size+1, sizeof(char *));
@@ -1317,9 +1315,11 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         //for (i = 0; i < PQntuples(res1); i++)
         while(i < PQntuples(res1))
         {
+
           str_userid=strdup(PQgetvalue(res1, i, 2));
           if (hashtbl_result = hashtbl_get (*pointer, str_userid))
           {
+               
                //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",str_userid, hashtbl_result);
                size_eff++;
                char update_dashboard_queue[2048] = { '\0' };
@@ -1328,12 +1328,12 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
                   return 0;
 
+               i++;
                if(str_userid)
                {
                  free(str_userid);
                  str_userid=NULL;
                }
-               i++;
                continue;
           }
           if(str_userid)
@@ -1358,7 +1358,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
               str_u2=NULL; 
             }
           }
-          
+
             sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
           if(shards==0)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
@@ -1373,6 +1373,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           i++;
           ch++;
         }
+
         if((size-size_eff)==0)
         {
           myfree_array(URL,size+1);
