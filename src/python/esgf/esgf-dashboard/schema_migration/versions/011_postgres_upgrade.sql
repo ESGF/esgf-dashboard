@@ -21,8 +21,23 @@ drop trigger if exists store_delete_entry on esgf_node_manager.access_logging;
 drop function if exists delete_dashboard_queue() CASCADE;
 drop function if exists update_dashboard_queue() CASCADE;
 drop function if exists store_dashboard_queue() CASCADE;
+DROP FUNCTION if EXISTS table_exists_userid() CASCADE;
 
-alter table esgf_dashboard.dashboard_queue add column user_id character varying NOT NULL DEFAULT '<no-user_id>';
+CREATE FUNCTION table_exists_userid() RETURNS integer AS'
+DECLARE
+BEGIN
+IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''esgf_dashboard'' AND table_name=''dashboard_queue'') THEN
+    IF not EXISTS (SELECT column_name 
+               FROM information_schema.columns 
+               WHERE table_schema=''esgf_dashboard'' and table_name=''dashboard_queue'' and column_name=''user_id'') THEN
+      alter table esgf_dashboard.dashboard_queue add column user_id character varying NOT NULL DEFAULT ''<no-user_id>'';
+    END IF;
+return 0;
+END IF;
+END;
+'LANGUAGE 'plpgsql';
+
+select table_exists_userid();
 
 --
 -- Insert into the dashboard_queue_table a new row stored in the access_logging table
@@ -79,5 +94,3 @@ esgf_node_manager.access_logging
 FOR EACH ROW EXECUTE PROCEDURE delete_dashboard_queue();
 
 SET search_path = public, pg_catalog;
-
-

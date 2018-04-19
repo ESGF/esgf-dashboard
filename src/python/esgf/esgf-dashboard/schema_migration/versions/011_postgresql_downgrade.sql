@@ -68,5 +68,7 @@ AFTER DELETE ON
 esgf_node_manager.access_logging
 FOR EACH ROW EXECUTE PROCEDURE delete_dashboard_queue();
 
+drop function if exists table_exists_userid() CASCADE;
+
 /* REGISTRY DROP TABLE */
 SET search_path = public, pg_catalog;
