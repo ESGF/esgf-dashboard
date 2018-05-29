@@ -29,6 +29,7 @@ TAGS
 *.egg
 *#*
 *.md5
+Makefile.in
 semantic.cache*
 generated/
 /build
