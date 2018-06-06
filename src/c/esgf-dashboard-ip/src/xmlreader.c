@@ -356,6 +356,7 @@ int get_metadata_solr(xmlDocPtr * doc, xmlNode * a_node, struct dataset_project 
             sprintf(str, "//arr[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->name);
           else
             sprintf(str, "//%s[@name='%s']", (*datasetproj)[cnt]->first[j]->first[k]->occ,(*datasetproj)[cnt]->first[j]->first[k]->name);
+       
           res=count_tag(doc,str);
           res=retrieve_tag(doc, str, datasetproj, cnt, j, k, query, num, res);
        }
@@ -1266,7 +1267,6 @@ int print_element_dmart_feder(xmlNode * a_node, int res)
                          if(prop1)
                          {
                             xmlChar* content=xmlNodeGetContent(cur_node);
-                            printf("content %s\n", content);
                             xmlFree(content);
                             content=NULL;
                          }

@@ -61,14 +61,6 @@
 #define HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT		64	
 #define HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT_TMP	        64	
 
-// HashTables dimensions - CMIP6 Project
-#define HAST_TABLE_CMIP6_DIM_MODEL	        	64
-#define HAST_TABLE_CMIP6_DIM_EXPERIMENT	        	64
-#define HAST_TABLE_CMIP6_BRIDGE_MODEL		64	
-#define HAST_TABLE_CMIP6_BRIDGE_MODEL_TMP	        64	
-#define HAST_TABLE_CMIP6_BRIDGE_EXPERIMENT		64	
-#define HAST_TABLE_CMIP6_BRIDGE_EXPERIMENT_TMP	        64	
-
 #if 0
 #define POSTGRES_HOST "localhost"
 #define POSTGRES_PORT_NUMBER 5432
@@ -312,7 +304,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                       replica=strdup((*datasetproj)[cnt]->first[size2]->first[size3]->value[size4]);
                     }
                   }
-                  if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "institute")==0)
+                  if((strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "institute")==0) || (strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "institution_id")==0))
                   {
                     size_institute=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     institute=(char **)calloc(size_institute+1, sizeof(char*));                    
@@ -356,7 +348,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                     }
                     variable_long_name[size4]=NULL;
                   }
-                  if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "time_frequency")==0)
+                  if((strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "time_frequency")==0) || (strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "frequency")==0)) 
                   {
                     size_time=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     time_frequency=(char **)calloc(size_time+1, sizeof(char*));                    
@@ -417,7 +409,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                     }
                     model[size4]=NULL;
                   }
-                  if(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "experiment")==0)
+                  if((strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "experiment")==0)||(strcmp((*datasetproj)[cnt]->first[size2]->first[size3]->name, "experiment_id")==0))
                   {
                     size_exp=(*datasetproj)[cnt]->first[size2]->first[size3]->size;
                     experiment=(char **)calloc(size_exp+1, sizeof(char*));                    
@@ -1013,7 +1005,6 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  //continue;
 		}
              }
-              
 	      if (!(hashtbl_obs_dim_realm = hashtbl_create (HAST_TABLE_OBS_DIM_REALM, NULL)))
 		{
 		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_OBS_DIM_REALM [skip parsing]\n");
@@ -1740,9 +1731,213 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model);
 		  hashtbl_destroy (hashtbl_cmip5_bridge_model_tmp);
 		  hashtbl_destroy (hashtbl_cmip5_fact_download);
+               }
              }
-           }
-
+             if(strcmp(proj_name, "CMIP6")==0)
+             {
+              create_populate_done=4;
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP6 DIM EXPERIMENT\n");
+	      if (!(hashtbl_cmip5_dim_experiment = hashtbl_create (HAST_TABLE_CMIP5_DIM_EXPERIMENT, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_DIM_EXPERIMENT [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_dim_date);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  //continue;
+		}	       
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP6 BRIDGE EXPERIMENT\n");
+	      if (!(hashtbl_cmip5_bridge_experiment = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_BRIDGE_EXPERIMENT [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		}
+	      pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for CMIP6 BRIDGE EXPERIMENT\n");
+	      if (!(hashtbl_cmip5_bridge_experiment_tmp = hashtbl_create (HAST_TABLE_CMIP5_BRIDGE_EXPERIMENT_TMP, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_BRIDGE_EXPERIMENT_TMP [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+		}
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP6 DIM SOURCE ID\n");
+               if (!(hashtbl_obs_dim_source_id = hashtbl_create (HAST_TABLE_OBS_DIM_SOURCE_ID, NULL)))
+               {
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_SOURCE_ID [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+                  //continue;
+                }
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the hashtable for CMIP6 BRIDGE SOURCE ID\n");
+              if (!(hashtbl_obs_bridge_source_id = hashtbl_create (HAST_TABLE_OBS_BRIDGE_SOURCE_ID, NULL)))
+                {
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_SOURCE_ID [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id);
+                  //continue;
+                }
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"Creating the TMP hashtable for CMIP6 BRIDGE SOURCE ID\n");
+              if (!(hashtbl_obs_bridge_source_id_tmp = hashtbl_create (HAST_TABLE_OBS_BRIDGE_SOURCE_ID_TMP, NULL)))
+                {
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP6_SOURCE_ID_TMP [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
+                  //continue;
+                }
+	      if (!(hashtbl_cmip5_fact_download = hashtbl_create (HAST_TABLE_CMIP5_DOWNLOAD, NULL)))
+		{
+		  pmesg(LOG_WARNING,__FILE__,__LINE__,"ERROR: hashtbl_create() failed for HAST_TABLE_CMIP5_DOWNLOAD [skip parsing]\n");
+                  hashtbl_destroy (hashtbl_obs_dim_dataset);
+                  hashtbl_destroy (hashtbl_obs_dim_institute);
+                  hashtbl_destroy (hashtbl_obs_dim_variable);
+                  hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_dim_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute);
+                  hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable);
+                  hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+                  hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm);
+                  hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+		  hashtbl_destroy (hashtbl_cross_dim_date);
+		  hashtbl_destroy (hashtbl_cross_dim_geolocation);
+		  hashtbl_destroy (hashtbl_cross_dim_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project);
+                  hashtbl_destroy (hashtbl_cross_bridge_project_tmp);
+		  hashtbl_destroy (hashtbl_cross_fact_download);
+		  hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+		  hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+		  hashtbl_destroy (hashtbl_obs_dim_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id);
+		  hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
+		  hashtbl_destroy (hashtbl_cmip5_fact_download);
+                  //continue;
+                }
+              }
 
               if(strcmp(proj_name, "OBS4MIPS")==0)
               {
@@ -1840,6 +2035,53 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP5_DOWNLOAD,
 				   &hashtbl_cmip5_fact_download);
 	        }
+              if(strcmp(proj_name, "CMIP6")==0)
+              {
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_DATASET,
+				   &hashtbl_obs_dim_dataset);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_INSTITUTE,
+				   &hashtbl_obs_dim_institute);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_VARIABLE,
+				   &hashtbl_obs_dim_variable);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_FREQUENCY,
+				   &hashtbl_obs_dim_time_frequency);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_REALM,
+				   &hashtbl_obs_dim_realm);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_INSTITUTE,
+				   &hashtbl_obs_bridge_institute);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_INSTITUTE_TMP,
+				   &hashtbl_obs_bridge_institute_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_VARIABLE,
+				   &hashtbl_obs_bridge_variable);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_VARIABLE_TMP,
+				   &hashtbl_obs_bridge_variable_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_FREQUENCY,
+				   &hashtbl_obs_bridge_time_frequency);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_FREQUENCY_TMP,
+				   &hashtbl_obs_bridge_time_frequency_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_REALM,
+				   &hashtbl_obs_bridge_realm);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_REALM_TMP,
+				   &hashtbl_obs_bridge_realm_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_SOURCE_ID,
+				   &hashtbl_obs_dim_source_id);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_SOURCE_ID,
+				   &hashtbl_obs_bridge_source_id);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_SOURCE_ID_TMP,
+				   &hashtbl_obs_bridge_source_id_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_DATE,
+				   &hashtbl_obs_dim_date);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_GEOLOCATION,
+				   &hashtbl_obs_dim_geolocation);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DIM_EXPERIMENT,
+				   &hashtbl_cmip5_dim_experiment);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_EXPERIMENT,
+				   &hashtbl_cmip5_bridge_experiment);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_BRIDGE_EXPERIMENT_TMP,
+				   &hashtbl_cmip5_bridge_experiment_tmp);
+	          populate_hash_table (conn, QUERY_GET_LIST_OF_CMIP6_DOWNLOAD,
+				   &hashtbl_cmip5_fact_download);
+               }
           }
 	  else
 	    pmesg(LOG_DEBUG,__FILE__,__LINE__, "Hash tables already in place with the data [%d]\n",create_populate_done);
@@ -1862,15 +2104,19 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              success_lookup[1]++;
              if(strcmp(proj_name, "OBS4MIPS")==0)
                 snprintf (insert_new_date_query, sizeof (insert_new_date_query), QUERY_INSERT_NEW_OBS_DATE, buf, buf1, buf2);
-             else
+             if(strcmp(proj_name, "CMIP5")==0)
                 snprintf (insert_new_date_query, sizeof (insert_new_date_query), QUERY_INSERT_NEW_CMIP5_DATE, buf, buf1, buf2);
+             if(strcmp(proj_name, "CMIP6")==0)
+                snprintf (insert_new_date_query, sizeof (insert_new_date_query), QUERY_INSERT_NEW_CMIP6_DATE, buf, buf1, buf2);
              
 	     submit_query (conn, insert_new_date_query);
 
              if(strcmp(proj_name, "OBS4MIPS")==0)
 	         snprintf(select_id_date_query, sizeof (select_id_date_query), QUERY_GET_OBS_DATE_ID, buf);
-             else
+             if(strcmp(proj_name, "CMIP5")==0)
 	         snprintf(select_id_date_query, sizeof (select_id_date_query), QUERY_GET_CMIP5_DATE_ID, buf);
+             if(strcmp(proj_name, "CMIP6")==0)
+	         snprintf(select_id_date_query, sizeof (select_id_date_query), QUERY_GET_CMIP6_DATE_ID, buf);
 
              date_obs_id=get_foreign_key_value(conn, select_id_date_query);
 	     // add entry to hash table
@@ -1878,7 +2124,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              hashtbl_insert (hashtbl_obs_dim_date, buf, date_obs_id_str);
 	     pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable query=%s [%d] [%s]\n",select_id_date_query, date_obs_id, date_obs_id_str);
           }
-          if((remote_addr) && ((strcmp(proj_name, "OBS4MIPS")==0)||(strcmp(proj_name, "CMIP5")==0)))
+          if((remote_addr) && ((strcmp(proj_name, "OBS4MIPS")==0)||(strcmp(proj_name, "CMIP5")==0) || (strcmp(proj_name, "CMIP6")==0)))
           {
              int code=0;
              struct geo_output_struct geo_output;
@@ -1943,15 +2189,19 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                        PQclear (res_geo);
                      if((country_id) && (strcmp(proj_name, "OBS4MIPS")==0))
 		       snprintf (insert_geo_query, sizeof (insert_geo_query),QUERY_INSERT_OBS_DIM_GEOLOCATION, lat, lon, atoi(country_id));
-                     else
+                     if((country_id) && (strcmp(proj_name, "CMIP5")==0))
 		       snprintf (insert_geo_query, sizeof (insert_geo_query),QUERY_INSERT_CMIP5_DIM_GEOLOCATION, lat, lon, atoi(country_id));
+                     if((country_id) && (strcmp(proj_name, "CMIP6")==0))
+		       snprintf (insert_geo_query, sizeof (insert_geo_query),QUERY_INSERT_CMIP6_DIM_GEOLOCATION, lat, lon, atoi(country_id));
 
                      submit_query (conn, insert_geo_query);
                      free(country_code);
                      if(strcmp(proj_name, "OBS4MIPS")==0)
 	                snprintf(select_id_geo_query, sizeof (select_id_geo_query), QUERY_GET_GEO_OBS_ID, lat, lon);
-                     else
+                     if(strcmp(proj_name, "CMIP5")==0)
 	                snprintf(select_id_geo_query, sizeof (select_id_geo_query), QUERY_GET_GEO_CMIP5_ID, lat, lon);
+                     if(strcmp(proj_name, "CMIP6")==0)
+	                snprintf(select_id_geo_query, sizeof (select_id_geo_query), QUERY_GET_GEO_CMIP6_ID, lat, lon);
                      geo_obs_id=get_foreign_key_value(conn, select_id_geo_query);
 	             // add entry to hash table
 	             sprintf (geo_id_str, "%ld", geo_obs_id);
@@ -1971,6 +2221,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
          int miss_inst=0;
          int *array_id_inst=calloc(size_institute, sizeof(int));
+
          for(i=0; i<size_institute; i++)
          {  
             int inst_id=0;
@@ -1991,14 +2242,18 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                success_lookup[1]++;
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	           snprintf (insert_inst_query, sizeof (insert_inst_query),QUERY_INSERT_OBS_DIM_INSTITUTE,institute[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	           snprintf (insert_inst_query, sizeof (insert_inst_query),QUERY_INSERT_CMIP5_DIM_INSTITUTE,institute[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	           snprintf (insert_inst_query, sizeof (insert_inst_query),QUERY_INSERT_CMIP6_DIM_INSTITUTE,institute[i]);
                submit_query (conn, insert_inst_query);
-               
+ 
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	           snprintf(select_id_inst_query, sizeof (select_id_inst_query), QUERY_GET_INSTITUTE_OBS_ID,institute[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	           snprintf(select_id_inst_query, sizeof (select_id_inst_query), QUERY_GET_INSTITUTE_CMIP5_ID,institute[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	           snprintf(select_id_inst_query, sizeof (select_id_inst_query), QUERY_GET_INSTITUTE_CMIP6_ID,institute[i]);
                inst_id=get_foreign_key_value(conn, select_id_inst_query);
                array_id_inst[i]=inst_id;
 	       // add entry to hash table
@@ -2036,8 +2291,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char max_group_id_str[2048] = { '\0' };
             if(strcmp(proj_name, "OBS4MIPS")==0)
                  resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_OBS_ID,&res2);
-            else
+            if(strcmp(proj_name, "CMIP5")==0)
                  resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_CMIP5_ID,&res2);
+            if(strcmp(proj_name, "CMIP6")==0)
+                 resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_CMIP6_ID,&res2);
             if(resp!=-1)
             {
                for (i = 0; i < PQntuples(res2); i++)
@@ -2050,8 +2307,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_OBS_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                     snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_CMIP5_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
+                if(strcmp(proj_name, "CMIP6")==0)
+                    snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_CMIP6_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
                 submit_query (conn, insert_group_inst_query);
 
                 sprintf(array_id_inst_str, "%d", array_id_inst[i]);
@@ -2079,8 +2338,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char insert_group_inst_query[2048] = { '\0' };
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_OBS_ID,&res2);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                    resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_CMIP5_ID,&res2);
+                if(strcmp(proj_name, "CMIP6")==0)
+                   resp=submit_query_res (conn, QUERY_INST_GET_MAX_GROUP_CMIP6_ID,&res2);
                 if(resp!=-1)
                 {
                    for (i = 0; i < PQntuples(res2); i++)
@@ -2097,8 +2358,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 {
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                       snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_OBS_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
-                  else
+                  if(strcmp(proj_name, "CMIP5")==0)
                       snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_CMIP5_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
+                  if(strcmp(proj_name, "CMIP6")==0)
+                      snprintf (insert_group_inst_query, sizeof (insert_group_inst_query),QUERY_INSERT_CMIP6_BRIDGE_INSTITUTE,array_id_inst[i],max_group_id+1);
                   submit_query (conn, insert_group_inst_query);
                   sprintf(array_id_inst_str, "%d", array_id_inst[i]);
                   sprintf(max_group_id_str, "%d", max_group_id+1);
@@ -2137,14 +2400,18 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                success_lookup[1]++;
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	          snprintf (insert_var_query, sizeof (insert_var_query),QUERY_INSERT_OBS_DIM_VARIABLE, cf_standard_name[i], variable_long_name[i], variable[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	          snprintf (insert_var_query, sizeof (insert_var_query),QUERY_INSERT_CMIP5_DIM_VARIABLE, cf_standard_name[i], variable_long_name[i], variable[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	          snprintf (insert_var_query, sizeof (insert_var_query),QUERY_INSERT_CMIP6_DIM_VARIABLE, cf_standard_name[i], variable_long_name[i], variable[i]);
 
                submit_query (conn, insert_var_query);
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	          snprintf(select_id_var_query, sizeof (select_id_var_query), QUERY_GET_VARIABLE_OBS_ID,cf_standard_name[i], variable_long_name[i], variable[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	          snprintf(select_id_var_query, sizeof (select_id_var_query), QUERY_GET_VARIABLE_CMIP5_ID,cf_standard_name[i], variable_long_name[i], variable[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	          snprintf(select_id_var_query, sizeof (select_id_var_query), QUERY_GET_VARIABLE_CMIP6_ID,cf_standard_name[i], variable_long_name[i], variable[i]);
 
                var_id=get_foreign_key_value(conn, select_id_var_query);
                array_id_var[i]=var_id;
@@ -2177,8 +2444,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char max_group_id_str[2048] = { '\0' };
             if(strcmp(proj_name, "OBS4MIPS")==0)
                 resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_OBS_ID,&res2);
-            else
+            if(strcmp(proj_name, "CMIP5")==0)
                 resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_CMIP5_ID,&res2);
+            if(strcmp(proj_name, "CMIP6")==0)
+                resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_CMIP6_ID,&res2);
             if(resp!=-1)
             {
                for (i = 0; i < PQntuples(res2); i++)
@@ -2191,8 +2460,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_OBS_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                    snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_CMIP5_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
+                if(strcmp(proj_name, "CMIP6")==0)
+                   snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_CMIP6_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
                 submit_query (conn, insert_group_var_query);
 
                 sprintf(array_id_var_str, "%d", array_id_var[i]);
@@ -2220,7 +2491,9 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char insert_group_var_query[2048] = { '\0' };
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_OBS_ID,&res2);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
+                    resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_CMIP5_ID,&res2);
+                if(strcmp(proj_name, "CMIP6")==0)
                     resp=submit_query_res (conn, QUERY_VAR_GET_MAX_GROUP_CMIP5_ID,&res2);
                 if(resp!=-1)
                 {
@@ -2238,8 +2511,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 {
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                       snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_OBS_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
-                  else
+                  if(strcmp(proj_name, "CMIP5")==0)
                       snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_CMIP5_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
+                  if(strcmp(proj_name, "CMIP6")==0)
+                      snprintf (insert_group_var_query, sizeof (insert_group_var_query),QUERY_INSERT_CMIP6_BRIDGE_VARIABLE,array_id_var[i],max_group_id+1);
                   submit_query (conn, insert_group_var_query);
                   sprintf(array_id_var_str, "%d", array_id_var[i]);
                   sprintf(max_group_id_str, "%d", max_group_id+1);
@@ -2276,13 +2551,17 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                success_lookup[1]++;
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	         snprintf (insert_time_freq_query, sizeof (insert_time_freq_query),QUERY_INSERT_OBS_DIM_TIME_FREQUENCY, time_frequency[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	         snprintf (insert_time_freq_query, sizeof (insert_time_freq_query),QUERY_INSERT_CMIP5_DIM_TIME_FREQUENCY, time_frequency[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	         snprintf (insert_time_freq_query, sizeof (insert_time_freq_query),QUERY_INSERT_CMIP6_DIM_TIME_FREQUENCY, time_frequency[i]);
                submit_query (conn, insert_time_freq_query);
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	         snprintf(select_id_time_freq_query, sizeof (select_id_time_freq_query), QUERY_GET_TIME_FREQ_OBS_ID,time_frequency[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	         snprintf(select_id_time_freq_query, sizeof (select_id_time_freq_query), QUERY_GET_TIME_FREQ_CMIP5_ID,time_frequency[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	         snprintf(select_id_time_freq_query, sizeof (select_id_time_freq_query), QUERY_GET_TIME_FREQ_CMIP6_ID,time_frequency[i]);
                time_id=get_foreign_key_value(conn, select_id_time_freq_query);
                array_id_time_freq[i]=time_id;
 	       // add entry to hash table
@@ -2314,8 +2593,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char max_group_id_str[2048] = { '\0' };
             if(strcmp(proj_name, "OBS4MIPS")==0)
                resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_OBS_ID,&res2);
-            else
+            if(strcmp(proj_name, "CMIP5")==0)
                resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_CMIP5_ID,&res2);
+            if(strcmp(proj_name, "CMIP6")==0)
+               resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_CMIP6_ID,&res2);
             if(resp!=-1)
             {
                for (i = 0; i < PQntuples(res2); i++)
@@ -2328,8 +2609,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_OBS_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                    snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_CMIP5_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
+                if(strcmp(proj_name, "CMIP6")==0)
+                   snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_CMIP6_BRIDGE_FREQUENCY,array_id_time_freq[i],max_group_id+1);
                 submit_query (conn, insert_group_time_freq_query);
 
                 sprintf(array_id_time_freq_str, "%d", array_id_time_freq[i]);
@@ -2357,8 +2640,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char insert_group_time_freq_query[2048] = { '\0' };
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                    resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_OBS_ID,&res2);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                    resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_CMIP5_ID,&res2);
+                if(strcmp(proj_name, "CMIP6")==0)
+                   resp=submit_query_res (conn, QUERY_TIME_FREQ_GET_MAX_GROUP_CMIP6_ID,&res2);
                 if(resp!=-1)
                 {
                    for (i = 0; i < PQntuples(res2); i++)
@@ -2375,8 +2660,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 {
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                      snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_OBS_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
-                  else
+                  if(strcmp(proj_name, "CMIP5")==0)
                      snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_CMIP5_BRIDGE_TIME_FREQUENCY,array_id_time_freq[i],max_group_id+1);
+                  if(strcmp(proj_name, "CMIP6")==0)
+                     snprintf (insert_group_time_freq_query, sizeof (insert_group_time_freq_query),QUERY_INSERT_CMIP6_BRIDGE_FREQUENCY,array_id_time_freq[i],max_group_id+1);
                   submit_query (conn, insert_group_time_freq_query);
                   sprintf(array_id_time_freq_str, "%d", array_id_time_freq[i]);
                   sprintf(max_group_id_str, "%d", max_group_id+1);
@@ -2520,7 +2807,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       }
 
          /* ob4mips_dim_source_id and bridge */
-      if(strcmp(proj_name, "OBS4MIPS")==0)
+      if((strcmp(proj_name, "OBS4MIPS")==0)||(strcmp(proj_name, "CMIP6")==0))
       {
          int miss_source_id=0;
          int *array_id_source_id=calloc(size_source, sizeof(int));
@@ -2543,11 +2830,23 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                char insert_source_id_query[2048] = { '\0' };
                char select_id_source_id_query[2048] = { '\0' };
                success_lookup[1]++;
-	       snprintf (insert_source_id_query, sizeof (insert_source_id_query),QUERY_INSERT_OBS_DIM_SOURCE_ID, source_id[i]);
+               if(strcmp(proj_name, "OBS4MIPS")==0)
+	         snprintf (insert_source_id_query, sizeof (insert_source_id_query),QUERY_INSERT_OBS_DIM_SOURCE_ID, source_id[i]);
+               else
+	         snprintf (insert_source_id_query, sizeof (insert_source_id_query),QUERY_INSERT_CMIP6_DIM_SOURCE_ID, source_id[i]);
                submit_query (conn, insert_source_id_query);
-	       snprintf(select_id_source_id_query, sizeof (select_id_source_id_query), QUERY_GET_SOURCE_ID_ID,source_id[i]);
+
+               printf("query vale %s\n", insert_source_id_query);
+
+               if(strcmp(proj_name, "OBS4MIPS")==0)
+	         snprintf(select_id_source_id_query, sizeof (select_id_source_id_query), QUERY_GET_SOURCE_ID_ID,source_id[i]);
+               else
+	         snprintf(select_id_source_id_query, sizeof (select_id_source_id_query), QUERY_CMIP6_GET_SOURCE_ID_ID,source_id[i]);
                source_id_id=get_foreign_key_value(conn, select_id_source_id_query);
-               array_id_source_id[i]=source_id_id;
+               if(source_id_id>0)
+                  array_id_source_id[i]=source_id_id;
+               else
+                  array_id_source_id[i]=1;
 	       // add entry to hash table
 	       sprintf (source_id_id_str, "%ld", source_id_id);
                hashtbl_insert (hashtbl_obs_dim_source_id,source_id[i],source_id_id_str);
@@ -2575,8 +2874,11 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char insert_group_source_id_query[2048] = { '\0' };
             char array_id_source_id_str[2048] = { '\0' };
             char max_group_id_str[2048] = { '\0' };
-            resp=submit_query_res (conn, QUERY_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
-            if(resp!=-1)
+            if(strcmp(proj_name, "OBS4MIPS")==0)
+               resp=submit_query_res (conn, QUERY_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
+            else
+               resp=submit_query_res (conn, QUERY_CMIP6_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
+            if(resp<=0)
             {
                for (i = 0; i < PQntuples(res2); i++)
                {
@@ -2586,11 +2888,15 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_source;i++)
             {
-                snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
+                if(strcmp(proj_name, "OBS4MIPS")==0)
+                   snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
+                else 
+                   snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_CMIP6_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
                 submit_query (conn, insert_group_source_id_query);
 
-                sprintf(array_id_source_id_str, "%d", array_id_source_id[i]);
                 sprintf(max_group_id_str, "%d", max_group_id+1);
+                sprintf(array_id_source_id_str, "%d", array_id_source_id[i]);
+                //printf ("max_group_id_str %s +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++array_id_source_id_str %s +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n", max_group_id_str,array_id_source_id_str);
                 hashtbl_insert (hashtbl_obs_bridge_source_id,array_id_source_id_str,max_group_id_str);
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",array_id_source_id_str,max_group_id_str);
             } 
@@ -2612,7 +2918,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 int max_group_id=0;
                 int resp=0;
                 char insert_group_source_id_query[2048] = { '\0' };
-                resp=submit_query_res (conn, QUERY_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
+                if(strcmp(proj_name, "OBS4MIPS")==0)
+                  resp=submit_query_res (conn, QUERY_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
+                else
+                  resp=submit_query_res (conn, QUERY_CMIP6_SOURCE_ID_GET_MAX_GROUP_ID,&res2);
                 if(resp!=-1)
                 {
                    for (i = 0; i < PQntuples(res2); i++)
@@ -2627,8 +2936,12 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_source;i++)
                 {
-                  snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
+                  if(strcmp(proj_name, "OBS4MIPS")==0)
+                    snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_OBS_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
+                  else
+                    snprintf (insert_group_source_id_query, sizeof (insert_group_source_id_query),QUERY_INSERT_CMIP6_BRIDGE_SOURCE_ID,array_id_source_id[i],max_group_id+1);
                   submit_query (conn, insert_group_source_id_query);
+                  //printf("query vale %s+++++++++++++++++++++++++++++++++++++++++++++++++++++\n", insert_group_source_id_query);
                   sprintf(array_id_source_id_str, "%d", array_id_source_id[i]);
                   sprintf(max_group_id_str, "%d", max_group_id+1);
                   hashtbl_insert (hashtbl_obs_bridge_source_id,array_id_source_id_str,max_group_id_str);
@@ -2640,6 +2953,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
          }
         free(array_id_source_id);
        }
+
 
          /* ob4mips_dim_realm and bridge */
          int miss_realm=0;
@@ -2665,13 +2979,17 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                success_lookup[1]++;
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	          snprintf (insert_realm_query, sizeof (insert_realm_query),QUERY_INSERT_OBS_DIM_REALM, realm[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	          snprintf (insert_realm_query, sizeof (insert_realm_query),QUERY_INSERT_CMIP5_DIM_REALM, realm[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	          snprintf (insert_realm_query, sizeof (insert_realm_query),QUERY_INSERT_CMIP6_DIM_REALM, realm[i]);
                submit_query (conn, insert_realm_query);
                if(strcmp(proj_name, "OBS4MIPS")==0)
 	          snprintf(select_id_realm_query, sizeof (select_id_realm_query), QUERY_GET_REALM_OBS_ID,realm[i]);
-               else
+               if(strcmp(proj_name, "CMIP5")==0)
 	          snprintf(select_id_realm_query, sizeof (select_id_realm_query), QUERY_GET_REALM_CMIP5_ID,realm[i]);
+               if(strcmp(proj_name, "CMIP6")==0)
+	          snprintf(select_id_realm_query, sizeof (select_id_realm_query), QUERY_GET_REALM_CMIP6_ID,realm[i]);
                realm_id=get_foreign_key_value(conn, select_id_realm_query);
                array_id_realm[i]=realm_id;
 	       // add entry to hash table
@@ -2703,8 +3021,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char max_group_id_str[2048] = { '\0' };
             if(strcmp(proj_name, "OBS4MIPS")==0)
                resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_OBS_ID,&res2);
-            else
+            if(strcmp(proj_name, "CMIP5")==0)
                resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_CMIP5_ID,&res2);
+            if(strcmp(proj_name, "CMIP6")==0)
+               resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_CMIP6_ID,&res2);
             if(resp!=-1)
             {
                for (i = 0; i < PQntuples(res2); i++)
@@ -2717,8 +3037,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             {
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_OBS_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                     snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_CMIP5_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
+                if(strcmp(proj_name, "CMIP6")==0)
+                    snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_CMIP6_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
                 submit_query (conn, insert_group_realm_query);
 
                 sprintf(array_id_realm_str, "%d", array_id_realm[i]);
@@ -2746,8 +3068,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 char insert_group_realm_query[2048] = { '\0' };
                 if(strcmp(proj_name, "OBS4MIPS")==0)
                     resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_OBS_ID,&res2);
-                else
+                if(strcmp(proj_name, "CMIP5")==0)
                     resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_CMIP5_ID,&res2);
+                if(strcmp(proj_name, "CMIP6")==0)
+                    resp=submit_query_res (conn, QUERY_REALM_GET_MAX_GROUP_CMIP6_ID,&res2);
                 if(resp!=-1)
                 {
                    for (i = 0; i < PQntuples(res2); i++)
@@ -2764,8 +3088,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 {
                   if(strcmp(proj_name, "OBS4MIPS")==0)
                      snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_OBS_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
-                  else
+                  if(strcmp(proj_name, "CMIP5")==0)
                      snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_CMIP5_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
+                  if(strcmp(proj_name, "CMIP6")==0)
+                     snprintf (insert_group_realm_query, sizeof (insert_group_realm_query),QUERY_INSERT_CMIP6_BRIDGE_REALM,array_id_realm[i],max_group_id+1);
 
                   submit_query (conn, insert_group_realm_query);
                   sprintf(array_id_realm_str, "%d", array_id_realm[i]);
@@ -2900,7 +3226,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
         free(array_model_id);
       }
          /* cmip5_dim_experiment and bridge */
-      if(strcmp(proj_name, "CMIP5")==0)
+      if((strcmp(proj_name, "CMIP5")==0) || (strcmp(proj_name, "CMIP6")==0))
       {
          int miss_exp=0;
          int *array_exp_id=calloc(size_exp, sizeof(int));
@@ -2923,9 +3249,16 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                char insert_exp_query[2048] = { '\0' };
                char select_exp_id_query[2048] = { '\0' };
                success_lookup[1]++;
-	       snprintf (insert_exp_query, sizeof (insert_exp_query),QUERY_INSERT_CMIP5_DIM_EXPERIMENT, experiment[i]);
+               if(strcmp(proj_name, "CMIP5")==0)
+	         snprintf (insert_exp_query, sizeof (insert_exp_query),QUERY_INSERT_CMIP5_DIM_EXPERIMENT, experiment[i]);
+               else
+	         snprintf (insert_exp_query, sizeof (insert_exp_query),QUERY_INSERT_CMIP6_DIM_EXPERIMENT, experiment[i]);
+
                submit_query (conn, insert_exp_query);
-	       snprintf(select_exp_id_query, sizeof (select_exp_id_query), QUERY_GET_EXPERIMENT_CMIP5_ID,experiment[i]);
+               if(strcmp(proj_name, "CMIP5")==0)
+	         snprintf(select_exp_id_query, sizeof (select_exp_id_query), QUERY_GET_EXPERIMENT_CMIP5_ID,experiment[i]);
+               else
+	         snprintf(select_exp_id_query, sizeof (select_exp_id_query), QUERY_GET_EXPERIMENT_CMIP6_ID,experiment[i]);
                exp_id=get_foreign_key_value(conn, select_exp_id_query);
                array_exp_id[i]=exp_id;
 	       // add entry to hash table
@@ -2955,7 +3288,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             char insert_group_exp_query[2048] = { '\0' };
             char array_exp_id_str[2048] = { '\0' };
             char max_group_id_str[2048] = { '\0' };
-            resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP5_ID,&res2);
+            if(strcmp(proj_name, "CMIP5")==0)
+              resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP5_ID,&res2);
+            else
+              resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP6_ID,&res2);
             if(resp!=-1)
             {
                for (i = 0; i < PQntuples(res2); i++)
@@ -2966,7 +3302,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
             }
             for(i=0; i<size_exp;i++)
             {
-                snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
+                if(strcmp(proj_name, "CMIP5")==0)
+                  snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
+                else
+                  snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP6_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
                 submit_query (conn, insert_group_exp_query);
 
                 sprintf(array_exp_id_str, "%d", array_exp_id[i]);
@@ -2992,7 +3331,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 int max_group_id=0;
                 int resp=0;
                 char insert_group_exp_query[2048] = { '\0' };
-                resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP5_ID,&res2);
+                if(strcmp(proj_name, "CMIP5")==0)
+                  resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP5_ID,&res2);
+                else
+                  resp=submit_query_res (conn, QUERY_EXPERIMENT_GET_MAX_GROUP_CMIP6_ID,&res2);
                 if(resp!=-1)
                 {
                    for (i = 0; i < PQntuples(res2); i++)
@@ -3007,7 +3349,10 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   char max_group_id_str[2048] = { '\0' };
                 for(i=0; i<size_exp;i++)
                 {
-                  snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
+                  if(strcmp(proj_name, "CMIP5")==0)
+                    snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP5_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
+                  else
+                    snprintf (insert_group_exp_query, sizeof (insert_group_exp_query),QUERY_INSERT_CMIP6_BRIDGE_EXPERIMENT,array_exp_id[i],max_group_id+1);
                   submit_query (conn, insert_group_exp_query);
                   sprintf(array_id_exp_str, "%d", array_exp_id[i]);
                   sprintf(max_group_id_str, "%d", max_group_id+1);
@@ -3085,7 +3430,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
 
          }
           long int dataset_id_key = 0;              
-         if((strcmp(proj_name, "OBS4MIPS")==0) || (strcmp(proj_name, "CMIP5")==0))
+         if((strcmp(proj_name, "OBS4MIPS")==0) || (strcmp(proj_name, "CMIP5")==0) || (strcmp(proj_name, "CMIP6")==0))
          {
 
           if (hashtbl_result = hashtbl_get (hashtbl_obs_dim_dataset, dataset_name))
@@ -3104,14 +3449,18 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              success_lookup[1]++;
              if(strcmp(proj_name, "OBS4MIPS")==0)
                  snprintf (insert_new_dataset_query, sizeof (insert_new_dataset_query), QUERY_INSERT_NEW_DATASET_OBS, dataset_name, atoi((*datasetproj)[cnt]->version), datetime_start, datetime_stop);
-             else
+             if(strcmp(proj_name, "CMIP5")==0)
                  snprintf (insert_new_dataset_query, sizeof (insert_new_dataset_query), QUERY_INSERT_NEW_DATASET_CMIP5, dataset_name, atoi((*datasetproj)[cnt]->version), datetime_start, datetime_stop);
+             if(strcmp(proj_name, "CMIP6")==0)
+                 snprintf (insert_new_dataset_query, sizeof (insert_new_dataset_query), QUERY_INSERT_NEW_DATASET_CMIP6, dataset_name, atoi((*datasetproj)[cnt]->version), datetime_start, datetime_stop);
              submit_query (conn, insert_new_dataset_query);
 
              if(strcmp(proj_name, "OBS4MIPS")==0)
                 snprintf(select_id_dataset_query, sizeof (select_id_dataset_query), QUERY_GET_DATASET_OBS_ID, dataset_name);
-             else
+             if(strcmp(proj_name, "CMIP5")==0)
                 snprintf(select_id_dataset_query, sizeof (select_id_dataset_query), QUERY_GET_DATASET_CMIP5_ID, dataset_name);
+             if(strcmp(proj_name, "CMIP6")==0)
+                snprintf(select_id_dataset_query, sizeof (select_id_dataset_query), QUERY_GET_DATASET_CMIP6_ID, dataset_name);
               dataset_id_key=get_foreign_key_value(conn, select_id_dataset_query);
              // add entry to hash table
               sprintf (dataset_id_str, "%ld", dataset_id_key);
@@ -3119,7 +3468,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
              pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%d] [%s]\n",dataset_id_key, dataset_id_str);
           }
         }
-        if((strcmp(proj_name, "OBS4MIPS")==0) || (strcmp(proj_name, "CMIP5")==0))
+        if((strcmp(proj_name, "OBS4MIPS")==0) || (strcmp(proj_name, "CMIP5")==0)|| (strcmp(proj_name, "CMIP6")==0))
         {
           if(strcmp(proj_name, "OBS4MIPS")==0)
           {
@@ -3156,7 +3505,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                 pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_obs_row,fact_obs_id_str);
              }
           }
-          else
+          if(strcmp(proj_name, "CMIP5")==0)
           {
              char *str_succ=NULL;
              if(strcmp(success_row,"t")==0)
@@ -3191,6 +3540,41 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
               }
 
           }
+          if(strcmp(proj_name, "CMIP6")==0)
+          {
+             char *str_succ=NULL;
+             if(strcmp(success_row,"t")==0)
+                  str_succ=strdup("true");
+             else
+                 str_succ=strdup("false");
+             char fact_cmip_row[2048] = { '\0' };
+             long int fact_cmip_id=0;
+             sprintf(fact_cmip_row,"%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, str_succ, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, source_id_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query); 
+             free(str_succ);
+             if (hashtbl_result = hashtbl_get (hashtbl_cmip5_fact_download, fact_cmip_row))
+             {
+               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",fact_row, hashtbl_result);
+               fact_cmip_id = atol (hashtbl_result);
+	        success_lookup[0]++;
+             }
+             else
+	     {		// add host entry in DB (and hashtable too) without geolocation information
+                 char insert_cmip5_fact_download[2048] = { '\0' };
+                 char select_id_fact_query[2048] = { '\0' };
+                 char fact_cmip_id_str[256] = { '\0' };
+                 char fact1_row[2048] = { '\0' };
+                 sprintf(fact1_row, "%ld:%s:%d:%s:%s:%s:%s:%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d", size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, source_id_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
+                  snprintf (insert_cmip5_fact_download, sizeof (insert_cmip5_fact_download), QUERY_INSERT_CMIP6_FACT_DOWNLOAD,size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, source_id_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
+	         submit_query (conn, insert_cmip5_fact_download);
+                 snprintf(select_id_fact_query, sizeof (select_id_fact_query), QUERY_GET_CMIP6_ROW, size_row, success_row, duration_row, replica, esgf_node, buf3, buf4, user_id_hash_row, user_idp_row, date_obs_id, geo_obs_id, dataset_id_key, time_freq_group_key, var_group_key, exp_group_key, model_group_key, realm_group_key, institute_group_key,(*datasetproj)[cnt]->id_query);
+
+                fact_cmip_id=get_foreign_key_value(conn, select_id_fact_query);
+                sprintf (fact_cmip_id_str, "%ld", fact_cmip_id);
+                hashtbl_insert (hashtbl_cmip5_fact_download,fact_cmip_row,fact_cmip_id_str);
+                pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",fact_cmip_row,fact_cmip_id_str);
+              }
+           }
+
         }
 
   pmesg(LOG_DEBUG,__FILE__,__LINE__,"*********** End parsing routine  ************\n");
@@ -3268,6 +3652,32 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
       hashtbl_destroy (hashtbl_cmip5_dim_experiment);
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
       hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+      hashtbl_destroy (hashtbl_cmip5_fact_download);
+    }
+    if(create_populate_done==4)
+    {
+      hashtbl_destroy (hashtbl_obs_dim_dataset);
+      hashtbl_destroy (hashtbl_obs_dim_institute);
+      hashtbl_destroy (hashtbl_obs_dim_variable);
+      hashtbl_destroy (hashtbl_obs_dim_time_frequency);
+      hashtbl_destroy (hashtbl_obs_dim_realm);
+      hashtbl_destroy (hashtbl_obs_dim_geolocation);
+      hashtbl_destroy (hashtbl_obs_dim_date);
+      hashtbl_destroy (hashtbl_obs_bridge_institute);
+      hashtbl_destroy (hashtbl_obs_bridge_institute_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_variable);
+      hashtbl_destroy (hashtbl_obs_bridge_variable_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency);
+      hashtbl_destroy (hashtbl_obs_bridge_time_frequency_tmp);
+      hashtbl_destroy (hashtbl_obs_bridge_realm);
+      hashtbl_destroy (hashtbl_obs_bridge_realm_tmp);
+      //hashtbl_destroy (hashtbl_cross_fact_download);
+      hashtbl_destroy (hashtbl_cmip5_dim_experiment);
+      hashtbl_destroy (hashtbl_cmip5_bridge_experiment);
+      hashtbl_destroy (hashtbl_cmip5_bridge_experiment_tmp);
+      hashtbl_destroy (hashtbl_obs_dim_source_id);
+      hashtbl_destroy (hashtbl_obs_bridge_source_id);
+      hashtbl_destroy (hashtbl_obs_bridge_source_id_tmp);
       hashtbl_destroy (hashtbl_cmip5_fact_download);
     }
     if(create_populate_done==1)
@@ -3586,7 +3996,6 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
         {  
            snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS, ESGF_HOSTNAME);
            submit_query(conn,insert_dmart_project_host);
-           //devo prendere, lat, lon e dmart_key
 
            /* update registry */
 	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_POS, datamart);
@@ -3654,6 +4063,7 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",key_geo, hashtbl_result);
               geo_id = atol (hashtbl_result);
               snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS, str1_geo, str_geo, project_name, str1_geo, str_geo, project_name);
+           
               //printf("QUERY_UPDATE_INSERT_NEW_CROSS_DMART_PROJECT_HOST_POS %s\n", insert_dmart_project_host);
               submit_query (conn,insert_dmart_project_host);
            }
@@ -4538,6 +4948,482 @@ int update_dmart(PGconn *conn, PGresult   *res1, HASHTBL *hashtbl_cross_dmart_pr
            if(res_query!=-1)
              PQclear (res1);
            snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_EXPERIMENT_HOST_TIME, month,year);
+           submit_query (conn,update_dmart_project_host);
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+           submit_query (conn, update_registry);
+        }
+      }
+//LUISA
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_clients_host_geolocation")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_CLIENTS_HOST_TIME_GEOLOCATION,ESGF_HOSTNAME);
+           submit_query (conn,insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           //snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_PROJECT_HOST_POS, dmart_key);
+           //int res_query=submit_query_res (conn, select_query,&res1);
+           int res_query=0;
+           float lat=0.0;
+           float lon=0.0;
+           /*if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+               PQclear (res1);*/
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_POS_DATE);
+           int resp_res=submit_query_res (conn, select_query,&res1);
+
+           for (i = 0; i < PQntuples(res1); i++)
+           {
+             //month=atoi(PQgetvalue(res1, i, 0));
+             //year=atoi(PQgetvalue(res1, i, 1));
+
+             lat=atof(PQgetvalue(res1, i, 0));
+	     lon=atof(PQgetvalue(res1, i, 1));
+
+             sprintf(str1_geo, "%14.11f",lat);
+             sprintf(str_geo, "%14.11f",lon);
+             if (*str1_geo==' ')
+                     sprintf(str1_geo, "%s",str1_geo+1);
+             if (*str_geo==' ')
+                     sprintf(str_geo, "%s",str_geo+1);
+           
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_POS_DATE, str1_geo, str_geo);
+             res_query=submit_query_res (conn, select_query,&res2);
+
+             if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo, str1_geo, str_geo);
+             else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_CLIENTS_HOST_TIME_GEOLOCATION, str1_geo, str_geo);
+             
+             submit_query(conn,insert_dmart_project_host);
+             if(res_query!=-1)
+               PQclear (res2);
+             
+             //snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP5_DMART_CLIENTS_HOST_TIME_GEOLOCATION, month,year);
+             //submit_query (conn,update_dmart_project_host);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           }
+           if(resp_res!=-1)
+               PQclear (res1);
+        }
+      }
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_dataset_host_time")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_DATASET_HOST_TIME,ESGF_HOSTNAME);
+           submit_query (conn,insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_DATASET_HOST_TIME, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+           char *dataset_name=NULL;
+           int dataset_version=0;
+           char *datetime_start=NULL;
+           char *datetime_stop=NULL;
+           if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_DAT_DATE, month, year);
+           res_query=submit_query_res (conn, select_query,&res1);
+
+           for (i = 0; i < PQntuples(res1); i++)
+           {
+             month=atoi(PQgetvalue(res1, i, 0));
+             year=atoi(PQgetvalue(res1, i, 1));
+
+             dataset_name=PQgetvalue(res1, i, 2);
+             dataset_version=atoi(PQgetvalue(res1, i, 3));
+             datetime_start=PQgetvalue(res1, i, 4);
+             datetime_stop=PQgetvalue(res1, i, 5);
+
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_DAT_DATE, month, year, dataset_name, dataset_version, datetime_start, datetime_stop);
+             int res_resp=submit_query_res (conn, select_query,&res2);
+
+             if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_DATASET_HOST_TIME, month, year, dataset_name, dataset_version, datetime_start, datetime_stop, month, year, dataset_name, dataset_version, datetime_start, datetime_stop);
+             else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_DATASET_HOST_TIME, month, year, dataset_name, dataset_version, datetime_start, datetime_stop);
+             
+             submit_query(conn,insert_dmart_project_host);
+             if(res_resp!=-1)
+               PQclear (res2);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP6_DATASET_HOST_TIME, month,year);
+           submit_query (conn,update_dmart_project_host);
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+        }
+      }
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_variable_host_time")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_VARIABLE_HOST_TIME,ESGF_HOSTNAME);
+           submit_query(conn,insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_VARIABLE_HOST_TIME, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+           char *var_code=NULL;
+           char *var_name=NULL;
+           char *cf_st=NULL;
+           if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_VAR_DATE, month, year);
+           res_query=submit_query_res (conn, select_query,&res1);
+
+           for (i = 0; i < PQntuples(res1); i++)
+           {
+             month=atoi(PQgetvalue(res1, i, 0));
+             year=atoi(PQgetvalue(res1, i, 1));
+
+             var_code=PQgetvalue(res1, i, 2);
+             var_name=PQgetvalue(res1, i, 3);
+             cf_st=PQgetvalue(res1, i, 4);
+
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_VAR_DATE, month, year, var_code, var_name,cf_st);
+             int res_resp=submit_query_res (conn, select_query,&res2);
+
+             if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_VARIABLE_HOST_TIME, month, year, var_code, var_name,cf_st, month, year, var_code, var_name,cf_st);
+             else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_VARIABLE_HOST_TIME, month, year, var_code, var_name,cf_st);
+             
+             submit_query(conn,insert_dmart_project_host);
+             if(res_resp!=-1)
+               PQclear (res2);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP6_VARIABLE_HOST_TIME, month,year);
+             submit_query (conn,update_dmart_project_host);
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+        }
+      }
+
+
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_source_host_time")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_SOURCE_HOST_TIME, ESGF_HOSTNAME);
+           submit_query(conn,insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_SOURCE_HOST_TIME, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+           char *source_id_name=NULL;
+           if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_SRC_DATE, month, year);
+           int resp_res=submit_query_res (conn, select_query,&res1);
+
+           for (i = 0; i < PQntuples(res1); i++)
+           {
+             month=atoi(PQgetvalue(res1, i, 0));
+             year=atoi(PQgetvalue(res1, i, 1));
+
+             source_id_name=PQgetvalue(res1, i, 2);
+
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_SRC_DATE, month, year, source_id_name);
+             res_query=submit_query_res (conn, select_query,&res2);
+
+             if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_SOURCE_HOST_TIME, month, year, source_id_name, month, year, source_id_name);
+             else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_SOURCE_HOST_TIME, month, year, source_id_name);
+             
+             submit_query(conn,insert_dmart_project_host);
+             if(res_query!=-1)
+               PQclear (res2);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           }
+           if(resp_res!=-1)
+             PQclear (res1);
+           snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP6_SOURCE_HOST_TIME, month,year);
+           submit_query (conn,update_dmart_project_host);
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+           submit_query (conn, update_registry);
+        }
+      }
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_realm_host_time")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_REALM_HOST_TIME, ESGF_HOSTNAME);
+           submit_query (conn,insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_REALM_HOST_TIME, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+           char *realm_name=NULL;
+           if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_RLM_DATE, month, year);
+           int resp_res=submit_query_res (conn, select_query,&res1);
+
+           for (i = 0; i < PQntuples(res1); i++)
+           {
+             month=atoi(PQgetvalue(res1, i, 0));
+             year=atoi(PQgetvalue(res1, i, 1));
+
+             realm_name=PQgetvalue(res1, i, 2);
+
+             snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_RLM_DATE, month, year, realm_name);
+             res_query=submit_query_res (conn, select_query,&res2);
+
+             if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_REALM_HOST_TIME, month, year, realm_name, month, year, realm_name);
+             else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_REALM_HOST_TIME, month, year, realm_name);
+             
+             submit_query(conn,insert_dmart_project_host);
+             if(res_query!=-1)
+               PQclear (res2);
+
+	     snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+             dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+             //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+             //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+             //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           }
+           if(resp_res!=-1)
+             PQclear (res1);
+           snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP6_REALM_HOST_TIME, month,year);
+           submit_query (conn,update_dmart_project_host);
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+           submit_query (conn, update_registry);
+        }
+      }
+
+     if(strcmp(datamart, "esgf_dashboard.cmip6_dmart_experiment_host_time")==0)
+     {  
+        if(dmart_key==0)
+        {  
+           snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_NEW_CMIP6_DMART_EXPERIMENT_HOST_TIME,ESGF_HOSTNAME);
+           submit_query (conn,insert_dmart_project_host);
+           printf("insert_dmart_project_host %s\n", insert_dmart_project_host);
+
+           /* update registry */
+	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+           dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+           sprintf (dmart_id_str, "%ld", dmart_id);
+
+           //char key_dmart_cros_proj_hos_time_id[2048]= { '\0' };
+           //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+           
+           //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+           //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+           if(dmart_id>=0)
+           {  
+             snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+             submit_query (conn, update_registry);
+           }
+        }
+        else
+        {
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXPERIMENT_HOST_TIME, dmart_key);
+           int res_query=submit_query_res (conn, select_query,&res1);
+
+           char *experiment_name=NULL;
+           if(PQntuples(res1)!=0)
+           {
+             month=atoi(PQgetvalue(res1, 0, 0));
+             year=atoi(PQgetvalue(res1, 0, 1));
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXP_DATE, month, year);
+           res_query=submit_query_res (conn, select_query,&res1);
+           if(PQntuples(res1)!=0)
+           {
+             for (i = 0; i < PQntuples(res1); i++)
+             {
+               month=atoi(PQgetvalue(res1, i, 0));
+               year=atoi(PQgetvalue(res1, i, 1));
+
+               experiment_name=PQgetvalue(res1, i, 2);
+
+               snprintf (select_query, sizeof (select_query), QUERY_SELECT_CMIP6_DMART_EXIST_EXP_DATE, month, year, experiment_name);
+               int res_resp=submit_query_res (conn, select_query,&res2);
+
+               if(PQntuples(res2)!=0)    
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_UPDATE_INSERT_NEW_CMIP6_DMART_EXPERIMENT_HOST_TIME, month, year, experiment_name, month, year, experiment_name);
+               else
+                 snprintf (insert_dmart_project_host, sizeof (insert_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_NEW_CMIP6_DMART_EXPERIMENT_HOST_TIME, month, year, experiment_name);
+             
+               submit_query(conn,insert_dmart_project_host);
+               if(res_resp!=-1)
+                 PQclear (res2);
+
+	       snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
+               dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
+               snprintf (update_registry, sizeof (update_registry), QUERY_UPDATE_REGISTRY,realtime, dmart_id,datamart);
+               submit_query (conn, update_registry);
+               //if(res_resp!=-1)
+               //sprintf(key_dmart_cros_proj_hos_time_id, "%s:%s", buf1, buf2);
+               //hashtbl_insert (hashtbl_cross_dmart_project_host_time,key_dmart_cros_proj_hos_time_id,dmart_id_str);
+               //pmesg(LOG_DEBUG,__FILE__,__LINE__,"[LookupFailed] Adding new entry in the hashtable [%s] [%s]\n",key_dmart_cros_proj_hos_time_id, dmart_id_str);
+             }
+           }
+           if(res_query!=-1)
+             PQclear (res1);
+           snprintf (update_dmart_project_host, sizeof (update_dmart_project_host), QUERY_SELECT_INSERT_UPDATE_CMIP6_EXPERIMENT_HOST_TIME, month,year);
            submit_query (conn,update_dmart_project_host);
 	   snprintf(select_id_dmart_query, sizeof (select_id_dmart_query), QUERY_GET_DMART_ID, datamart);
            dmart_id=get_foreign_key_value(conn, select_id_dmart_query);
