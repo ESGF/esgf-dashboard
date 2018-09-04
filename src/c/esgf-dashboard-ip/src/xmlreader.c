@@ -167,8 +167,9 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
                                if (node1 != NULL)
                                {
                                   content=xmlNodeGetContent(node1);
-                                  if((*datasetproj)[cnt]->first[c]->first[j]->value[u])
-                                    free((*datasetproj)[cnt]->first[c]->first[j]->value[u]);
+                                  //LUIS
+                                  //if((*datasetproj)[cnt]->first[c]->first[j]->value[u])
+                                    //free((*datasetproj)[cnt]->first[c]->first[j]->value[u]);
                                   (*datasetproj)[cnt]->first[c]->first[j]->value[u]=strdup(content);
                                   xmlFree(content);
                                   content=NULL;
