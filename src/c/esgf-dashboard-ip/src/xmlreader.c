@@ -167,7 +167,6 @@ int retrieve_tag(xmlDocPtr * doc, char *tag, struct dataset_project ***datasetpr
                                if (node1 != NULL)
                                {
                                   content=xmlNodeGetContent(node1);
-                                  //LUIS
                                   //if((*datasetproj)[cnt]->first[c]->first[j]->value[u])
                                     //free((*datasetproj)[cnt]->first[c]->first[j]->value[u]);
                                   (*datasetproj)[cnt]->first[c]->first[j]->value[u]=strdup(content);
@@ -1051,7 +1050,8 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
     host_n=(char **)calloc (2, sizeof(char*));
     xmlChar *prop=NULL; 
     char query[2048]={'\0'};
-//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time; 12 - cross_dmart_isenes_kpis;   
+//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time; 12 - cross_dmart_isenes_kpis; 13 - cmip6_dmart_clients_host_geolocation; 14 - cmip6_dmart_experiment_id_host_time; 15 - cmip6_dmart_variable_host_time; 16 - cmip6_dmart_dataset_host_time; 17 - cmip6_dmart_source_id_host_time; 18 - cmip6_dmart_realm_host_time;
+  
                             PGresult *res2;
                             PGresult *res3;
                             int del_flag=0;
@@ -1323,9 +1323,9 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                strcat(str_field, prop1);
                                strcat(str_field, ",");
                                //printf("value is %s\n", content);
-                               if(strcmp(tableName, "obs4mips_dmart_clients_host_time_geolocation")==0)
+                               if(strcmp(tableName, "obs4mips_dmart_clients_host_geolocation")==0)
                                {
-                                  if(k==5)
+                                  if(k==8)
                                   {
                                     strcat(str_value, "'");
                                     strcat(str_value, content);
@@ -1518,9 +1518,84 @@ int read_elem_fed(xmlNode * a_node, char *tableName, char **fields, char **value
                                     strcat(str_value, ",");
                                   }
                                }
-                               if(strcmp(tableName, "cmip5_dmart_clients_host_time_geolocation")==0)
+                               if(strcmp(tableName, "cmip5_dmart_clients_host_geolocation")==0)
                                {
-                                  if(k==8)
+                                  if(k==9)
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip6_dmart_clients_host_geolocation")==0)
+                               {
+                                  if(k==9)
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip6_dmart_experiment_id_host_time")==0)
+                               {
+                                  if((k==8) || (k==9))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip6_dmart_variable_host_time")==0)
+                               {
+                                  if((k==8) || (k==9) || (k==10) || (k==11))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip6_dmart_dataset_host_time")==0)
+                               {
+                                  if((k==8) || (k==9) || (k==11) || (k==12))
+                                  {
+                                    strcat(str_value, "'");
+                                    strcat(str_value, content);
+                                    strcat(str_value, "'");
+                                    strcat(str_value, ",");
+                                  }
+                                  else
+                                  {
+                                    strcat(str_value, content);
+                                    strcat(str_value, ",");
+                                  }
+                               }
+                               if(strcmp(tableName, "cmip6_dmart_source_id_host_time")==0)
+                               {
+                                  if((k==8) || (k==9))
                                   {
                                     strcat(str_value, "'");
                                     strcat(str_value, content);

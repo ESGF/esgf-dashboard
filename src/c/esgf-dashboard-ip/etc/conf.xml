@@ -28,4 +28,18 @@
   <metadata occ="date">datetime_stop</metadata>
   <metadata occ="long">size</metadata>
  </project>
+ <project name="CMIP6">
+  <metadata occ="str">institution_id</metadata>
+  <metadata occ="str">variable</metadata>
+  <metadata occ="str">variable_long_name</metadata>
+  <metadata occ="str">cf_standard_name</metadata>
+  <metadata occ="str">frequency</metadata>
+  <metadata occ="str">realm</metadata>
+  <metadata occ="str">experiment_id</metadata>
+  <metadata occ="str">source_id</metadata>
+  <metadata occ="bool">replica</metadata>
+  <metadata occ="date">datetime_start</metadata>
+  <metadata occ="date">datetime_stop</metadata>
+  <metadata occ="long">size</metadata>
+ </project>
 </projects>
