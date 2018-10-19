@@ -360,7 +360,7 @@ setup_geoip() {
         
         pushd ${geoip_dist_dir} >& /dev/null
         ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && gmake clean && echo "[OK]" || echo "[FAIL]")
-        automake
+        autoreconf --install
         echo "./configure --prefix=${geoip_install_dir}"
         if ./configure --prefix=${geoip_install_dir} \
             && make \
@@ -480,7 +480,7 @@ setup_dashboard_provider() {
 
     pushd ${esgf_dashboard_ip_dist_dir}
     ((force_install)) && (echo "Cleaning the source tree.. $(pwd) " && make clean && echo "[OK]" || echo "(Hmmm... not respecting \"make clean\" - eh, no worries)")
-    automake
+    autoreconf --install
     echo "./configure --prefix=${esgf_dashboard_ip_install_dir}"
     if ./configure --prefix=${esgf_dashboard_ip_install_dir} --with-postgres-path=${postgress_install_dir} --with-geoip-prefix-path=${geoip_install_dir} \
 	&& make \
