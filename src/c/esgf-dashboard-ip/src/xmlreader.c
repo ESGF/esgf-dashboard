@@ -902,7 +902,7 @@ int read_config_feder(char *configName)
     char ip[128] = { '\0' };
     int port=0;
     char datanode[128] = { '\0' };
-    delete_element_config_feder(root_element,res, ip, port, datanode);
+    //delete_element_config_feder(root_element,res, ip, port, datanode);
     print_element_config_feder(root_element,res, ip, port);
     xmlFreeDoc(doc);
     xmlCleanupParser();
@@ -1000,19 +1000,6 @@ int read_dmart_feder(char *dmartName)
      }
      PQclear(res2);
 
-#if 0
-      sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
-
-      res2 = PQexec(conn, query);
-      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
-      {
-        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
-        PQclear(res2);
-        PQfinish(conn);
-        return -2;
-       }
-       PQclear(res2);
-#endif
 
        print_element_dmart_feder_names(root_element, tableName, conn);
        res2 = PQexec(conn, QUERY4);
@@ -1050,7 +1037,6 @@ void print_element_dmart_feder_names(xmlNode * a_node, char *tableName, PGconn *
     host_n=(char **)calloc (2, sizeof(char*));
     xmlChar *prop=NULL; 
     char query[2048]={'\0'};
-//0 - cmip5_dmart_experiment_host_time; 1 - cmip5_dmart_model_host_time; 2 - cmip5_dmart_variable_host_time; 3 - esgf_dashboard.cmip5_dmart_dataset_host_time; 4 - cross_dmart_project_host_time; 5 - cross_dmart_project_host_geolocation; 6 - cmip5_dmart_clients_host_time_geolocation; 7 - obs4mips_dmart_clients_host_time_geolocation; 8 - obs4mips_dmart_variable_host_time; 9 - obs4mips_dmart_source_host_time; 10 - obs4mips_dmart_realm_host_time; 11 - obs4mips_dmart_dataset_host_time; 12 - cross_dmart_isenes_kpis; 13 - cmip6_dmart_clients_host_geolocation; 14 - cmip6_dmart_experiment_id_host_time; 15 - cmip6_dmart_variable_host_time; 16 - cmip6_dmart_dataset_host_time; 17 - cmip6_dmart_source_id_host_time; 18 - cmip6_dmart_realm_host_time;
   
                             PGresult *res2;
                             PGresult *res3;

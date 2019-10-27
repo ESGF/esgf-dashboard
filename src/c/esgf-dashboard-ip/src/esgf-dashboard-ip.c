@@ -25,9 +25,11 @@
 #include "../include/ftpget.h"
 #include "../include/hashtbl.h"
 
+#if 0
 static const char *project[]={"CMIP5","CORDEX","OBS4MIPS","all projects",NULL};
  
 static const char *table[]={"cmip5_data_usage","cordex_data_usage","obs4mips_data_usage","all_data_usage",NULL};
+#endif //new_collector
 
 int msglevel; // global variable for log purposes 
 
@@ -159,6 +161,8 @@ handle_error (int error)
 /* This is our thread function.  It is like main(), but for a thread*/
 
 //void *
+//
+#if 0
 int automatic_registration_xml_feed (void *arg)
 {
   char *esgf_registration_xml_path;
@@ -250,6 +254,8 @@ void * data_download_metrics_dw_reconciliation(void *arg)
 
 	return NULL;
 }
+#endif //new_collector
+
 
 void * data_federA(void *arg)
 {
@@ -292,7 +298,7 @@ void * data_planA(void *arg)
         HASHTBL *hashtbl_no_auth;
         int i=1;
 
-
+#if 0
         /* Connect to database */
         snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
         conn = PQconnectdb ((const char *) conninfo);
@@ -339,9 +345,11 @@ void * data_planA(void *arg)
         pmesg(LOG_DEBUG,__FILE__,__LINE__,"Transaction closed\n");
 
         PQfinish(conn);
-        
+ #endif   
 	while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	{
+
+#if 0
             res=get_download_shards(".work", ".work/shards.xml");
             if(res==0)
               pmesg(LOG_DEBUG,__FILE__,__LINE__,"Download shards.xml with success\n");
@@ -368,21 +376,22 @@ void * data_planA(void *arg)
               i++;
             }
             fclose ( fp );
-
+#endif
 	    // skip the first time, because the process is called once before this loop	
 	    while (1) // while(i<3) TEST_  ---- while (1) PRODUCTION_
 	    {
-               if(res1==-1)
-                 res1=0;
+               //if(res1==-1)
+                 //res1=0;
 	         //break;
-               res=compute_solr_process_planA(res1, &hashtbl_no_auth);
+               //res=compute_solr_process_planA(res1, &hashtbl_no_auth);
+               res=compute_solr_process_planA();
                if(res==-25)
 	       {
                  fprintf(stderr, "%s\n", "There are no entries to be processed");
                  break;
 	       }
 	    }
-            hashtbl_destroy (hashtbl_no_auth);
+            //hashtbl_destroy (hashtbl_no_auth);
 	    sleep(DATA_METRICS_SPAN*3600); // PRODUCTION_ once a day
             //sleep(60);
             fprintf(stderr, "%s\n", "DONE PLANA");
@@ -391,6 +400,7 @@ void * data_planA(void *arg)
 	return NULL;
 }
 
+#if 0
 int compute_aggregate_data_user_metrics()
 {
   	int ret_code;
@@ -473,6 +483,7 @@ int realtime_monitoring_setup(void)
     // 3 files for realtime cpu monitoring exists now! 
     return 0;
 }
+#endif //new_collector
 
 
 int
@@ -625,7 +636,7 @@ main (int argc, char **argv)
     }
 
   print_all_properties (); // TEST_ --- PRODUCTION_ // da commentare
-
+#if 0
   sprintf (esgf_registration_xml_path, "%s/registration.xml",
 	   REGISTRATION_XML_PATH);
 
@@ -645,7 +656,7 @@ main (int argc, char **argv)
   //display_sensor_structures_info(num_sensors,&sens_struct[0]);
   //read_dmart_feder("./xml"); 
   //return 0;
-
+#endif
   DIR* pDir = opendir(WORK_DIR);
   struct dirent *pFile;
   char file_n[128] = { '\0' };
@@ -717,9 +728,12 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
 
   //compute_remote_clients_data_mart();
 
+#if 0
   int num_proj;
   for(num_proj=0; project[num_proj]!=NULL; num_proj++)
       reconciliation_process_planB(project[num_proj], table[num_proj], num_proj);
+#endif //new_collector
+
   //compute_aggregate_data_user_metrics();
 
   //if (FEDERATED_STATS)
@@ -797,10 +811,12 @@ if(strcmp(ALLOW_FEDERATION, "yes")==0)
 	{
   	if (pthread_join (pth_realtime, NULL))
   		pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join error - realtime !!!\n");
-  	elsepth_planA,
+  	else
   		pmesg(LOG_DEBUG,__FILE__,__LINE__,"Realtime monitoring thread joined the master!\n");
     	}		
 #endif
+
+
   if (pthread_join (pth_planA, NULL))
   	pmesg(LOG_ERROR,__FILE__,__LINE__,"pthread_join PLANA error!!!\n");
   else
@@ -1105,7 +1121,6 @@ ESGF_properties (char *esgf_properties_path, int *mandatory_properties,
 }
 
 
-
 int
 ESGF_passwd (char *esgf_passwd_path)
 {
@@ -1157,6 +1172,7 @@ ESGF_node_type (char *esgf_passwd_path)
   fclose (file);
   return 0;
 }
+
 int ptr_register (ptr_mng* reg, void ** ptr, int type)
 {
   void ****tmp;

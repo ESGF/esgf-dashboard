@@ -208,11 +208,13 @@
 //
 // PLAN A
 // SELECT URL FROM DASHBOARD_QUEUE
-#define QUERY_PLANA_SELECT_URL "select url_path,id,user_id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 100;"
+//#define QUERY_PLANA_SELECT_URL "select url_path,id,user_id from esgf_dashboard.dashboard_queue where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 100;"
+#define QUERY_COLLECTOR_SELECT_URL "select url_path,id from esgf_dashboard.downloads_info where processed=0 and not url_path like 'http%%' order by timestamp ASC limit 10;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and url_path like '%%esg_dataroot%%' order by timestamp ASC limit 1000;"
 //#define QUERY_PLANA_SELECT_URL "select url_path,id from esgf_dashboard.dashboard_queue where processed=0 and id=415547;"
 #define QUERY_UPDATE_DASHBOARD_QUEUE "update esgf_dashboard.dashboard_queue set processed=1 where id=%d;"
+#define QUERY_UPDATE_DOWNLOADS_QUEUE "update esgf_dashboard.downloads_info set processed=1 where id=%d;"
 #define QUERY_UPDATE_DASHBOARD_QUEUE_NO_AUTH "update esgf_dashboard.dashboard_queue set processed=2 where id=%d;"
 #define QUERY_UPDATE_REGISTRY_INIT "update esgf_dashboard.registry set dmart_key=0,timestamp=0;"
 // QUERY_INSERT_CROSS_DIM_DATE adds a new date of the downloaded file in the database
@@ -242,6 +244,7 @@
 // Get list of CMIP5 DOWNLOAD 
 #define QUERY_GET_LIST_OF_CMIP5_DOWNLOAD "SELECT (CAST(size as bigint)||':'||CAST(success as bool)||':'||CAST(duration as integer)||':'||CAST(replica as bool)||':'||host_name||':'||CAST(hour as integer)||':'||CAST(minute as integer)||':'||user_id_hash||':'||user_idp||':'||CAST(date_key as integer)||':'||CAST(geolocation_key as integer))||':'||CAST(dataset_key as integer)||':'||CAST(time_frequency_group_key as integer)||':'||CAST(variable_group_key as integer)||':'||CAST(experiment_group_key as integer)||':'||CAST(model_group_key as integer)||':'||CAST(realm_group_key as integer)||':'||CAST(institute_group_key as integer)||':'||CAST(id_query as integer) AS name, download_key from esgf_dashboard.cmip5_fact_download;"
 #define QUERY_SELECT_DASHBOARD_QUEUE "SELECT timestamp,remote_addr,size,success, duration, user_id_hash, user_idp from esgf_dashboard.dashboard_queue where id=%d;"
+#define QUERY_SELECT_DOWNLOADS_QUEUE "SELECT timestamp,size,success, duration, user_id_hash, user_idp from esgf_dashboard.downloads_info where id=%d;"
 // Insert new date adds a new date in the database
 #define QUERY_INSERT_NEW_DATE "INSERT into esgf_dashboard.cross_dim_date(download_date,month,year) values('%s','%s','%s');"
 // Retrieve the id value of a specific date

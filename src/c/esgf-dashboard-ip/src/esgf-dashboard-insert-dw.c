@@ -253,7 +253,7 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                   //printf("ID is %d and flag is %d\n", (*datasetproj)[cnt]->id_query, (*datasetproj)[cnt]->flag);
 
                 //continue; 
-                snprintf (select_query, sizeof (select_query), QUERY_SELECT_DASHBOARD_QUEUE, (*datasetproj)[cnt]->id_query);
+                snprintf (select_query, sizeof (select_query), QUERY_SELECT_DOWNLOADS_QUEUE, (*datasetproj)[cnt]->id_query);
         res1 = PQexec(conn,select_query);
 
         if ((!res1) || (PQresultStatus(res1) != PGRES_TUPLES_OK))
@@ -271,7 +271,8 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                    timestamp=atoi(PQgetvalue(res1, i, 0));
                    //printf("timestamp %s\n", PQgetvalue(res1, i, 0));
                    //printf("remote_addr %s\n", PQgetvalue(res1, i, 1));
-                   remote_addr=strdup(PQgetvalue(res1, i, 1));
+                   //remote_addr=strdup(PQgetvalue(res1, i, 1));
+                   remote_addr=strdup("localhost");
 
                    //printf("size %s\n", PQgetvalue(res1, i, 2));
                    //printf("size %.0f\n", atof(PQgetvalue(res1, i, 2)));
@@ -280,16 +281,16 @@ int check_cross_project (PGconn *conn, struct dataset_project ***datasetproj, ch
                       //size_row=size_row/(1024*1024*1024);
                    //printf("size %d\n", size_row);
                    //printf("success %s\n", PQgetvalue(res1, i, 3));
-                   success_row=strdup(PQgetvalue(res1, i, 3));
+                   success_row=strdup(PQgetvalue(res1, i, 2));
 
                    //printf("duration %ld\n", atoi(PQgetvalue(res1, i, 4)));
-                   duration_row=atoi(PQgetvalue(res1, i, 4));
+                   duration_row=atoi(PQgetvalue(res1, i, 3));
                    //printf("duration %s\n", PQgetvalue(res1, i, 4));
                    //printf("user_id_hash %s\n", PQgetvalue(res1, i, 5));
-                   user_id_hash_row=strdup(PQgetvalue(res1, i, 5));
+                   user_id_hash_row=strdup(PQgetvalue(res1, i, 4));
                  
                    //printf("user_idp %s\n", PQgetvalue(res1, i, 6));
-                   user_idp_row=strdup(PQgetvalue(res1, i, 6));
+                   user_idp_row=strdup(PQgetvalue(res1, i, 5));
                 }
 
                 PQclear (res1);

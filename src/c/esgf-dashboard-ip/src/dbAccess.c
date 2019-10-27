@@ -23,6 +23,7 @@
 #include <libxml/tree.h>
 #include <dirent.h>
 #include "../include/hashtbl.h"
+#include <sys/time.h>
 
 #define CONNECTION_STRING "host=%s port=%d dbname=%s user=%s password=%s"
 // todo: to be added the path DASHBOARD_SERVICE_PATH IN THE STATS FILE
@@ -1126,49 +1127,6 @@ int compute_federation()
     char conninfo[1024] = {'\0'};
     char query[2048] = {'\0'};
 
-#if 0
-    /* Connect to database */
-    snprintf (conninfo, sizeof (conninfo), "host=%s port=%d dbname=%s user=%s password=%s", POSTGRES_HOST, POSTGRES_PORT_NUMBER,POSTGRES_DB_NAME, POSTGRES_USER,POSTGRES_PASSWD);
-    conn = PQconnectdb ((const char *) conninfo);
-
-    if (PQstatus(conn) != CONNECTION_OK)
-    {
-       pmesg(LOG_ERROR,__FILE__,__LINE__,"Connection to database failed: %s", PQerrorMessage(conn));
-       PQfinish(conn);
-       return -1;
-     }
-     res2 = PQexec(conn, QUERY8);
-     if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
-     {
-        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
-        PQclear(res2);
-        PQfinish(conn);
-        return -2;
-      }
-      sprintf(query, "%s", "delete from esgf_dashboard.cross_dmart_project_host_time; delete from esgf_dashboard.cross_dmart_project_host_geolocation; delete from esgf_dashboard.obs4mips_dmart_clients_host_time_geolocation; delete from esgf_dashboard.obs4mips_dmart_variable_host_time; delete from esgf_dashboard.obs4mips_dmart_source_host_time; delete from esgf_dashboard.obs4mips_dmart_realm_host_time; delete from esgf_dashboard.obs4mips_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_experiment_host_time; delete from esgf_dashboard.cmip5_dmart_model_host_time; delete from esgf_dashboard.cmip5_dmart_variable_host_time; delete from esgf_dashboard.cmip5_dmart_dataset_host_time; delete from esgf_dashboard.cmip5_dmart_clients_host_time_geolocation;");
-
-      res2 = PQexec(conn, query);
-      if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
-      {
-        pmesg(LOG_ERROR,__FILE__,__LINE__,"Open transaction failed\n");
-        //PQclear(res2);
-        //PQfinish(conn);
-        //return -2;
-       }
-       PQclear(res2);
-       res2 = PQexec(conn, QUERY4);
-       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Trying to close the transaction\n");
-       pmesg(LOG_DEBUG,__FILE__,__LINE__,"Query: [%s]\n",QUERY4);
-       if ((!res2) || (PQresultStatus (res2) != PGRES_COMMAND_OK))
-       {
-         pmesg(LOG_ERROR,__FILE__,__LINE__,"Close transaction failed\n");
-         PQclear(res2);
-         PQfinish(conn);
-         return -2;
-        }
-        PQclear(res2);
-         PQfinish(conn);
-#endif
     dir = opendir (FED_DIR);
     while ((entry = readdir (dir)) != NULL) {
       if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
@@ -1185,7 +1143,8 @@ int compute_federation()
 }
 
 //PLANA START
-int compute_solr_process_planA(int shards, HASHTBL ** pointer)
+//int compute_solr_process_planA(int shards, HASHTBL ** pointer)
+int compute_solr_process_planA()
 {
   	char select_query_dashboard[2048] = { '\0' };
         int         nFields;
@@ -1215,7 +1174,8 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
 
  	pmesg(LOG_DEBUG,__FILE__,__LINE__,"Process planA START\n");
 
-	snprintf (select_query_dashboard, sizeof (select_query_dashboard),QUERY_PLANA_SELECT_URL);
+	//snprintf (select_query_dashboard, sizeof (select_query_dashboard),QUERY_PLANA_SELECT_URL);
+	snprintf (select_query_dashboard, sizeof (select_query_dashboard),QUERY_COLLECTOR_SELECT_URL);
 
         PGconn *conn;
         PGresult *res1;
@@ -1279,10 +1239,10 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           return -25;
     	}
         
-       
-        int size_eff_b=0;
-        size=PQntuples(res1);
-          
+        //int size_eff_b=0;
+        //size=PQntuples(res1);
+
+#if 0       
         for (i = 0; i < PQntuples(res1); i++)
         {
           str_userid=strdup(PQgetvalue(res1, i, 2));
@@ -1295,6 +1255,8 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         }
         if(size_eff_b>0)
           size=size-size_eff_b;
+#endif
+
         URL=(char**) calloc (size+1, sizeof(char *));
         id_query=(char**) calloc (size+1, sizeof(char *));
         flag_id=(char**) calloc (size+1, sizeof(char *));
@@ -1313,13 +1275,17 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
         i=0;
         /* next, print out the rows */
         //for (i = 0; i < PQntuples(res1); i++)
+
+struct timeval  tv1, tv2;
+gettimeofday(&tv1, NULL);
+
         while(i < PQntuples(res1))
         {
-
+#if 0
           str_userid=strdup(PQgetvalue(res1, i, 2));
           if (hashtbl_result = hashtbl_get (*pointer, str_userid))
           {
-               
+           
                //pmesg(LOG_DEBUG,__FILE__,__LINE__,"Lookup HostTable hit! [%s] [%s]\n",str_userid, hashtbl_result);
                size_eff++;
                char update_dashboard_queue[2048] = { '\0' };
@@ -1341,6 +1307,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
             free(str_userid);
             str_userid=NULL;
           }
+#endif    
 
           str_url1=strdup(PQgetvalue(res1, i, 0));
 
@@ -1359,7 +1326,10 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
             }
           }
 
-            sprintf(url_comp1, "http://%s/solr/files/select/?q=url:*%s*", ESGF_NODE_SOLR, str_url1);
+            //sprintf(url_comp1, "http://localhost:8989/solr/files/select/?q=url:*%s*", str_url1);
+            sprintf(url_comp1, "http://esgf-data.dkrz.de/solr/files/select/?q=url:*%s*", str_url1);
+
+#if 0
           if(shards==0)
             sprintf(url_comp, "%s&shards=localhost:8983/solr/files", url_comp1);
           else
@@ -1368,6 +1338,8 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
           free(str_url1);
           str_url1=NULL;
           URL[ch]=strdup(url_comp);
+#endif
+          URL[ch]=strdup(url_comp1);
           id_query[ch]=strdup(PQgetvalue(res1, i, 1));
           flag_id[ch]=strdup("0");
           i++;
@@ -1626,11 +1598,17 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
                  else
                    res_rep=get_replica(doc, root_element);
                }
+
+#if 0
                if(shards==0)
                  sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
                else
                  sprintf(str_url, "http://%s/solr/datasets/select/?q=id:%s&shards=localhost:8983/solr/datasets,localhost:8982/solr/datasets", ESGF_NODE_SOLR, datasetproj[cnt2]->dataset_id);
                //printf("str_url second query to solr %s\n", str_url);
+#endif
+
+               //sprintf(str_url, "http://localhost:8989/solr/datasets/select/?q=id:%s", datasetproj[cnt2]->dataset_id);
+               sprintf(str_url, "http://esgf-data.dkrz.de/solr/datasets/select/?q=id:%s", datasetproj[cnt2]->dataset_id);
                if(datasetid[cnt2]!=NULL)
                {
                  free(datasetid[cnt2]);
@@ -1665,7 +1643,7 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
               a=atoi(queryid[cnt]);
               if(a>0) 
               {
-                snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DASHBOARD_QUEUE,a);
+                snprintf (update_dashboard_queue, sizeof (update_dashboard_queue), QUERY_UPDATE_DOWNLOADS_QUEUE,a);
                 
                 if (transaction_based_query(update_dashboard_queue, QUERY8, QUERY4))
                   return 0;
@@ -1683,7 +1661,20 @@ int compute_solr_process_planA(int shards, HASHTBL ** pointer)
     //datasetproj[cnt2]=NULL;
     myfree_array(URL,size+1);
     free_struct_FtpFile(ftpfile);
+    char buffer[2056]={'\0'};
+    pFile = fopen ("time.csv", "a+");
 
+    gettimeofday(&tv2, NULL);
+
+    sprintf (buffer, "Total time = %f seconds\n",
+         (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+         (double) (tv2.tv_sec - tv1.tv_sec));
+     char *str=NULL;
+     str=strdup(buffer);
+     fprintf (pFile, "%s\n", str);
+     free(str);
+     str=NULL;
+              fclose (pFile);
 
     ftpfile=calloc (cnt2+2, sizeof(struct FtpFile *));
 
