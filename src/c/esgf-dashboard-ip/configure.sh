@@ -1,1 +1,0 @@
-./configure --prefix=/root/Desktop/installLLNL/esgf-dashboard-ip --with-geoip-prefix-path=/root/Desktop/installLLNL/geoIP/ --with-postgres-header-path=/root/Desktop/installLLNL/postgresql/include --with-postgres-lib-path=/root/Desktop/installLLNL/postgresql/lib
